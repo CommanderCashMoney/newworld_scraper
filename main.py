@@ -16,7 +16,7 @@ import ctypes
 import ocr_image
 import difflib
 from discord import Webhook, RequestsWebhookAdapter
-from pathlib import Path
+
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -556,8 +556,7 @@ def main():
         if 'advanced' in access_groups:
             overlay.show_advanced()
         event, values = overlay.read()
-        if event != '__TIMEOUT__':
-            print(event)
+
         if values['test_t']:
             test_run = True
             ocr_image.ocr.test_run(True)

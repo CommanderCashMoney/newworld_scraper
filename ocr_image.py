@@ -164,8 +164,11 @@ def ocr_pages():
 
 def ocr_items():
     global stop_loop
-
-    time.sleep(10)
+    if not ocr.get_test():
+        time.sleep(15)
+    else:
+        time.sleep(2)
+    ocr.update_overlay('log_output', 'Started extracting text from images', True)
     path = resource_path('temp/')
     while True:
         img_count2 = ocr.get_img_count2()
@@ -465,7 +468,7 @@ class OCR_Image:
         ocr_running = False
         self.confirmed_names = get_name_ids(self.env)
         self.dict_name_cleanup = get_name_swaps(self.env)
-        ocr.update_overlay('log_output', 'Started extracting text from images', True)
+
         self.set_state('running')
         for thread in threading.enumerate():
             if thread.name == "ocr_running":
