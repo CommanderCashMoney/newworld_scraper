@@ -112,6 +112,9 @@ def look_for_tp():
         reference_img = cv2.imread(reference_image_file)
         res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        # print(f'Trading post max_val: {max_val}')
+        # file_name = resource_path('images/trading_post_cap.png')
+        # cv2.imwrite(file_name, reference_grab)
         if max_val > 0.92:
             return True
         else:
@@ -167,14 +170,14 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
         overlay.enable('resend')
         overlay.updatetext('error_output', f'Error occurred while submitting data to API. Status code: {r.status_code}', append=True)
 
-
-    webhook = Webhook.from_url(
-        "https://discord.com/api/webhooks/949896242157223987/3vZb2XxNTvpQMlgF-Bp1Sxlcr5jnJFeS5J5nv6cTrQKw3uaQMxGgXsh8aFpCPaTDYrlX",
-        adapter=RequestsWebhookAdapter())
-    try:
-        webhook.send(f'Scan upload from {user_name}. Server: {server_id} Count: {total_count} Code: {r.status_code}')
-    except:
-        print('notification update error')
+    if func == 'price_insert' and env == 'prod':
+        webhook = Webhook.from_url(
+            "https://discord.com/api/webhooks/949896242157223987/3vZb2XxNTvpQMlgF-Bp1Sxlcr5jnJFeS5J5nv6cTrQKw3uaQMxGgXsh8aFpCPaTDYrlX",
+            adapter=RequestsWebhookAdapter())
+        try:
+            webhook.send(f'Scan upload from {user_name}. Server: {server_id} Count: {total_count} Code: {r.status_code}')
+        except:
+            print('notification update error')
 
     overlay.read()
     post_timer.stop()
@@ -311,6 +314,9 @@ def look_for_scroll(section, overlay):
         reference_img = cv2.imread(reference_image_file)
         res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        # print(f'scrollbar: {max_val}')
+        # file_name = resource_path('images/scrollbar_cap.png')
+        # cv2.imwrite(file_name, reference_grab)
         if max_val > 0.98:
             return True
         else:
