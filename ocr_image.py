@@ -83,6 +83,8 @@ def process_image(img):
     res = np.invert(res)
     # cv2.imshow('win1', res)
     # cv2.moveWindow('win1', 2560, 0)
+    # file_name = resource_path('images/processed_image.png')
+    # cv2.imwrite(file_name, res)
     return res
 
 
@@ -165,22 +167,27 @@ def ocr_pages():
 def ocr_items():
     global stop_loop
     if not ocr.get_test():
-        time.sleep(15)
+        time.sleep(5)
     else:
         time.sleep(2)
     ocr.update_overlay('log_output', 'Started extracting text from images', True)
     path = resource_path('temp/')
     while True:
         img_count2 = ocr.get_img_count2()
-        # print(f'img_count2 = {img_count2}')
-        # img_queue = ocr.get_img_queue()
+        img_cap_status = ocr.get_cap_state()
+
         img_dir = os.listdir(path)
         if len(img_dir) == 0:
-        # if len(img_queue) == 0:
-            print('queue is empty. stopping loop')
-            ocr.update_overlay('error_output', 'Ran out of images to process prematurely', True)
-            ocr.set_state('stopped')
-            break
+            if img_cap_status == 'running':
+                print('Waiting for more images')
+                ocr.update_overlay('status_bar', 'Waiting for more images.')
+                time.sleep(5)
+                continue
+            else:
+                print('queue is empty. stopping loop')
+                ocr.update_overlay('error_output', 'Ran out of images to process prematurely', True)
+                ocr.set_state('stopped')
+                break
         file_name = resource_path(f'temp/img-{img_count2}.png')
         if not os.path.isfile(file_name):
 
@@ -236,7 +243,6 @@ def ocr_items():
                         text.strip()
                     f_txt[i] = [text, txt['left'][count], txt['top'][count]]
                     i += 1
-
         prep_insert(f_txt, ocr.test, img_count2)
 
         ocr.set_img_count2(img_count2 + 1)
@@ -421,6 +427,7 @@ class OCR_Image:
         self.total = 0
         self.overlay_updates = []
         self.section_end = []
+        self.cap_state = 'running'
 
     def set_section_end(self, section_end):
         self.section_end.append(section_end)
@@ -436,6 +443,12 @@ class OCR_Image:
 
     def set_state(self, val):
         self.ocr_state = val
+
+    def set_cap_state(self, val):
+        self.cap_state = val
+
+    def get_cap_state(self):
+        return self.cap_state
 
     def set_env(self, env):
         self.env = env

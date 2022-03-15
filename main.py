@@ -653,8 +653,9 @@ def main():
             overlay.hide('resend')
             img_count = 1
             ocr_image.ocr.clean_insert_list()
-
+            ocr_image.ocr.set_cap_state('running')
             ocr_image.ocr.start_OCR()
+
             if test_run:
                 print('Starting TEST run')
                 overlay.updatetext('log_output', 'Test scan started', append=True)
@@ -718,7 +719,8 @@ def main():
                     ocr_cycle(pages, overlay, app_timer)
 
             enabled = False
-
+            ocr_image.ocr.set_cap_state('stopped')
+            overlay.updatetext('log_output', 'Image capture finished', append=True)
 
         ocr_state = ocr_image.ocr.get_state()
         if ocr_state == 'running':
