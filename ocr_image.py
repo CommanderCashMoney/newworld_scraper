@@ -203,6 +203,7 @@ def ocr_items():
         # print('img queue len: {}'.format(ocr.get_img_queue_len()))
         ocr.set_state('running')
         img = process_image(img)
+        img_copy = img
         ocr.remove_one_img_queue(img_count2)
         custom_config = """--psm 6 -c tessedit_char_whitelist="0123456789,.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:- \\"\\'" """
         txt = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
@@ -230,6 +231,7 @@ def ocr_items():
 
                             if text is not None and f_txt[y][0] is not None:
                                 f_txt[y][0] += ' ' + text.strip()
+
                         else:
                         # it's not a name, append it onto the end of the list
                             if text is not None:
