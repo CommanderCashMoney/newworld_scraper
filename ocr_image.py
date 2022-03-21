@@ -1,22 +1,21 @@
 import time
 import os
+from pathlib import Path
+
 import numpy as np
 import cv2
 import pytesseract
 from datetime import datetime
 import threading
 import sys
-from grabscreen import grab_screen
+
+from settings import SETTINGS
+from utils import get_endpoint_from_func_name, resource_path
+from utils.grabscreen import grab_screen
 import requests
 import json
 
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
-
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
 
 
 pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe')
@@ -24,10 +23,7 @@ pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe'
 
 def get_name_swaps(env):
     # env = 'prod'
-    if env == 'dev':
-        url = 'http://127.0.0.1:8080/nc/'
-    else:
-        url = 'https://nwmarketprices.com/nc/'
+    url = get_endpoint_from_func_name("nc", env, is_api=False)
     response = requests.get(url)
     response = response.json()
     l_names = json.loads(response['nc'])
@@ -49,10 +45,7 @@ def text_cleanup(text):
 
 def get_name_ids(env):
     # env = 'prod'
-    if env == 'dev':
-        url = 'http://127.0.0.1:8080/cn/'
-    else:
-        url = 'https://nwmarketprices.com/cn/'
+    url = get_endpoint_from_func_name("cn", env, is_api=False)
     response = requests.get(url)
     response = response.json()
     l_names = json.loads(response['cn'])
@@ -171,7 +164,7 @@ def ocr_items():
     else:
         time.sleep(2)
     ocr.update_overlay('log_output', 'Started extracting text from images', True)
-    path = resource_path('temp/')
+    path = SETTINGS.temp_app_data
     while True:
         img_count2 = ocr.get_img_count2()
         img_cap_status = ocr.get_cap_state()
@@ -188,15 +181,14 @@ def ocr_items():
                 ocr.update_overlay('error_output', 'Ran out of images to process prematurely', True)
                 ocr.set_state('stopped')
                 break
-        file_name = resource_path(f'temp/img-{img_count2}.png')
-        if not os.path.isfile(file_name):
-
+        file_path = SETTINGS.temp_app_data / f"img-{img_count2}.png"
+        if not file_path.is_file():
             print(f'couldnt find img_count2 = {img_count2}')
             ocr.update_overlay('error_output', f'Couldnt find the correct image for text extraction. id={img_count2}', True)
             ocr.set_state('stopped')
             break
         else:
-            img = cv2.imread(file_name)
+            img = cv2.imread(str(file_path))
 
         # file_name = 'testimgs/imgtest-{}.png'.format(img_count2)
         # cv2.imwrite(file_name, img)
@@ -431,6 +423,8 @@ class OCR_Image:
         self.section_end = []
         self.cap_state = 'running'
 
+
+
     def set_section_end(self, section_end):
         self.section_end.append(section_end)
 
@@ -462,8 +456,8 @@ class OCR_Image:
         return self.total
 
     def add_img(self, img, img_count):
-        file_name = resource_path(f'temp/img-{img_count}.png')
-        cv2.imwrite(file_name, img)
+        file_path = SETTINGS.temp_app_data / f"img-{img_count}.png"
+        cv2.imwrite(str(file_path), img)
 
         # self.image_queue[img_count] = img
         # self.image_queue.append((img, pages, section))
@@ -515,12 +509,12 @@ class OCR_Image:
     #     return self.image_queue
 
     def get_img_queue_len(self):
-        path = resource_path('temp/')
+        path = SETTINGS.temp_app_data
         img_dir = os.listdir(path)
         return len(img_dir)
 
     def remove_one_img_queue(self, img_count):
-        file_name = resource_path(f'temp/img-{img_count}.png')
+        file_name = SETTINGS.temp_app_data / f"img-{img_count}.png"
         os.remove(file_name)
         # self.image_queue.pop(img_count)
         # print(f'Removed: {img_count}')
@@ -591,9 +585,9 @@ class OCR_Image:
         self.total = 0
         print('All lists cleared')
 
-        dir = resource_path('temp/')
-        for f in os.listdir(dir):
-            os.remove(os.path.join(dir, f))
+        app_data_dir = SETTINGS.temp_app_data
+        for f in os.listdir(app_data_dir):
+            os.remove(os.path.join(app_data_dir, f))
 
 
 ocr = OCR_Image()

@@ -1,14 +1,15 @@
 import json
+
 import requests
 import cv2
-from grabscreen import grab_screen
+from utils.grabscreen import grab_screen
 import time
 import pytesseract
 import pynput
 import sys, os
-from win32gui import GetWindowText, GetForegroundWindow, BringWindowToTop
+from win32gui import GetWindowText, GetForegroundWindow
 import numpy as np
-import window_func
+from utils import window_func, resource_path
 from my_timer import Timer
 from datetime import datetime, timedelta
 import overlay_settings_nw_tp
@@ -17,6 +18,7 @@ import ocr_image
 import difflib
 from discord import Webhook, RequestsWebhookAdapter
 
+from utils.__init__ import get_endpoint_from_func_name
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -32,10 +34,7 @@ mouse = pynput.mouse.Controller()
 screen_center = (1200,700)
 # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
+
 
 pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe')
 
@@ -123,28 +122,12 @@ def look_for_tp():
     return False
 
 
-
-
 def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func='price_insert'):
     global mytoken, prices_data_resend
     post_timer = Timer('post')
     post_timer.start()
+    url = get_endpoint_from_func_name(func, env)
 
-    if func == 'price_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/scanner_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/scanner_upload/'
-    if func == 'name_cleanup_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/name_cleanup_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/name_cleanup_upload/'
-    if func == 'confirmed_names_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/confirmed_names_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/confirmed_names_upload/'
     print('Starting submit to API')
     overlay.updatetext('status_bar', 'API Submit started')
     overlay.updatetext('log_output', 'API Submit started', append=True)
@@ -503,10 +486,7 @@ server_access_ids = []
 def login(overlay, env, un, pw):
     global mytoken, user_name, access_groups, server_access_ids
 
-    if env == 'dev':
-        url = 'http://localhost:8080/api/token/'
-    else:
-        url = 'https://nwmarketprices.com/api/token/'
+    url = get_endpoint_from_func_name("token", env)
     print('Logging in')
     overlay.disable('login')
     overlay.updatetext('login_status', 'logging in..')
@@ -554,15 +534,10 @@ def main():
     round_timer.start()
     loading_timer.start()
 
-
-
     while True:
-
-
         if 'advanced' in access_groups:
             overlay.show_advanced()
         event, values = overlay.read()
-
         if values['test_t']:
             test_run = True
             ocr_image.ocr.test_run(True)
@@ -763,4 +738,5 @@ def main():
                     overlay.show_confirm()
 
 
-main()
+if __name__ == "__main__":
+    main()
