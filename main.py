@@ -294,8 +294,9 @@ def next_page():
     mouse.position = (1300, 480)
     time.sleep(0.1)
 
-
+page_stuck_counter = 0
 def look_for_scroll(section, overlay):
+    global page_stuck_counter
     look_for_cancel_or_refresh()
     # look for scrollbar
     if section == 'top':
@@ -318,14 +319,16 @@ def look_for_scroll(section, overlay):
         # file_name = resource_path('images/scrollbar_cap.png')
         # cv2.imwrite(file_name, reference_grab)
         if max_val > 0.98:
+            page_stuck_counter = 0
             return True
         else:
-            print('loading_scroll')
+            print(f'loading_scroll {section}')
             overlay.updatetext('status_bar', 'Loading page')
             overlay.read()
             time.sleep(0.1)
-            if loading_timer.elapsed() > 5:
+            if loading_timer.elapsed() > 3:
                 #we have been loading too long. Somthing is wrong. Skip it.
+                page_stuck_counter += 1
                 print('loading too long. skip it')
                 overlay.updatetext('error_output', 'Took too long waiting for page to load', append=True)
                 overlay.read()
@@ -406,7 +409,7 @@ def get_updates_from_ocr(overlay):
 
 
 def ocr_cycle(pages, overlay, app_timer):
-    global enabled, img_count, canceled
+    global enabled, img_count, canceled, page_stuck_counter
 
     for x in range(pages):
         if look_for_tp():
@@ -416,6 +419,7 @@ def ocr_cycle(pages, overlay, app_timer):
                 canceled = True
                 overlay.read()
                 return True
+            overlay.updatetext('pages_left', pages-1)
             img = get_img(pages, 'top', overlay)
             ocr_image.ocr.add_img(img, img_count)
             overlay.updatetext('key_count', img_count)
@@ -470,6 +474,12 @@ def ocr_cycle(pages, overlay, app_timer):
             # cv2.imwrite(file_name, img)
             img_count += 1
 
+            if page_stuck_counter > 2:
+                # got stuck looking for the scrollbars. exit out and skip section
+                print('page stuck too long. moving to next section')
+                overlay.updatetext('error_output', 'Page stuck too long. Moving to next section', append=True)
+                page_stuck_counter = 0
+                break
 
             next_page()
             pages -= 1
@@ -674,25 +684,39 @@ def main():
                     round_timer.restart()
                     now = datetime.now()
                     run_start = now.strftime("%m/%d/%Y %H:%M:%S")
-                    # sections_list = [(368, 488), (170, 796), (368, 568), (170, 796), (368, 632),(170, 796), (368, 708), (170, 796), (368, 788), (170, 796), (368, 855), (170, 796), (368, 936), (170, 796), (368, 990), (170, 796), (368, 1068),(165, 900), (165, 985), (165, 1091)]
-
-                    # sections_list = [(165, 985)]
-                    # sections_list = [(368, 488), (170, 796), (368, 568), (368, 936), (170, 796), (368, 990)]
-                    sections_list = [(368, 936), (170, 796), (368, 990)]
-                    # print('auto scan started. Scanning all categories')
-
+                    section_list = {
+                        'Raw Resources': (368, 488),
+                        'Resources Reset 1': (170, 796),
+                        'Refined Resources': (368, 568),
+                        'Resources Reset 2': (170, 796),
+                        'Cooking Ingredients': (368, 632),
+                        'Resources Reset 3': (170, 796),
+                        'Craft Mods': (368, 708),
+                        'Resources Reset 4': (170, 796),
+                        'Components': (368, 788),
+                        'Resources Reset 5': (170, 796),
+                        'Potion Reagents': (368, 855),
+                        'Dyes': (368, 936),
+                        'Resources Reset 6': (170, 796),
+                        'Azoth': (368, 990),
+                        'Resources Reset 7': (170, 796),
+                        'Arcana': (368, 1068),
+                        'Consumables': (165, 900),
+                        'Ammunition': (165, 985),
+                        'House Furnishings': (165, 1091)
+                    }
                     keypress_exit = False
                     # click resources twice because screen won't have focus
                     click('left', (170, 796))
                     time.sleep(0.2)
                     click('left', (170, 796))
                     time.sleep(1)
-                    for x in sections_list:
-                        click('left', x)
+                    for key in section_list:
+                        click('left', section_list[key])
                         time.sleep(1)
-
                         mouse.position = (1300, 480)
-                        if x != (170, 796):
+                        if section_list[key] != (170, 796):
+                            print(f'Starting new section: {key}')
                             keypress_exit = ocr_cycle(ocr_image.ocr.get_page_count(), overlay, app_timer)
                             if keypress_exit:
                                 overlay.updatetext('error_output', 'Exit key press', append=True)

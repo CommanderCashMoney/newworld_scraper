@@ -31,7 +31,7 @@ class overlay():
 
             ]], visible=False)],
             [sg.Text('Status: '), sg.Text('Ready', key='status_bar', auto_size_text=True)],
-            [sg.Text('Elapsed Time: '), sg.Text('', key='elapsed', auto_size_text=True)],
+            [sg.Text('Elapsed Time: '), sg.Text('', key='elapsed', auto_size_text=True), sg.Text('Pages left in section: '), sg.Text('', key='pages_left', auto_size_text=True)],
             [sg.Text('Images captured: '), sg.Text('0', key='key_count', auto_size_text=True), sg.Text('Images left to parse: '), sg.Text('0', key='ocr_count', auto_size_text=True)],
             [sg.Text('Accuracy: '), sg.Text('0%', key='accuracy', auto_size_text=True), sg.Text('Listings processed: '), sg.Text('0', key='listings_count', auto_size_text=True)],
             [sg.Text('Price fails: '), sg.Text('0', key='p_fails', auto_size_text=True), sg.Text('Data Rejects: '), sg.Text('0', key='rejects', auto_size_text=True)],
@@ -139,7 +139,7 @@ class overlay():
 
 
 
-#
+
 # overlay = overlay()
 #
 # enabled = False

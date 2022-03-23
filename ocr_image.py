@@ -62,7 +62,7 @@ def get_name_ids(env):
     return dict_confirmed_names
 
 
-def process_image(img):
+def process_image(img, blur=3):
     scale_percent = 250  # percent of original size
     width = int(img.shape[1] * scale_percent / 100)
     height = int(img.shape[0] * scale_percent / 100)
@@ -78,7 +78,7 @@ def process_image(img):
 
     res = cv2.cvtColor(res, cv2.COLOR_RGB2GRAY)
 
-    res = cv2.GaussianBlur(res, (3, 3), cv2.BORDER_ISOLATED)
+    res = cv2.GaussianBlur(res, (blur, blur), cv2.BORDER_ISOLATED)
     res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     res = np.invert(res)
     # cv2.imshow('win1', res)
@@ -142,7 +142,7 @@ def price_check(curr_price, prev_price, s_curr_price):
 def ocr_pages():
     aoi = (2233, 287, 140, 32)
     img = grab_screen(aoi)
-    img = process_image(img)
+    img = process_image(img, blur=1)
     custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
     txt = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
     pages = txt['text'][-1]
@@ -151,7 +151,7 @@ def ocr_pages():
         if int(pages) < 501:
             return int(pages)
         else:
-            print('page count greater than 300')
+            print('page count greater than 500')
             ocr.update_overlay('error_output',
                                    'Page count greater than 500', True)
             return 1
