@@ -330,7 +330,7 @@ def look_for_scroll(section, overlay):
                 #we have been loading too long. Somthing is wrong. Skip it.
                 page_stuck_counter += 1
                 print('loading too long. skip it')
-                overlay.updatetext('error_output', 'Took too long waiting for page to load', append=True)
+                overlay.updatetext(f'error_output', f'Took too long waiting for page to load - {page_stuck_counter}', append=True)
                 overlay.read()
                 return True
 
@@ -696,10 +696,11 @@ def main():
                         'Components': (368, 788),
                         'Resources Reset 5': (170, 796),
                         'Potion Reagents': (368, 855),
-                        'Dyes': (368, 936),
                         'Resources Reset 6': (170, 796),
-                        'Azoth': (368, 990),
+                        'Dyes': (368, 936),
                         'Resources Reset 7': (170, 796),
+                        'Azoth': (368, 990),
+                        'Resources Reset 8': (170, 796),
                         'Arcana': (368, 1068),
                         'Consumables': (165, 900),
                         'Ammunition': (165, 985),
