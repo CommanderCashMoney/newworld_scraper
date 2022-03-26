@@ -12,7 +12,8 @@ class Environment(Enum):
 class Settings(BaseSettings):
     VERSION = "1.0.8"
 
-    environment: Environment = Environment.dev
+    environment: Environment = Environment.prod
+
     nwmp_dev_api_host: str = "http://localhost:8080/"
     nwmp_prod_api_host: str = "https://nwmarketprices.com/"
     # user/pass can be set for development purposes in .env to avoid having to type each time
