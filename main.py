@@ -19,7 +19,7 @@ import difflib
 
 from settings import SETTINGS
 from utils.api import check_latest_version, version_endpoint
-from utils.self_updating import download_to_path, install_new_version, perform_update_download
+from utils.self_updating import installer_file_path, install_new_version, perform_update_download
 
 
 
@@ -581,7 +581,7 @@ def version_update_events(event, values) -> None:
             overlay.window["download_update"].update(visible=False)
             overlay.set_spinner_visibility(False)
             return
-        install_func = lambda: install_new_version(download_to_path())  # noqa
+        install_func = lambda: install_new_version(installer_file_path())  # noqa
         overlay.window.perform_long_operation(install_func, installer_launched_event)
 
 
