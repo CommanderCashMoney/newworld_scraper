@@ -11,13 +11,15 @@ import numpy as np
 import window_func
 from my_timer import Timer
 from datetime import datetime, timedelta
-import overlay_settings_nw_tp
+from overlay_settings_nw_tp import overlay
 import ctypes
 import ocr_image
 import difflib
 from discord import Webhook, RequestsWebhookAdapter
 
 from settings import SETTINGS
+from utils.api import check_latest_version
+from utils.self_updating import install_new_version, perform_update_download
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -149,11 +151,10 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
     overlay.updatetext('log_output', 'API Submit started', append=True)
     overlay.read()
 
-    data = {
+    r = requests.post(url, timeout=200, json={
         "version": SETTINGS.VERSION,
         "price_data": json.loads(json_data)
-    }
-    r = requests.post(url, timeout=200, json=data, headers={'Authorization': f'Bearer {mytoken}'})
+    }, headers={'Authorization': f'Bearer {mytoken}'})
     print(f'{func} API submit time: {post_timer.elapsed()}')
     overlay.updatetext('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
     overlay.updatetext('log_output', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}', append=True)
@@ -161,8 +162,7 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
         overlay.updatetext('log_output', 'Submission Sucessful!', append=True)
     elif r.status_code == 401:
         # credentials expired. prompt login
-        overlay.updatetext('error_output', f'Credentials have expired, sending back to login',
-                           append=True)
+        overlay.updatetext('error_output', f'Credentials have expired, sending back to login', append=True)
         prices_data_resend = (json_data, env, total_count, server_id, func)
         overlay.show_login()
         overlay.enable('login')
@@ -570,7 +570,24 @@ img_count = 1
 current_page = 1
 canceled = False
 prices_data_resend = ()
-overlay = overlay_settings_nw_tp.overlay()
+version_fetched_event = "-VERSION FETCHED-"
+download_new_version_event = "-DOWNLOAD NEW VERSION-"
+installer_launched_event = "-INSTALLING-"
+
+
+def version_update_events(event, values) -> None:
+    if event == version_fetched_event:
+        overlay.version_check_complete(values[version_fetched_event])
+    elif event == "download_update":
+        download_func = lambda: perform_update_download(overlay.download_link)  # noqa
+        overlay.window.perform_long_operation(download_func, download_new_version_event)
+        overlay.window["download_update"].update(text="Downloading...", disabled=True)
+        overlay.set_spinner_visibility(True)
+    elif event == download_new_version_event:
+        install_func = lambda: install_new_version(values[download_new_version_event])
+        overlay.window.perform_long_operation(install_func, installer_launched_event)
+
+
 def main():
     auto_scan_sections = False
     run_start = None
@@ -579,15 +596,16 @@ def main():
     app_timer.start()
     round_timer.start()
     loading_timer.start()
-
-
+    overlay.window.perform_long_operation(check_latest_version, version_fetched_event)
 
     while True:
-
-
         if 'advanced' in access_groups:
             overlay.show_advanced()
         event, values = overlay.read()
+        version_update_events(event, values)
+        if event is None or event == installer_launched_event:  # quit
+            break
+        overlay.update_spinner()
 
         if values['test_t']:
             test_run = True

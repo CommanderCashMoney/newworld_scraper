@@ -9,8 +9,15 @@ class Environment(Enum):
     dev = "dev"
 
 
+class Versioning(Enum):
+    major = "major"
+    minor = "minor"
+    patch = "patch"
+
+
 class Settings(BaseSettings):
-    VERSION = "1.0.8"
+    VERSION = "1.0.7"
+    FORCE_UPDATE_ON_VERSION = Versioning.patch
 
     environment: Environment = Environment.prod
 
