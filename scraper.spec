@@ -1,23 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
-added_files = [
 
-("images", "images"),
-("nw_images", "nw_images"),
-("temp", "temp"),
-("tesseract/", "tesseract")
-
-]
-added_binaries = [
-('tesseract/tesseract.exe', 'tesseract')
-]
 
 block_cipher = None
 
 
-a = Analysis(['main.py'],
+a = Analysis(['scraper.spectarget_env', '=', 'dev'],
              pathex=[],
-             binaries=added_binaries,
-             datas=added_files,
+             binaries=[],
+             datas=[],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
@@ -27,7 +17,6 @@ a = Analysis(['main.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 
@@ -37,7 +26,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,  
           [],
-          name='Trading_Post_Scraper',
+          name='scraper',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,

@@ -10,18 +10,24 @@ class Overlay():
 
     def __init__(self):
         self.spinner_step = 0  # set to -1 to hide
-        self._show_spinner = False
+        self._show_spinner = True
         self.server_version: str = None
         self.download_link: str = None
         is_dev = SETTINGS.is_dev
         layout1 = [
             [
-                sg.Text('Trade Scraper'), sg.Text('Env?', visible=is_dev),
+                sg.Text('Trade Scraper', key="title"), sg.Text('Env?', visible=is_dev),
                 sg.Radio('Prod', group_id='4', key='prod', default=not is_dev, visible=is_dev),
                 sg.Radio('Dev', group_id='4', key='dev', default=is_dev, visible=is_dev)
             ],
-            [sg.Text('User Name: '), sg.InputText(key='un', size=(25, 1), default_text=SETTINGS.api_username)],
-            [sg.Text('Password:   '), sg.InputText(key='pw', size=(25, 1), password_char='*', default_text=SETTINGS.api_password)],
+            [
+                sg.Text('User Name: ', key="un_text"),
+                sg.InputText(key='un', size=(25, 1), default_text=SETTINGS.api_username)
+            ],
+            [
+                sg.Text('Password:   ', key="pw_text"),
+                sg.InputText(key='pw', size=(25, 1), password_char='*', default_text=SETTINGS.api_password)
+            ],
             [
                 sg.Button('Checking Version', key='login', size=(15, 1), bind_return_key=True, disabled=True),
                 sg.Text('', key='login_status'),

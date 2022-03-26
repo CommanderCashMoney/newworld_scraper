@@ -1,3 +1,4 @@
+import traceback
 import json
 import requests
 import cv2
@@ -11,19 +12,18 @@ import numpy as np
 import window_func
 from my_timer import Timer
 from datetime import datetime, timedelta
-from overlay_settings_nw_tp import overlay
+from overlay_settings_nw_tp import overlay  # noqa
 import ctypes
 import ocr_image
 import difflib
 from discord import Webhook, RequestsWebhookAdapter
 
 from settings import SETTINGS
-from utils.api import check_latest_version
-from utils.self_updating import install_new_version, perform_update_download
+from utils.api import check_latest_version, version_endpoint
+from utils.self_updating import download_to_path, install_new_version, perform_update_download
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
-    import traceback
     traceback.print_exception(exc_type, exc_value, tb)
     sys.exit(-1)
 
@@ -577,15 +577,40 @@ installer_launched_event = "-INSTALLING-"
 
 def version_update_events(event, values) -> None:
     if event == version_fetched_event:
-        overlay.version_check_complete(values[version_fetched_event])
+        if values[version_fetched_event]:
+            overlay.version_check_complete(values[version_fetched_event])
+            return
+        # otherwise, we error out.
+        hide = ["un_text", "un", "pw_text", "pw", "login"]
+        for element in hide:
+            overlay.window[element].update(visible=False)
+        endpoint = version_endpoint()
+        overlay.window["title"].update(
+            f"Version check failed! :(\n\nNo connection to {endpoint}\n\nPlease let us know on discord."
+        )
+        overlay.set_spinner_visibility(False)
     elif event == "download_update":
         download_func = lambda: perform_update_download(overlay.download_link)  # noqa
         overlay.window.perform_long_operation(download_func, download_new_version_event)
         overlay.window["download_update"].update(text="Downloading...", disabled=True)
         overlay.set_spinner_visibility(True)
     elif event == download_new_version_event:
-        install_func = lambda: install_new_version(values[download_new_version_event])
+        if values[download_new_version_event] is not None:
+            exc = values[download_new_version_event]
+            overlay.window["download_update_text"].update(
+                f"Couldn't download file.\n\n"
+                f"Please check the installer is not already open.\n\n"
+                f"Please close application once you check the error log."
+            )
+            formatted_exception = "".join(traceback.format_exception(None, exc, exc.__traceback__))
+            print(formatted_exception)
+            overlay.window["download_update"].update(visible=False)
+            overlay.set_spinner_visibility(False)
+            return
+        install_func = lambda: install_new_version(download_to_path())  # noqa
         overlay.window.perform_long_operation(install_func, installer_launched_event)
+
+
 
 
 def main():
