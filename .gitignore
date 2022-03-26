@@ -141,4 +141,5 @@ cython_debug/
 
 # project specific
 build/
+dist/
 /test_img_cap.py
