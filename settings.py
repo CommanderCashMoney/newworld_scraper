@@ -16,7 +16,7 @@ class Versioning(Enum):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.0.7"
+    VERSION = "1.0.8"
     FORCE_UPDATE_ON_VERSION = Versioning.patch
 
     environment: Environment = Environment.prod

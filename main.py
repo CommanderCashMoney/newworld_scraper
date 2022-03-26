@@ -193,54 +193,33 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
 
 def prep_for_api_insert(data_list, server_id, env, overlay):
     global user_name, access_groups
-    s = ''
-    line = ''
-    total_count = 0
-    # json_data = json.dumps(data_list)
-    # {"price": "0.69", "name": "Test0", "timestamp": "2021-01-01T12:11", "server_id": 1},
-    for x in data_list:
-        x.append(server_id)
-        if len(x) > 6:
-            print('ERROR - saw an extra data column: {}'.format(x))
-            continue
-        for count, value in enumerate(x):
-            if count == 0:
-                line = line + '{' + f'"name": {json.dumps(value)}, '
-            if count == 1:
-                line = line + f'"price": "{value}", '
-            if count == 2:
-                if not value:
-                    value = 1
-                line = line + f'"avail": {value}, '
-            if count == 3:
-                dt = datetime.strptime(value,'%m/%d/%Y %H:%M:%S')
-                dt.strftime('%Y-%m-%dT%X')
-                # 1/25/2022 17:34:11
-                line = line + f'"timestamp": "{dt}", '
-            if count == 4:
-                line = line + f'"name_id": {value}, '
-            if count == 5:
-                line = line + f'"server_id": "{value}", '
-                line = line + f'"username": "{user_name}", '
-                if 'scanner_user' in access_groups:
-                    line = line + '"approved": "True"}, '
-                else:
-                    line = line + '"approved": "False"}, '
-
-        s = f'{s}{line}'
-        line = ''
-        total_count += 1
-    s = s[:-2]
-    s = f'[{s}]'
-
-    api_insert(s, env, overlay, user_name, total_count, server_id)
+    correct_number_of_columns = 5
+    correct_columns = [row for row in data_list if len(row) == correct_number_of_columns]
+    bad_columns = [row for row in data_list if len(row) != correct_number_of_columns]
+    if bad_columns:
+        print(f"The following rows had bad data: {bad_columns}")
+    payload = [
+        {
+            "name": row[0],
+            "price": str(row[1]),
+            "avail": row[2] or 1,
+            "timestamp": row[3],
+            "name_id": row[4],
+            "server_id": server_id,
+            "version": SETTINGS.VERSION,
+            "username": user_name,
+            "approved": 'scanner_user' in access_groups
+        }
+        for row in correct_columns
+    ]
+    total_count = len(payload)
+    api_insert(json.dumps(payload, default=str), env, overlay, user_name, len(payload), server_id)
 
     overlay.updatetext('log_output', f'Total clean listings added: {total_count}', append=True)
     overlay.updatetext('status_bar', 'Ready')
     overlay.read()
     print(f'totalcount: {total_count}')
     ocr_image.ocr.set_state('ready')
-
 
 
 def add_single_item(clean_list, env, func, overlay):
