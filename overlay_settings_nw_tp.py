@@ -8,7 +8,7 @@ from settings import SETTINGS
 class overlay():
 
     def __init__(self):
-        is_dev = SETTINGS.prod
+        is_dev = SETTINGS.is_dev
         layout1 = [
             [
                 sg.Text('Trade Scraper'), sg.Text('Env?', visible=is_dev),
