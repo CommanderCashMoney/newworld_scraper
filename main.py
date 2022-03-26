@@ -153,7 +153,8 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
 
     r = requests.post(url, timeout=200, json={
         "version": SETTINGS.VERSION,
-        "price_data": json.loads(json_data)
+        "price_data": json.loads(json_data),
+        "server_id": server_id
     }, headers={'Authorization': f'Bearer {mytoken}'})
     print(f'{func} API submit time: {post_timer.elapsed()}')
     overlay.updatetext('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
@@ -205,15 +206,18 @@ def prep_for_api_insert(data_list, server_id, env, overlay):
             "avail": row[2] or 1,
             "timestamp": row[3],
             "name_id": row[4],
-            "server_id": server_id,
-            "version": SETTINGS.VERSION,
-            "username": user_name,
-            "approved": 'scanner_user' in access_groups
         }
         for row in correct_columns
     ]
     total_count = len(payload)
-    api_insert(json.dumps(payload, default=str), env, overlay, user_name, len(payload), server_id)
+    api_insert(
+        json.dumps(payload, default=str),
+        env,
+        overlay,
+        user_name,
+        len(payload),
+        server_id
+    )
 
     overlay.updatetext('log_output', f'Total clean listings added: {total_count}', append=True)
     overlay.updatetext('status_bar', 'Ready')
