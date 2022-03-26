@@ -2,16 +2,21 @@ import PySimpleGUI as sg
 from getkeys import key_check
 import time
 
+from settings import SETTINGS
+
 
 class overlay():
 
     def __init__(self):
-
-        layout1 = [[
-             # sg.Text('Trade Scraper'),  sg.Text('Env?', visible=True), sg.Radio('Prod', group_id='4', key='prod', default=True, visible=True), sg.Radio('Dev', group_id='4', key='dev', visible=True)],
-            sg.Text('Trade Scraper'), sg.Text('Env?', visible=False), sg.Radio('Prod', group_id='4', key='prod', default=True, visible=False), sg.Radio('Dev', group_id='4', key='dev', visible=False)],
-            [sg.Text('User Name: '), sg.InputText(key='un', size=(25, 1))],
-            [sg.Text('Password:   '), sg.InputText(key='pw', size=(25, 1), password_char='*')],
+        is_dev = SETTINGS.is_dev
+        layout1 = [
+            [
+                sg.Text('Trade Scraper'), sg.Text('Env?', visible=is_dev),
+                sg.Radio('Prod', group_id='4', key='prod', default=not is_dev, visible=is_dev),
+                sg.Radio('Dev', group_id='4', key='dev', default=is_dev, visible=is_dev)
+            ],
+            [sg.Text('User Name: '), sg.InputText(key='un', size=(25, 1), default_text=SETTINGS.api_username)],
+            [sg.Text('Password:   '), sg.InputText(key='pw', size=(25, 1), password_char='*', default_text=SETTINGS.api_password)],
             [sg.Button('Login', key='login', size=(15, 1), bind_return_key=True), sg.Text('', key='login_status')],
         ]
 
