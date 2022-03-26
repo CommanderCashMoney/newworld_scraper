@@ -17,6 +17,7 @@ import ocr_image
 import difflib
 from discord import Webhook, RequestsWebhookAdapter
 
+from settings import SETTINGS
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -123,8 +124,6 @@ def look_for_tp():
     return False
 
 
-
-
 def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func='price_insert'):
     global mytoken, prices_data_resend
     post_timer = Timer('post')
@@ -149,12 +148,16 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
     overlay.updatetext('status_bar', 'API Submit started')
     overlay.updatetext('log_output', 'API Submit started', append=True)
     overlay.read()
-    r = requests.post(url, timeout=200, data=json_data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {mytoken}'})
+
+    data = {
+        "version": SETTINGS.VERSION,
+        "price_data": json.loads(json_data)
+    }
+    r = requests.post(url, timeout=200, json=data, headers={'Authorization': f'Bearer {mytoken}'})
     print(f'{func} API submit time: {post_timer.elapsed()}')
     overlay.updatetext('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
     overlay.updatetext('log_output', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}', append=True)
     if r.status_code == 201:
-
         overlay.updatetext('log_output', 'Submission Sucessful!', append=True)
     elif r.status_code == 401:
         # credentials expired. prompt login
@@ -164,6 +167,9 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
         overlay.show_login()
         overlay.enable('login')
         overlay.unhide('resend')
+    elif r.status_code in [200, 400]:
+        overlay.updatetext('error_output', r.json()["message"], append=True)
+        print(r.json())
     else:
         prices_data_resend = (json_data, env, total_count, server_id, func)
         overlay.unhide('resend')
@@ -523,8 +529,13 @@ def login(overlay, env, un, pw):
     overlay.read()
     json_data = {"username": un, "password": pw}
     json_data = json.dumps(json_data)
-    r = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
-    if r.status_code == 200:
+    try:
+        r = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    except requests.exceptions.ConnectionError:
+        r = None
+
+    status_code = r.status_code if r is not None else None
+    if status_code == 200:
         print('login successful')
         json_response = r.json()
         mytoken = json_response['access']
@@ -536,6 +547,11 @@ def login(overlay, env, un, pw):
                 server_access_ids.append(x[7:])
         overlay.updatetext('server_select', server_access_ids)
         overlay.show_main()
+    elif r is None:
+        print("Login failed - no connection to server")
+        overlay.enable('login')
+        overlay.updatetext('login_status', 'login failed')
+        overlay.read()
     else:
         print('login failed!')
         print(r.status_code)
