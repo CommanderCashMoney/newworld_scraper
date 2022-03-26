@@ -16,11 +16,11 @@ from overlay_settings_nw_tp import overlay  # noqa
 import ctypes
 import ocr_image
 import difflib
-from discord import Webhook, RequestsWebhookAdapter
 
 from settings import SETTINGS
 from utils.api import check_latest_version, version_endpoint
 from utils.self_updating import download_to_path, install_new_version, perform_update_download
+
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -176,15 +176,6 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
         overlay.unhide('resend')
         overlay.enable('resend')
         overlay.updatetext('error_output', f'Error occurred while submitting data to API. Status code: {r.status_code}', append=True)
-
-    if func == 'price_insert' and env == 'prod':
-        webhook = Webhook.from_url(
-            "https://discord.com/api/webhooks/949896242157223987/3vZb2XxNTvpQMlgF-Bp1Sxlcr5jnJFeS5J5nv6cTrQKw3uaQMxGgXsh8aFpCPaTDYrlX",
-            adapter=RequestsWebhookAdapter())
-        try:
-            webhook.send(f'Scan upload from {user_name}. Server: {server_id} Count: {total_count} Code: {r.status_code}')
-        except:
-            print('notification update error')
 
     overlay.read()
     post_timer.stop()
