@@ -396,9 +396,8 @@ def prep_insert(d_items, testrun, img_count2):
                 acc = 100
             ocr.update_overlay('accuracy', f'{acc}%')
 
-            now = datetime.now()
-            dt_string = now.strftime("%m/%d/%Y %H:%M:%S")
-            clean_list.append(dt_string)
+            dt = datetime.utcnow()
+            clean_list.append(dt)
             clean_list.append(name_id)
             if not testrun:
 

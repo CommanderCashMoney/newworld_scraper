@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from typing import Union
 from urllib.parse import urljoin
 
 from settings import SETTINGS
@@ -23,7 +24,10 @@ def get_endpoint_from_func_name(func: str, target_env: str, is_api: bool = True)
     return urljoin(base_url, relative_url)
 
 
-def resource_path(relative_path):
+def resource_path(relative_path: Path, as_path=False) -> Union[str, Path]:
     """ Get absolute path to resource, works for dev and for PyInstaller """
     base_path = getattr(sys, '_MEIPASS', Path(os.path.abspath(__file__)).parent.parent)
-    return os.path.join(base_path, relative_path)
+    path_obj = Path(base_path) / relative_path
+    if as_path:
+        return path_obj
+    return str(path_obj)

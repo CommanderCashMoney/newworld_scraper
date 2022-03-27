@@ -1,3 +1,4 @@
+import traceback
 import json
 import requests
 import cv2
@@ -11,16 +12,18 @@ import numpy as np
 import window_func
 from my_timer import Timer
 from datetime import datetime, timedelta
-import overlay_settings_nw_tp
+from overlay_settings_nw_tp import overlay  # noqa
 import ctypes
 import ocr_image
 import difflib
-from discord import Webhook, RequestsWebhookAdapter
+
+from settings import SETTINGS
+from utils.api import check_latest_version, version_endpoint
+from utils.self_updating import installer_file_path, install_new_version, perform_update_download
 
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
-    import traceback
     traceback.print_exception(exc_type, exc_value, tb)
     sys.exit(-1)
 
@@ -123,8 +126,6 @@ def look_for_tp():
     return False
 
 
-
-
 def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func='price_insert'):
     global mytoken, prices_data_resend
     post_timer = Timer('post')
@@ -149,35 +150,32 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
     overlay.updatetext('status_bar', 'API Submit started')
     overlay.updatetext('log_output', 'API Submit started', append=True)
     overlay.read()
-    r = requests.post(url, timeout=200, data=json_data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {mytoken}'})
+
+    r = requests.post(url, timeout=200, json={
+        "version": SETTINGS.VERSION,
+        "price_data": json.loads(json_data),
+        "server_id": server_id
+    }, headers={'Authorization': f'Bearer {mytoken}'})
     print(f'{func} API submit time: {post_timer.elapsed()}')
     overlay.updatetext('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
     overlay.updatetext('log_output', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}', append=True)
     if r.status_code == 201:
-
         overlay.updatetext('log_output', 'Submission Sucessful!', append=True)
     elif r.status_code == 401:
         # credentials expired. prompt login
-        overlay.updatetext('error_output', f'Credentials have expired, sending back to login',
-                           append=True)
+        overlay.updatetext('error_output', f'Credentials have expired, sending back to login', append=True)
         prices_data_resend = (json_data, env, total_count, server_id, func)
         overlay.show_login()
         overlay.enable('login')
         overlay.unhide('resend')
+    elif r.status_code in [200, 400]:
+        overlay.updatetext('error_output', r.json()["message"], append=True)
+        print(r.json())
     else:
         prices_data_resend = (json_data, env, total_count, server_id, func)
         overlay.unhide('resend')
         overlay.enable('resend')
         overlay.updatetext('error_output', f'Error occurred while submitting data to API. Status code: {r.status_code}', append=True)
-
-    if func == 'price_insert' and env == 'prod':
-        webhook = Webhook.from_url(
-            "https://discord.com/api/webhooks/949896242157223987/3vZb2XxNTvpQMlgF-Bp1Sxlcr5jnJFeS5J5nv6cTrQKw3uaQMxGgXsh8aFpCPaTDYrlX",
-            adapter=RequestsWebhookAdapter())
-        try:
-            webhook.send(f'Scan upload from {user_name}. Server: {server_id} Count: {total_count} Code: {r.status_code}')
-        except:
-            print('notification update error')
 
     overlay.read()
     post_timer.stop()
@@ -187,54 +185,36 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
 
 def prep_for_api_insert(data_list, server_id, env, overlay):
     global user_name, access_groups
-    s = ''
-    line = ''
-    total_count = 0
-    # json_data = json.dumps(data_list)
-    # {"price": "0.69", "name": "Test0", "timestamp": "2021-01-01T12:11", "server_id": 1},
-    for x in data_list:
-        x.append(server_id)
-        if len(x) > 6:
-            print('ERROR - saw an extra data column: {}'.format(x))
-            continue
-        for count, value in enumerate(x):
-            if count == 0:
-                line = line + '{' + f'"name": {json.dumps(value)}, '
-            if count == 1:
-                line = line + f'"price": "{value}", '
-            if count == 2:
-                if not value:
-                    value = 1
-                line = line + f'"avail": {value}, '
-            if count == 3:
-                dt = datetime.strptime(value,'%m/%d/%Y %H:%M:%S')
-                dt.strftime('%Y-%m-%dT%X')
-                # 1/25/2022 17:34:11
-                line = line + f'"timestamp": "{dt}", '
-            if count == 4:
-                line = line + f'"name_id": {value}, '
-            if count == 5:
-                line = line + f'"server_id": "{value}", '
-                line = line + f'"username": "{user_name}", '
-                if 'scanner_user' in access_groups:
-                    line = line + '"approved": "True"}, '
-                else:
-                    line = line + '"approved": "False"}, '
-
-        s = f'{s}{line}'
-        line = ''
-        total_count += 1
-    s = s[:-2]
-    s = f'[{s}]'
-
-    api_insert(s, env, overlay, user_name, total_count, server_id)
+    correct_number_of_columns = 5
+    correct_columns = [row for row in data_list if len(row) == correct_number_of_columns]
+    bad_columns = [row for row in data_list if len(row) != correct_number_of_columns]
+    if bad_columns:
+        print(f"The following rows had bad data: {bad_columns}")
+    payload = [
+        {
+            "name": row[0],
+            "price": str(row[1]),
+            "avail": row[2] or 1,
+            "timestamp": row[3],
+            "name_id": row[4],
+        }
+        for row in correct_columns
+    ]
+    total_count = len(payload)
+    api_insert(
+        json.dumps(payload, default=str),
+        env,
+        overlay,
+        user_name,
+        len(payload),
+        server_id
+    )
 
     overlay.updatetext('log_output', f'Total clean listings added: {total_count}', append=True)
     overlay.updatetext('status_bar', 'Ready')
     overlay.read()
     print(f'totalcount: {total_count}')
     ocr_image.ocr.set_state('ready')
-
 
 
 def add_single_item(clean_list, env, func, overlay):
@@ -521,10 +501,15 @@ def login(overlay, env, un, pw):
     overlay.disable('login')
     overlay.updatetext('login_status', 'logging in..')
     overlay.read()
-    json_data = {"username": un, "password": pw}
+    json_data = {"username": un, "password": pw, "version": SETTINGS.VERSION}
     json_data = json.dumps(json_data)
-    r = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
-    if r.status_code == 200:
+    try:
+        r = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
+    except requests.exceptions.ConnectionError:
+        r = None
+
+    status_code = r.status_code if r is not None else None
+    if status_code == 200:
         print('login successful')
         json_response = r.json()
         mytoken = json_response['access']
@@ -536,6 +521,11 @@ def login(overlay, env, un, pw):
                 server_access_ids.append(x[7:])
         overlay.updatetext('server_select', server_access_ids)
         overlay.show_main()
+    elif r is None:
+        print("Login failed - no connection to server")
+        overlay.enable('login')
+        overlay.updatetext('login_status', 'login failed')
+        overlay.read()
     else:
         print('login failed!')
         print(r.status_code)
@@ -554,7 +544,52 @@ img_count = 1
 current_page = 1
 canceled = False
 prices_data_resend = ()
-overlay = overlay_settings_nw_tp.overlay()
+version_fetched_event = "-VERSION FETCHED-"
+download_new_version_event = "-DOWNLOAD NEW VERSION-"
+installer_launched_event = "-INSTALLING-"
+
+
+def version_update_events(event, values) -> None:
+    if event == version_fetched_event:
+        response = values[version_fetched_event]
+        if response is not None:
+            overlay.version_check_complete(response)
+            if not response["compatible_version"]:
+                overlay.show_update_window()
+            return
+        # otherwise, we error out.
+        hide = ["un_text", "un", "pw_text", "pw", "login"]
+        for element in hide:
+            overlay.window[element].update(visible=False)
+        endpoint = version_endpoint()
+        overlay.window["title"].update(
+            f"Version check failed! :(\n\nNo connection to {endpoint}\n\nPlease let us know on discord."
+        )
+        overlay.set_spinner_visibility(False)
+    elif event == "download_update":
+        download_func = lambda: perform_update_download(overlay.download_link)  # noqa
+        overlay.window.perform_long_operation(download_func, download_new_version_event)
+        overlay.window["download_update"].update(text="Downloading...", disabled=True)
+        overlay.set_spinner_visibility(True)
+    elif event == download_new_version_event:
+        if values[download_new_version_event] is not None:
+            exc = values[download_new_version_event]
+            overlay.window["download_update_text"].update(
+                f"Couldn't download file.\n\n"
+                f"Please check the installer is not already open.\n\n"
+                f"Please close application once you check the error log."
+            )
+            formatted_exception = "".join(traceback.format_exception(None, exc, exc.__traceback__))
+            print(formatted_exception)
+            overlay.window["download_update"].update(visible=False)
+            overlay.set_spinner_visibility(False)
+            return
+        install_func = lambda: install_new_version(installer_file_path())  # noqa
+        overlay.window.perform_long_operation(install_func, installer_launched_event)
+
+
+
+
 def main():
     auto_scan_sections = False
     run_start = None
@@ -563,15 +598,16 @@ def main():
     app_timer.start()
     round_timer.start()
     loading_timer.start()
-
-
+    overlay.window.perform_long_operation(check_latest_version, version_fetched_event)
 
     while True:
-
-
         if 'advanced' in access_groups:
             overlay.show_advanced()
         event, values = overlay.read()
+        version_update_events(event, values)
+        if event is None or event == installer_launched_event:  # quit
+            break
+        overlay.update_spinner()
 
         if values['test_t']:
             test_run = True
