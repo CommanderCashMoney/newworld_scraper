@@ -7,7 +7,8 @@ from utils import get_endpoint_from_func_name
 
 def version_endpoint() -> str:
     target_env = "dev"  # need to change this, but for now prod doesn't have the endpoint
-    return get_endpoint_from_func_name("version/", target_env=target_env)
+    url = get_endpoint_from_func_name("version/", target_env=target_env)
+    return f"{url}?version={SETTINGS.VERSION}"
 
 
 def check_latest_version() -> str:

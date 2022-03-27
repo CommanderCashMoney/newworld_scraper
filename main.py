@@ -551,8 +551,12 @@ installer_launched_event = "-INSTALLING-"
 
 def version_update_events(event, values) -> None:
     if event == version_fetched_event:
-        if values[version_fetched_event]:
-            overlay.version_check_complete(values[version_fetched_event])
+        response = values[version_fetched_event]
+        if response is not None and response["compatible_version"]:
+            if not response["compatible_version"]:
+                overlay.show_update_window()
+            else:
+                overlay.version_check_complete(response)
             return
         # otherwise, we error out.
         hide = ["un_text", "un", "pw_text", "pw", "login"]

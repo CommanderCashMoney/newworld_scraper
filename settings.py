@@ -16,9 +16,7 @@ class Versioning(Enum):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.0.8"
-    FORCE_UPDATE_ON_VERSION = Versioning.patch
-
+    VERSION = "1.1.8"
     environment: Environment = Environment.prod
 
     nwmp_dev_api_host: str = "http://localhost:8080/"
