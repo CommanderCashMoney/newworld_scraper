@@ -9,14 +9,9 @@ class Environment(Enum):
     dev = "dev"
 
 
-class Versioning(Enum):
-    major = 3
-    minor = 2
-    patch = 1
-
-
 class Settings(BaseSettings):
     VERSION = "1.0.8"
+
     environment: Environment = Environment.prod
 
     nwmp_dev_api_host: str = "http://localhost:8080/"

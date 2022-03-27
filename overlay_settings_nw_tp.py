@@ -1,8 +1,6 @@
 import PySimpleGUI as sg
-from getkeys import key_check
-import time
 
-from settings import SETTINGS, Versioning
+from settings import SETTINGS
 from utils import resource_path
 
 
