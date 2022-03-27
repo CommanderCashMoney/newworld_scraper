@@ -501,7 +501,7 @@ def login(overlay, env, un, pw):
     overlay.disable('login')
     overlay.updatetext('login_status', 'logging in..')
     overlay.read()
-    json_data = {"username": un, "password": pw}
+    json_data = {"username": un, "password": pw, "version": SETTINGS.VERSION}
     json_data = json.dumps(json_data)
     try:
         r = requests.post(url, data=json_data, headers={'Content-Type': 'application/json'})
