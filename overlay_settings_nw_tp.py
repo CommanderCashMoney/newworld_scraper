@@ -194,14 +194,14 @@ class Overlay():
         if version != SETTINGS.VERSION:
             split_server_version = [int(v) for v in version.split(".")]
             split_version = [int(v) for v in SETTINGS.VERSION.split(".")]
-            update_type = None
+            update_type = 0
             if split_server_version[0] > split_version[0]:
                 update_type = Versioning.major
             elif split_server_version[1] > split_version[1]:
                 update_type = Versioning.minor
             elif split_server_version[2] > split_version[2]:
                 update_type = Versioning.patch
-            if SETTINGS.FORCE_UPDATE_ON_VERSION == update_type:
+            if update_type.value >= SETTINGS.FORCE_UPDATE_ON_VERSION.value:
                 self.show_update_window()
 
         login = self.window.find_element("login")

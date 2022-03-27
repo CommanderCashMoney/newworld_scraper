@@ -10,9 +10,9 @@ class Environment(Enum):
 
 
 class Versioning(Enum):
-    major = "major"
-    minor = "minor"
-    patch = "patch"
+    major = 3
+    minor = 2
+    patch = 1
 
 
 class Settings(BaseSettings):
