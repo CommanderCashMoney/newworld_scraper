@@ -4,12 +4,12 @@ from time import perf_counter
 
 from PIL import Image
 
-from ocr import page_parser
+from ocr import ocr_image
 
 
 def parse_page(file):
     with Image.open(file) as im:
-        pg = page_parser.get_all_items_from_image(file, im)
+        pg = ocr_image.get_all_items_from_image(file, im)
         j = json.dumps({
             "file": file,
             "data": [pg[row] for row in pg]
@@ -35,7 +35,7 @@ for file in path.iterdir():
     if READ_META and is_meta:
         read_meta(file)
     if not READ_META and not is_meta:
-        parse_page(file)
+        parse_page(str(file))
 
 
 

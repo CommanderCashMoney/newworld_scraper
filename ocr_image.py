@@ -67,8 +67,7 @@ def process_image(img, blur=3):
     width = int(img.shape[1] * scale_percent / 100)
     height = int(img.shape[0] * scale_percent / 100)
     dim = (width, height)
-    img = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
-
+    img = cv2.resize(img, dim, interpolation=cv2.INTER_BITS)
 
     lower_color = np.array([75, 40, 40])
     upper_color = np.array([255, 255, 255])
@@ -78,7 +77,7 @@ def process_image(img, blur=3):
 
     res = cv2.cvtColor(res, cv2.COLOR_RGB2GRAY)
 
-    res = cv2.GaussianBlur(res, (blur, blur), cv2.BORDER_ISOLATED)
+    res = cv2.bilateralFilter(res, 5, 50, 100)
     res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     res = np.invert(res)
     # cv2.imshow('win1', res)
