@@ -6,7 +6,7 @@ from utils import get_endpoint_from_func_name
 
 
 def version_endpoint() -> str:
-    target_env = "dev"  # need to change this, but for now prod doesn't have the endpoint
+    target_env = "dev" if SETTINGS.is_dev else "prod"
     url = get_endpoint_from_func_name("version/", target_env=target_env)
     return f"{url}?version={SETTINGS.VERSION}"
 
