@@ -22,8 +22,8 @@ import difflib
 
 from settings import SETTINGS
 from app.utils import format_seconds, resource_path
-from app.nwmp_api import check_latest_version, version_endpoint
-from app.self_updating import installer_file_path, install_new_version, perform_update_download
+from app.nwmp_api import check_latest_version
+from app.self_updating import INSTALLER_LAUNCHED_EVENT, VERSION_FETCHED_EVENT, version_update_events
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -36,7 +36,7 @@ pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe'
 
 # globals
 page_stuck_counter = 0
-enabled = False
+SCANNING = False
 canceled = False
 test_run = False
 img_count = 1
@@ -48,14 +48,14 @@ server_access_ids = []
 
 # todo: move to keyboard module
 def on_press(key):
-    global enabled, canceled
+    global SCANNING, canceled
 
     if GetWindowText(GetForegroundWindow()) == 'Trade Price Scraper' or GetWindowText(GetForegroundWindow()) == "New World":
         # if key == pynput.keyboard.Key.enter:
         #     print('hit enter')
 
         if key == pynput.keyboard.KeyCode(char='/'):
-            enabled = False
+            SCANNING = False
             canceled = True
             print('Exited from Key Press')
             ocr_image.ocr.stop_OCR()
@@ -190,7 +190,7 @@ def get_updates_from_ocr():
 
 
 def ocr_cycle(pages, app_timer):
-    global enabled, img_count, canceled, page_stuck_counter
+    global SCANNING, img_count, canceled, page_stuck_counter
 
     for x in range(pages):
         if look_for_tp():
@@ -224,7 +224,7 @@ def ocr_cycle(pages, app_timer):
                     break
 
 
-            if not enabled:
+            if not SCANNING:
                 return True
             mouse.scroll(0, -11)
 
@@ -268,7 +268,7 @@ def ocr_cycle(pages, app_timer):
             overlay.updatetext('elapsed', format_seconds(app_timer.elapsed()))
             overlay.read()
 
-            if not enabled:
+            if not SCANNING:
                 return True
         else:
             print('couldnt find TP marker')
@@ -276,7 +276,7 @@ def ocr_cycle(pages, app_timer):
             overlay.updatetext('status_bar', 'ERROR')
             canceled = True
             overlay.read()
-            enabled = False
+            SCANNING = False
             return True
     # need to clear the old price list since we are moving to a new section
     ocr_image.ocr.set_section_end(img_count)
@@ -323,66 +323,23 @@ round_timer = Timer('round')
 loading_timer = Timer('load')
 current_page = 1
 prices_data_resend = ()
-version_fetched_event = "-VERSION FETCHED-"
-download_new_version_event = "-DOWNLOAD NEW VERSION-"
-installer_launched_event = "-INSTALLING-"
-login_completed_event = "-LOGIN CALLBACK-"
-
-
-def version_update_events(event, values) -> None:
-    if event == version_fetched_event:
-        response = values[version_fetched_event]
-        if response is not None:
-            overlay.version_check_complete(response)
-            if not response["compatible_version"]:
-                overlay.show_update_window()
-            return
-        # otherwise, we error out.
-        hide = ["un_text", "un", "pw_text", "pw", "login"]
-        for element in hide:
-            overlay.window[element].update(visible=False)
-        endpoint = version_endpoint()
-        overlay.window["title"].update(
-            f"Version check failed! :(\n\nNo connection to {endpoint}\n\nPlease let us know on discord."
-        )
-        overlay.set_spinner_visibility(False)
-    elif event == "download_update":
-        download_func = lambda: perform_update_download(overlay.download_link)  # noqa
-        overlay.window.perform_long_operation(download_func, download_new_version_event)
-        overlay.window["download_update"].update(text="Downloading...", disabled=True)
-        overlay.set_spinner_visibility(True)
-    elif event == download_new_version_event:
-        if values[download_new_version_event] is not None:
-            exc = values[download_new_version_event]
-            overlay.window["download_update_text"].update(
-                f"Couldn't download file.\n\n"
-                f"Please check the installer is not already open.\n\n"
-                f"Please close application once you check the error log."
-            )
-            formatted_exception = "".join(traceback.format_exception(None, exc, exc.__traceback__))
-            print(formatted_exception)
-            overlay.window["download_update"].update(visible=False)
-            overlay.set_spinner_visibility(False)
-            return
-        install_func = lambda: install_new_version(installer_file_path())  # noqa
-        overlay.window.perform_long_operation(install_func, installer_launched_event)
 
 
 def main():
-    run_start = None
+    LOGIN_COMPLETED_EVENT = "-LOGIN CALLBACK-"  # noqa
 
-    global user_name, enabled, test_run, canceled, img_count, access_groups, server_access_ids, prices_data_resend, my_token
+    global user_name, SCANNING, test_run, canceled, img_count, access_groups, server_access_ids, prices_data_resend, my_token
     app_timer.start()
     round_timer.start()
     loading_timer.start()
-    overlay.window.perform_long_operation(check_latest_version, version_fetched_event)
+    overlay.window.perform_long_operation(check_latest_version, VERSION_FETCHED_EVENT)
 
     while True:
         if 'advanced' in access_groups:
             overlay.show_advanced()
         event, values = overlay.read()
         version_update_events(event, values)
-        if event is None or event == installer_launched_event:  # quit
+        if event is None or event == INSTALLER_LAUNCHED_EVENT:  # quit
             break
         overlay.update_spinner()
 
@@ -405,7 +362,7 @@ def main():
             pages = 1
 
         if event == 'Run' and server_id != '':
-            enabled = True
+            SCANNING = True
             if pages == 0 and not auto_scan_sections:
                 pages = ocr_image.ocr.get_page_count()
             overlay.disable('Run')
@@ -444,10 +401,10 @@ def main():
                 login_env = 'dev'
             overlay.set_spinner_visibility(True)
             # use long operation to avoid hang
-            overlay.window.perform_long_operation(lambda: login(overlay, login_env, un, pw), login_completed_event)
-        elif event == login_completed_event:
+            overlay.window.perform_long_operation(lambda: login(overlay, login_env, un, pw), LOGIN_COMPLETED_EVENT)
+        elif event == LOGIN_COMPLETED_EVENT:
             overlay.set_spinner_visibility(False)
-            response = values[login_completed_event]
+            response = values[LOGIN_COMPLETED_EVENT]
             if response is None:
                 overlay.enable('login')
                 overlay.updatetext('login_status', 'login failed')
@@ -472,7 +429,6 @@ def main():
         if event == '-FOLDER-':
             folder = values['-FOLDER-']
             insert_list = ocr_image.ocr.get_insert_list()
-            # insert_list = '[asdfasdf, asdfasdfasdf,asdfasdfasdf,asdfasdfasdfasdf,asdfasdf]'
             if insert_list:
                 with open(f'{folder}/prices_data.txt', 'w') as f:
                     f.write(json.dumps(insert_list))
@@ -480,7 +436,7 @@ def main():
             else:
                 overlay.updatetext('error_output', 'No data to export to file.', append=True)
 
-        if enabled:
+        if SCANNING:
             app_timer.restart()
             clear_overlay(overlay)
             overlay.hide_confirm()
@@ -506,8 +462,6 @@ def main():
                 canceled = False
                 if auto_scan_sections:
                     round_timer.restart()
-                    now = datetime.now()
-                    run_start = now.strftime("%m/%d/%Y %H:%M:%S")
                     section_list = {
                         'Raw Resources': (368, 488),
                         'Resources Reset 1': (170, 796),
@@ -565,7 +519,7 @@ def main():
                 else:
                     ocr_cycle(pages, app_timer)
 
-            enabled = False
+            SCANNING = False
             ocr_image.ocr.set_cap_state('stopped')
             overlay.updatetext('log_output', 'Image capture finished', append=True)
 
