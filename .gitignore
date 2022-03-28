@@ -143,3 +143,4 @@ cython_debug/
 build/
 dist/
 /test_img_cap.py
+temp/*
