@@ -496,8 +496,6 @@ user_name = ''
 access_groups = []
 server_access_ids = []
 def login(overlay, env, un, pw):
-    global mytoken, user_name, access_groups, server_access_ids
-
     if env == 'dev':
         url = 'http://localhost:8080/api/token/'
     else:
@@ -516,28 +514,14 @@ def login(overlay, env, un, pw):
     status_code = r.status_code if r is not None else None
     if status_code == 200:
         print('login successful')
-        json_response = r.json()
-        mytoken = json_response['access']
-        overlay.updatetext('login_status', '')
-        user_name = json_response['username']
-        access_groups = json_response['groups']
-        for x in access_groups:
-            if 'server-' in x:
-                server_access_ids.append(x[7:])
-        overlay.updatetext('server_select', server_access_ids)
-        overlay.show_main()
+        return r
     elif r is None:
         print("Login failed - no connection to server")
-        overlay.enable('login')
-        overlay.updatetext('login_status', 'login failed')
-        overlay.read()
     else:
         print('login failed!')
         print(r.status_code)
         print(r.json())
-        overlay.enable('login')
-        overlay.updatetext('login_status', 'login failed')
-        overlay.read()
+    return None
 
 
 app_timer = Timer('app')
@@ -552,6 +536,7 @@ prices_data_resend = ()
 version_fetched_event = "-VERSION FETCHED-"
 download_new_version_event = "-DOWNLOAD NEW VERSION-"
 installer_launched_event = "-INSTALLING-"
+login_completed_event = "-LOGIN CALLBACK-"
 
 
 def version_update_events(event, values) -> None:
@@ -593,13 +578,11 @@ def version_update_events(event, values) -> None:
         overlay.window.perform_long_operation(install_func, installer_launched_event)
 
 
-
-
 def main():
     auto_scan_sections = False
     run_start = None
 
-    global enabled, test_run, canceled, img_count, access_groups, server_access_ids, prices_data_resend, overlay
+    global enabled, test_run, canceled, img_count, access_groups, server_access_ids, prices_data_resend, overlay, mytoken
     app_timer.start()
     round_timer.start()
     loading_timer.start()
@@ -614,24 +597,24 @@ def main():
             break
         overlay.update_spinner()
 
-        if values['test_t']:
+        if values.get('test_t'):
             test_run = True
             ocr_image.ocr.test_run(True)
         else:
             test_run = False
             ocr_image.ocr.test_run(False)
 
-        if values['sections_auto']:
+        if values.get('sections_auto'):
             auto_scan_sections = True
         else:
             auto_scan_sections = False
-        if values['dev']:
+        if values.get('dev'):
             env = 'dev'
         else:
             env = 'prod'
         ocr_image.ocr.set_env(env)
 
-        server_id = values['server_select']
+        server_id = values.get('server_select', '')
 
         try:
             pages = int(values['pages'])
@@ -677,7 +660,27 @@ def main():
                 login_env = 'prod'
             else:
                 login_env = 'dev'
-            login(overlay, login_env, un, pw)
+            overlay.set_spinner_visibility(True)
+            # use long operation to avoid hang
+            overlay.window.perform_long_operation(lambda: login(overlay, login_env, un, pw), login_completed_event)
+        elif event == login_completed_event:
+            overlay.set_spinner_visibility(False)
+            response = values[login_completed_event]
+            if response is None:
+                overlay.enable('login')
+                overlay.updatetext('login_status', 'login failed')
+                overlay.read()
+            else:
+                json_response = response.json()
+                mytoken = json_response['access']
+                overlay.updatetext('login_status', '')
+                user_name = json_response['username']
+                access_groups = json_response['groups']
+                for x in access_groups:
+                    if 'server-' in x:
+                        server_access_ids.append(x[7:])
+                overlay.updatetext('server_select', server_access_ids)
+                overlay.show_main()
 
         if event == 'resend':
             overlay.disable('resend')
