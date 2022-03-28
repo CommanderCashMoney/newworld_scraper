@@ -4,7 +4,7 @@ from time import perf_counter
 
 from PIL import Image
 
-from ocr import ocr_image
+from app.ocr import ocr_image
 
 
 def parse_page(file):

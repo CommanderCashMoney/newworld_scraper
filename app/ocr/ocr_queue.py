@@ -3,13 +3,14 @@ from pathlib import Path
 from queue import Queue
 from threading import Thread
 
-from ocr.ocr_image import OCRImage
+from app.ocr.ocr_image import OCRImage
 
 
 class _OCRQueue:
     def __init__(self) -> None:
         self.continue_processing = True
         self.queue = Queue()
+        self.queue.empty()
         self._processing_thread = Thread(target=self.process_queue, name="OCR Queue", daemon=True)
 
     def add_to_queue(self, img_path: Path):
@@ -34,7 +35,8 @@ class _OCRQueue:
 
     def stop(self) -> None:
         self.continue_processing = False
-        self.queue.put(None)  # noqa
+        if self.queue.qsize() == 0:
+            self.queue.put(None)  # noqa - unstick the queue since it is waiting
 
 
 OCRQueue = _OCRQueue()

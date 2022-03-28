@@ -1,8 +1,8 @@
 import win32gui, win32con
-import re, traceback
-from time import sleep
+import re
 
-class cWindow:
+
+class Window:
     def __init__(self):
         self._hwnd = None
 
@@ -20,23 +20,17 @@ class cWindow:
 
     def _window_enum_callback(self, hwnd, wildcard):
         '''Pass to win32gui.EnumWindows() to check all the opened windows'''
-        if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) != None:
+        if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) is not None:
             self._hwnd = hwnd
-
 
     def find_window_wildcard(self, wildcard):
         self._hwnd = None
         win32gui.EnumWindows(self._window_enum_callback, wildcard)
 
 
-# def main():
-#     sleep(2)
-#
-#     wildcard = "^New World$"
-#     cW = cWindow()
-#     cW.find_window_wildcard(wildcard)
-#     # cW.Maximize()
-#     cW.BringToTop()
-#     cW.SetAsForegroundWindow()
-#
-# main()
+def bring_new_world_to_foreground() -> None:
+    wildcard = "^New World$"
+    cw = Window()
+    cw.find_window_wildcard(wildcard)
+    cw.BringToTop()
+    cw.SetAsForegroundWindow()

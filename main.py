@@ -2,63 +2,51 @@ import traceback
 import json
 import requests
 import cv2
-from grabscreen import grab_screen
+
+from app.nwmp_api_old import api_insert, prep_for_api_insert
+from app.ocr.utils import look_for_cancel_or_refresh, look_for_tp, next_page
+from app.utils.keyboard import press_key
+from app.utils.mouse import click, mouse
+from app.ocr.utils import grab_screen
 import time
 import pytesseract
 import pynput
-import sys, os
-from win32gui import GetWindowText, GetForegroundWindow, BringWindowToTop
+import sys
+from win32gui import GetWindowText, GetForegroundWindow
 import numpy as np
-import window_func
 from my_timer import Timer
 from datetime import datetime, timedelta
-from overlay_settings_nw_tp import overlay  # noqa
-import ctypes
+from app.overlay import overlay  # noqa
 import ocr_image
 import difflib
 
-from tzlocal import get_localzone
-
 from settings import SETTINGS
-from utils.api import check_latest_version, version_endpoint
-from utils.self_updating import installer_file_path, install_new_version, perform_update_download
-
+from app.utils import format_seconds, resource_path
+from app.nwmp_api import check_latest_version, version_endpoint
+from app.self_updating import installer_file_path, install_new_version, perform_update_download
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
     traceback.print_exception(exc_type, exc_value, tb)
     sys.exit(-1)
 
+
 sys.excepthook = show_exception_and_exit
-
-
-mouse = pynput.mouse.Controller()
-
-screen_center = (1200,700)
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
-
 pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe')
 
-def ra_x(x):
-    user32 = ctypes.windll.user32
-    screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-    x_adjust = screensize[0] / 2560
+# globals
+page_stuck_counter = 0
+enabled = False
+canceled = False
+test_run = False
+img_count = 1
+my_token = ''
+user_name = ''
+access_groups = []
+server_access_ids = []
 
-    # print(screensize)
-    return round(x*x_adjust)
-def ra_y(y):
-    user32 = ctypes.windll.user32
-    screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 
-    y_adjust = screensize[1] / 1440
-    # print(screensize)
-    return round(y*y_adjust)
-
+# todo: move to keyboard module
 def on_press(key):
     global enabled, canceled
 
@@ -76,153 +64,8 @@ def on_press(key):
 listener = pynput.keyboard.Listener(on_press=on_press)
 listener.start()
 
-def format_seconds(s):
-    hours, rem = divmod(s, 3600)
-    minutes, seconds = divmod(rem, 60)
-    return '{:02}:{:02}:{:02}'.format(int(hours), int(minutes), int(seconds))
 
-
-def click(btn, pos=screen_center, hold=0):
-    if btn == "left":
-        btn = pynput.mouse.Button.left
-    else:
-        btn = pynput.mouse.Button.right
-    mouse.position = pos
-    time.sleep(0.1)
-    mouse.press(btn)
-    time.sleep(hold)
-    mouse.release(btn)
-
-
-def press(key, hold=0.0):
-    kb = pynput.keyboard.Controller()
-    kb.press(key)
-    time.sleep(hold)
-    kb.release(key)
-
-wildcard = "^New World$"
-cw = window_func.cWindow()
-def look_for_tp():
-    global cw
-    for x in range(2):
-        cw.find_window_wildcard(wildcard)
-        cw.BringToTop()
-        cw.SetAsForegroundWindow()
-        mouse.position = (1300, 480)
-        time.sleep(0.1)
-        look_for_cancel_or_refresh()
-        reference_aoi = (450, 32, 165, 64)
-        reference_grab = grab_screen(region=reference_aoi)
-        reference_image_file = resource_path('nw_images/trading_post_label.png')
-        reference_img = cv2.imread(reference_image_file)
-        res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        # print(f'Trading post max_val: {max_val}')
-        # file_name = resource_path('images/trading_post_cap.png')
-        # cv2.imwrite(file_name, reference_grab)
-        if max_val > 0.92:
-            return True
-        else:
-            time.sleep(1)
-
-    return False
-
-
-def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func='price_insert'):
-    global mytoken, prices_data_resend
-    post_timer = Timer('post')
-    post_timer.start()
-
-    if func == 'price_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/scanner_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/scanner_upload/'
-    if func == 'name_cleanup_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/name_cleanup_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/name_cleanup_upload/'
-    if func == 'confirmed_names_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/confirmed_names_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/confirmed_names_upload/'
-    print('Starting submit to API')
-    overlay.updatetext('status_bar', 'API Submit started')
-    overlay.updatetext('log_output', 'API Submit started', append=True)
-    overlay.read()
-
-    my_tz = get_localzone().zone
-
-    r = requests.post(url, timeout=200, json={
-        "version": SETTINGS.VERSION,
-        "price_data": json.loads(json_data),
-        "server_id": server_id,
-        "timezone": my_tz
-    }, headers={'Authorization': f'Bearer {mytoken}'})
-    print(f'{func} API submit time: {post_timer.elapsed()}')
-    overlay.updatetext('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
-    overlay.updatetext('log_output', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}', append=True)
-    if r.status_code == 201:
-        overlay.updatetext('log_output', 'Submission Sucessful!', append=True)
-    elif r.status_code == 401:
-        # credentials expired. prompt login
-        overlay.updatetext('error_output', f'Credentials have expired, sending back to login', append=True)
-        prices_data_resend = (json_data, env, total_count, server_id, func)
-        overlay.show_login()
-        overlay.enable('login')
-        overlay.unhide('resend')
-    elif r.status_code in [200, 400]:
-        overlay.updatetext('error_output', r.json()["message"], append=True)
-        print(r.json())
-    else:
-        prices_data_resend = (json_data, env, total_count, server_id, func)
-        overlay.unhide('resend')
-        overlay.enable('resend')
-        overlay.updatetext('error_output', f'Error occurred while submitting data to API. Status code: {r.status_code}', append=True)
-
-    overlay.read()
-    post_timer.stop()
-    print(r.status_code)
-    # print(r.json())
-
-
-def prep_for_api_insert(data_list, server_id, env, overlay):
-    global user_name, access_groups
-    correct_number_of_columns = 5
-    correct_columns = [row for row in data_list if len(row) == correct_number_of_columns]
-    bad_columns = [row for row in data_list if len(row) != correct_number_of_columns]
-    if bad_columns:
-        print(f"The following rows had bad data: {bad_columns}")
-    payload = [
-        {
-            "name": row[0],
-            "price": str(row[1]),
-            "avail": row[2] or 1,
-            "timestamp": row[3],
-            "name_id": row[4],
-        }
-        for row in correct_columns
-    ]
-    total_count = len(payload)
-    api_insert(
-        json.dumps(payload, default=str),
-        env,
-        overlay,
-        user_name,
-        len(payload),
-        server_id
-    )
-
-    overlay.updatetext('log_output', f'Total clean listings added: {total_count}', append=True)
-    overlay.updatetext('status_bar', 'Ready')
-    overlay.read()
-    print(f'totalcount: {total_count}')
-    ocr_image.ocr.set_state('ready')
-
-
-def add_single_item(clean_list, env, func, overlay):
+def add_single_item(clean_list, env, func):
     global user_name, access_groups
     # add timestamp
     now = datetime.now()
@@ -242,10 +85,10 @@ def add_single_item(clean_list, env, func, overlay):
         json_data = json_data + '"approved": "False", '
     json_data = json_data + f'"username": "{user_name}"' + '}'
 
-    api_insert(json_data, env, overlay, user_name, 1, 0, func)
+    api_insert(json_data, env, 1, 0, func)
 
 
-def populate_confirm_form(overlay):
+def populate_confirm_form():
     cn = ocr_image.ocr.get_confirmed_names()
     cn_list = list(cn.keys())
     confirm_list = ocr_image.ocr.get_confirms()
@@ -261,7 +104,7 @@ def populate_confirm_form(overlay):
         overlay.enable('add{}'.format(count))
 
 
-def next_confirm_page(overlay):
+def next_confirm_page():
     global current_page
     current_page += 1
     for x in range(10):
@@ -270,29 +113,22 @@ def next_confirm_page(overlay):
 
     if len(ocr_image.ocr.get_confirms()) >= 10:
         ocr_image.ocr.del_confirms()
-    populate_confirm_form(overlay)
+    populate_confirm_form()
 
 
-def next_page():
-    click('left', (2400, 300))
-    # time.sleep(0.1)
-    mouse.position = (1300, 480)
-    time.sleep(0.1)
-
-page_stuck_counter = 0
-def look_for_scroll(section, overlay):
+def look_for_scroll(section):
     global page_stuck_counter
     look_for_cancel_or_refresh()
     # look for scrollbar
     if section == 'top':
         reference_aoi = (2438, 418, 34, 34)
-        reference_image_file = resource_path('nw_images/top_of_scroll.png')
+        reference_image_file = resource_path('app/images/new_world/top_of_scroll.png')
     elif section == 'btm':
         reference_aoi = (2442, 1314, 27, 27)
-        reference_image_file = resource_path('nw_images/btm_of_scroll.png')
+        reference_image_file = resource_path('app/images/new_world/btm_of_scroll.png')
     elif section == 'last':
         reference_aoi = (2444, 1378, 25, 25)
-        reference_image_file = resource_path('nw_images/btm_of_scroll2.png')
+        reference_image_file = resource_path('app/images/new_world/btm_of_scroll2.png')
 
     loading_timer.restart()
     while True:
@@ -320,49 +156,9 @@ def look_for_scroll(section, overlay):
                 return True
 
 
-def look_for_cancel_or_refresh():
-
-    reference_aoi = (961, 1032, 90, 30)
-    reference_grab = grab_screen(region=reference_aoi)
-    reference_image_file = resource_path('nw_images/cancel_btn.png')
-    reference_img = cv2.imread(reference_image_file)
-    res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    if max_val > 0.95:
-        loc = (max_loc[0] + 961), (max_loc[1] + 1032)
-        print('clicked cancel')
-        click('left', loc)
-        time.sleep(0.5)
-
-    reference_aoi = (1543, 900, 170, 40)
-    reference_grab = grab_screen(region=reference_aoi)
-    reference_image_file = resource_path('nw_images/refresh_btn.png')
-    reference_img = cv2.imread(reference_image_file)
-    res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
-    if max_val > 0.95:
-        loc = (max_loc[0] + 961), (max_loc[1] + 1032)
-        click('left', loc)
-        time.sleep(0.1)
-
-
-def check_loading(pages, section, overlay):
-
+def check_loading(pages, section):
     if pages > 1:
-        look_for_scroll(section, overlay)
-            # scrollbar is where it should be check for image icon
-            # aoi = (842, 1267, 200, 90)
-            # img = grab_screen(aoi)
-            # ref_grab = ocr_image.process_image(img)
-            # # print('npzero ', np.count_nonzero(ref_grab))
-            # while np.count_nonzero(ref_grab) == 112500:
-            #     aoi = (842, 1267, 200, 90)
-            #     img = grab_screen(aoi)
-            #     ref_grab = ocr_image.process_image(img)
-            #     overlay.updatetext('status_bar', 'Loading page')
-            #     overlay.read()
-            #     print('loading_icon')
+        look_for_scroll(section)
     else:
         aoi = (842, 444, 200, 70)
         img = grab_screen(aoi)
@@ -375,8 +171,8 @@ def check_loading(pages, section, overlay):
         time.sleep(0.3)
 
 
-def get_img(pages, section, overlay):
-    check_loading(pages, section, overlay)
+def get_img(pages, section):
+    check_loading(pages, section)
     if section == 'last':
         aoi = (927, 1198, 1510, 200)
     else:
@@ -385,7 +181,7 @@ def get_img(pages, section, overlay):
     return img
 
 
-def get_updates_from_ocr(overlay):
+def get_updates_from_ocr():
     ocr_updates = ocr_image.ocr.get_overlay_updates()
     for x in ocr_updates:
 
@@ -393,7 +189,7 @@ def get_updates_from_ocr(overlay):
         ocr_image.ocr.remove_one_overlayupdate()
 
 
-def ocr_cycle(pages, overlay, app_timer):
+def ocr_cycle(pages, app_timer):
     global enabled, img_count, canceled, page_stuck_counter
 
     for x in range(pages):
@@ -405,12 +201,12 @@ def ocr_cycle(pages, overlay, app_timer):
                 overlay.read()
                 return True
             overlay.updatetext('pages_left', pages-1)
-            img = get_img(pages, 'top', overlay)
+            img = get_img(pages, 'top')
             ocr_image.ocr.add_img(img, img_count)
             overlay.updatetext('key_count', img_count)
             overlay.updatetext('ocr_count', ocr_image.ocr.get_img_queue_len())
             overlay.updatetext('status_bar', 'Capturing images')
-            get_updates_from_ocr(overlay)
+            get_updates_from_ocr()
             overlay.read()
             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
             # cv2.imwrite(file_name, img)
@@ -419,7 +215,7 @@ def ocr_cycle(pages, overlay, app_timer):
             if pages == 1:
                 # see if scroll bar exists on last page
                 reference_aoi = (2438, 418, 34, 34)
-                reference_image_file = resource_path('nw_images/top_of_scroll.png')
+                reference_image_file = resource_path('app/images/new_world/top_of_scroll.png')
                 reference_grab = grab_screen(region=reference_aoi)
                 reference_img = cv2.imread(reference_image_file)
                 res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
@@ -432,7 +228,7 @@ def ocr_cycle(pages, overlay, app_timer):
                 return True
             mouse.scroll(0, -11)
 
-            img = get_img(pages, 'btm', overlay)
+            img = get_img(pages, 'btm')
             ocr_image.ocr.add_img(img, img_count)
             overlay.updatetext('key_count', img_count)
             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
@@ -443,7 +239,7 @@ def ocr_cycle(pages, overlay, app_timer):
             if pages == 1:
                 #confirm we have a full scroll bar
                 reference_aoi = (2442, 874, 27, 27)
-                reference_image_file = resource_path('nw_images/btm_of_scroll.png')
+                reference_image_file = resource_path('app/images/new_world/btm_of_scroll.png')
                 reference_grab = grab_screen(region=reference_aoi)
                 reference_img = cv2.imread(reference_image_file)
                 res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
@@ -452,7 +248,7 @@ def ocr_cycle(pages, overlay, app_timer):
                     break
 
             mouse.scroll(0, -2)
-            img = get_img(pages, 'last', overlay)
+            img = get_img(pages, 'last')
             ocr_image.ocr.add_img(img, img_count)
             overlay.updatetext('key_count', img_count)
             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
@@ -486,15 +282,13 @@ def ocr_cycle(pages, overlay, app_timer):
     ocr_image.ocr.set_section_end(img_count)
     print('finished ocr cycle')
 
+
 def clear_overlay(overlay):
     field_list = ['elapsed', 'key_count', 'ocr_count', 'accuracy', 'listings_count', 'p_fails', 'rejects', 'log_output', 'error_output']
     for x in field_list:
         overlay.updatetext(x, '')
 
-mytoken = ''
-user_name = ''
-access_groups = []
-server_access_ids = []
+
 def login(overlay, env, un, pw):
     if env == 'dev':
         url = 'http://localhost:8080/api/token/'
@@ -527,11 +321,7 @@ def login(overlay, env, un, pw):
 app_timer = Timer('app')
 round_timer = Timer('round')
 loading_timer = Timer('load')
-test_run = False
-enabled = False
-img_count = 1
 current_page = 1
-canceled = False
 prices_data_resend = ()
 version_fetched_event = "-VERSION FETCHED-"
 download_new_version_event = "-DOWNLOAD NEW VERSION-"
@@ -579,10 +369,9 @@ def version_update_events(event, values) -> None:
 
 
 def main():
-    auto_scan_sections = False
     run_start = None
 
-    global enabled, test_run, canceled, img_count, access_groups, server_access_ids, prices_data_resend, overlay, mytoken
+    global user_name, enabled, test_run, canceled, img_count, access_groups, server_access_ids, prices_data_resend, my_token
     app_timer.start()
     round_timer.start()
     loading_timer.start()
@@ -604,14 +393,8 @@ def main():
             test_run = False
             ocr_image.ocr.test_run(False)
 
-        if values.get('sections_auto'):
-            auto_scan_sections = True
-        else:
-            auto_scan_sections = False
-        if values.get('dev'):
-            env = 'dev'
-        else:
-            env = 'prod'
+        auto_scan_sections = bool(values.get('sections_auto'))
+        env = 'dev' if values.get('dev') else 'prod'
         ocr_image.ocr.set_env(env)
 
         server_id = values.get('server_select', '')
@@ -642,16 +425,15 @@ def main():
             overlay.disable(event)
             if values[f'good_name_{row_num}'] == 'Add New':
                 print(f'adding to confirmed names: {name_list}')
-                add_single_item(name_list, env, 'confirmed_names_insert', overlay)
+                add_single_item(name_list, env, 'confirmed_names_insert')
                 overlay.updatetext('log_output', f'adding to confirmed names: {name_list}', append=True)
             else:
                 print(f'adding to name cleanup dict: {name_list}')
-                add_single_item(name_list, env, 'name_cleanup_insert', overlay)
+                add_single_item(name_list, env, 'name_cleanup_insert')
                 overlay.updatetext('log_output', f'adding to name cleanup: {name_list}', append=True)
 
-
         if event == 'next_btn':
-            next_confirm_page(overlay)
+            next_confirm_page()
 
         if event == 'login':
             un = values['un']
@@ -672,7 +454,7 @@ def main():
                 overlay.read()
             else:
                 json_response = response.json()
-                mytoken = json_response['access']
+                my_token = json_response['access']
                 overlay.updatetext('login_status', '')
                 user_name = json_response['username']
                 access_groups = json_response['groups']
@@ -685,7 +467,7 @@ def main():
         if event == 'resend':
             overlay.disable('resend')
             overlay.read()
-            api_insert(prices_data_resend[0], prices_data_resend[1], overlay, user_name, prices_data_resend[2], prices_data_resend[3], prices_data_resend[4])
+            prices_data_resend = api_insert(*prices_data_resend)
 
         if event == '-FOLDER-':
             folder = values['-FOLDER-']
@@ -697,8 +479,6 @@ def main():
                 overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
             else:
                 overlay.updatetext('error_output', 'No data to export to file.', append=True)
-
-
 
         if enabled:
             app_timer.restart()
@@ -715,7 +495,7 @@ def main():
                 overlay.updatetext('log_output', 'Test scan started', append=True)
                 overlay.updatetext('status_bar', 'Test scan started')
                 overlay.read()
-                img = get_img(pages, 'top', overlay)
+                img = get_img(pages, 'top')
                 ocr_image.ocr.add_img(img, 1)
 
             else:
@@ -762,7 +542,7 @@ def main():
                         mouse.position = (1300, 480)
                         if section_list[key] != (170, 796):
                             print(f'Starting new section: {key}')
-                            keypress_exit = ocr_cycle(ocr_image.ocr.get_page_count(), overlay, app_timer)
+                            keypress_exit = ocr_cycle(ocr_image.ocr.get_page_count(), app_timer)
                             if keypress_exit:
                                 overlay.updatetext('error_output', 'Exit key press', append=True)
                                 overlay.updatetext('error_output', 'Scan Canceled. No data inserted.', append=True)
@@ -774,18 +554,16 @@ def main():
                             # check time to see if moving is required to stop idle check
                             if round_timer.elapsed() > 600:
                                 print('Mid cycle pause: ', str(timedelta(seconds=app_timer.elapsed())))
-                                press(pynput.keyboard.Key.esc)
+                                press_key(pynput.keyboard.Key.esc)
                                 time.sleep(0.5)
                                 rand_time = np.random.uniform(0.10, 0.15)
-                                press('w', rand_time)
-                                press('s', rand_time)
-                                press('e')
+                                press_key('w', rand_time)
+                                press_key('s', rand_time)
+                                press_key('e')
                                 time.sleep(1)
                                 round_timer.restart()
-
                 else:
-
-                    ocr_cycle(pages, overlay, app_timer)
+                    ocr_cycle(pages, app_timer)
 
             enabled = False
             ocr_image.ocr.set_cap_state('stopped')
@@ -797,7 +575,7 @@ def main():
             overlay.updatetext('status_bar', 'Waiting for text extraction to finish')
             # overlay.updatetext('log_output', 'Waiting for text extraction to finish', append=True)
             overlay.updatetext('ocr_count', ocr_image.ocr.get_img_queue_len())
-            get_updates_from_ocr(overlay)
+            get_updates_from_ocr()
             overlay.read()
 
             if ocr_image.ocr.get_img_queue_len() == 0:
@@ -806,20 +584,20 @@ def main():
                 overlay.updatetext('log_output', 'Finished extracting text', append=True)
                 overlay.updatetext('log_output', f'Total time taken: {format_seconds(app_timer.elapsed())}', append=True)
                 time.sleep(1)
-                get_updates_from_ocr(overlay)
+                get_updates_from_ocr()
                 overlay.read()
                 time.sleep(1)
                 print('Finished: ',str(timedelta(seconds=app_timer.elapsed())))
                 print('Reject List: ', ocr_image.ocr.get_rejects())
                 print('Confirm list: ', ocr_image.ocr.get_confirms())
 
-                populate_confirm_form(overlay)
+                populate_confirm_form()
                 if ocr_image.ocr.get_insert_list():
                     if not canceled:
                         overlay.updatetext('status_bar', 'Cleaning data and submitting to API')
                         overlay.updatetext('log_output', 'Cleaning data and submitting to API', append=True)
                         overlay.read()
-                        prep_for_api_insert(ocr_image.ocr.get_insert_list(), server_id, env, overlay)
+                        prep_for_api_insert(my_token, ocr_image.ocr.get_insert_list(), server_id, env)
                     else:
                         print('Scan Canceled. No data inserted.')
                         overlay.updatetext('status_bar', 'ERROR')

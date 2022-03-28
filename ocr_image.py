@@ -6,11 +6,10 @@ import pytesseract
 from datetime import datetime
 import threading
 import sys
-from grabscreen import grab_screen
 import requests
 import json
 
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
+from app.ocr.utils import grab_screen
 
 
 def resource_path(relative_path):

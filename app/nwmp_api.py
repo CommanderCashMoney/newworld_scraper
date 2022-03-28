@@ -1,8 +1,9 @@
 import requests
 
+import ocr_image
+from app.overlay import overlay
 from settings import SETTINGS
-from overlay_settings_nw_tp import overlay
-from utils import get_endpoint_from_func_name
+from app.utils import get_endpoint_from_func_name
 
 
 def version_endpoint() -> str:

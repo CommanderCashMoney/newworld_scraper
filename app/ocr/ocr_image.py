@@ -1,44 +1,22 @@
-import json
-import logging
-import threading
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from queue import Queue
 
 import cv2
 from PIL import Image
-import numpy as np
-from PIL.PngImagePlugin import PngImageFile
 from pytesseract import pytesseract
 
-from grabscreen import grab_screen
+from app.ocr.utils import (
+    EVERYTHING_CONFIG,
+    INTEGERS_ONLY_CONFIG,
+    NUMBERS_PERIODS_COMMAS_CONFIG,
+    get_txt_from_im,
+    grab_screen,
+    pre_process_image
+)
 
 
 # todo: move this somewhere on initialise
-from utils import resource_path
-
-pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe')
-
-
-def pre_process_image(img, scale=2.5):
-    width = int(img.shape[1] * scale)
-    height = int(img.shape[0] * scale)
-    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_BITS)
-
-    lower_color = np.array([75, 40, 40])
-    upper_color = np.array([255, 255, 255])
-
-    mask = cv2.inRange(img, lower_color, upper_color)
-    res = cv2.bitwise_and(img, img, mask=mask)
-
-    res = cv2.cvtColor(res, cv2.COLOR_RGB2GRAY)
-
-    res = cv2.bilateralFilter(res, 5, 50, 100)
-    res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    res = np.invert(res)
-    return res
-
 
 def get_current_screen_page_count(img) -> int:
     aoi = (2233, 287, 140, 32)
@@ -62,17 +40,6 @@ def get_current_screen_page_count(img) -> int:
         # ocr.update_overlay('error_output',
         #                    'Page count not numeric', True)
         return 1
-
-
-def get_txt_from_im(name: str, config: str, cropped: np.array) -> str:
-    data = pytesseract.image_to_data(cropped, output_type=pytesseract.Output.DICT, config=config)
-    data["column_name"] = name
-    return data
-
-
-EVERYTHING_CONFIG = """--psm 6 -c tessedit_char_whitelist="0123456789,.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:- \\"\\'" """
-NUMBERS_PERIODS_COMMAS_CONFIG = """--psm 6 -c tessedit_char_whitelist="0123456789,.\""""
-INTEGERS_ONLY_CONFIG = """--psm 6 -c tessedit_char_whitelist="0123456789\""""
 
 
 class OCRImage:
