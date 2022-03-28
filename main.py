@@ -17,6 +17,8 @@ import ctypes
 import ocr_image
 import difflib
 
+from tzlocal import get_localzone
+
 from settings import SETTINGS
 from utils.api import check_latest_version, version_endpoint
 from utils.self_updating import installer_file_path, install_new_version, perform_update_download
@@ -151,10 +153,13 @@ def api_insert(json_data, env, overlay, user_name, total_count,server_id=0, func
     overlay.updatetext('log_output', 'API Submit started', append=True)
     overlay.read()
 
+    my_tz = get_localzone().zone
+
     r = requests.post(url, timeout=200, json={
         "version": SETTINGS.VERSION,
         "price_data": json.loads(json_data),
-        "server_id": server_id
+        "server_id": server_id,
+        "timezone": my_tz
     }, headers={'Authorization': f'Bearer {mytoken}'})
     print(f'{func} API submit time: {post_timer.elapsed()}')
     overlay.updatetext('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')

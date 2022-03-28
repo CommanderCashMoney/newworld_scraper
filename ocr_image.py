@@ -396,11 +396,11 @@ def prep_insert(d_items, testrun, img_count2):
                 acc = 100
             ocr.update_overlay('accuracy', f'{acc}%')
 
-            dt = datetime.utcnow()
+            dt = datetime.now()
+
             clean_list.append(dt)
             clean_list.append(name_id)
             if not testrun:
-
                 ocr.add_inserts(clean_list)
                 ocr.update_old_list(clean_list)
                 ocr.reset_price_fail_count()
