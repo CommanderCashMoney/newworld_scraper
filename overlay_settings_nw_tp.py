@@ -109,7 +109,7 @@ class Overlay():
 
         # Create the main window
         self.window = sg.Window(
-            'Trade Price Scraper',
+            f'Trade Price Scraper - {SETTINGS.VERSION}',
             layout,
             keep_on_top=False,
             location=(0, 0),
