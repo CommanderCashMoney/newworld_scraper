@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 import pynput
 
-from app.ocr.utils import grab_screen, look_for_cancel_or_refresh, pre_process_image
+from app.ocr.utils import grab_screen, look_for_cancel_or_refresh, look_for_tp, pre_process_image
 from app.utils import resource_path
 from app.utils.keyboard import press_key
 from app.utils.mouse import click, mouse
@@ -58,12 +58,14 @@ section_list = {
 
 
 def update_overlay(key: str, value: str):
+    overlay = None
     overlay.updatetext(key, value)
     overlay.read()  # this is here to unstick the ui
 
 
-class SectionCrawler:
-    def __init__(self, section: str) -> None:
+class _SectionCrawler:
+    def __init__(self, parent: "Crawler", section: str) -> None:
+        self.parent = parent
         self.section = section
         self.coordinates = section_list[section]
         self.loading_timer = Timer('load')
@@ -73,6 +75,12 @@ class SectionCrawler:
 
     def __repr__(self) -> str:
         return f"<SectionCrawler: {self}>"
+
+    def crawl(self) -> None:
+        if not look_for_tp():
+            self.parent.stop(reason="Couldn't find trading post")
+        else:
+            print("Found trading post.")
 
     @staticmethod
     def next_page():
@@ -146,20 +154,29 @@ class SectionCrawler:
         pass
 
 
-class Crawler:
+class _Crawler:
     def __init__(self) -> None:
-        self.section_crawlers = [SectionCrawler(k) for k in section_list.keys()]
+        self.section_crawlers = [_SectionCrawler(k) for k in section_list.keys()]
         self.current_section = 0
-        self.crawler_thread = Thread(target=self.process_queue, name="OCR Queue", daemon=True)
+        self.crawler_thread = Thread(target=self.crawl, name="OCR Queue", daemon=True)
+        self.stopped = False
 
     def __str__(self) -> str:
         return f"{self.section_crawlers}: {self.current_section}"
 
     def crawl(self) -> None:
         print("Started Crawling")
+        for section_crawler in self.section_crawlers:
+            section_crawler.crawl()
 
     def start(self) -> None:
-        self._processing_thread.start()
+        self.stopped = False
+        if not self.crawler_thread.is_alive():
+            self.crawler_thread.start()
+
+    def stop(self, reason: str) -> None:
+        print(f"Stopped crawling because {reason}")
+        self.stopped = True
 
 
 
@@ -334,3 +351,6 @@ def crawl():
     # SCANNING = False
     # ocr_image.ocr.set_cap_state('stopped')
     # overlay.updatetext('log_output', 'Image capture finished', append=True)
+
+
+Crawler = _Crawler()
