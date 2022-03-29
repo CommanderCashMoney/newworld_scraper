@@ -40,24 +40,15 @@ def pre_process_image(img, scale=2.5):
     return res
 
 
-def look_for_tp():
-    for x in range(2):
-        bring_new_world_to_foreground()
-        mouse.position = (1300, 480)
-        time.sleep(0.1)
-        look_for_cancel_or_refresh()
-        reference_aoi = (450, 32, 165, 64)
-        reference_grab = grab_screen(region=reference_aoi)
-        reference_image_file = resource_path('app/images/new_world/trading_post_label.png')
-        reference_img = cv2.imread(reference_image_file)
-        res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.92:
-            return True
-        else:
-            time.sleep(1)
+def grab_screen(region=None):
+    left, top, width, height = region
+    mon = {"top": top, "left": left, "width": width, "height": height}
 
-    return False
+    sct = mss.mss()
+    g = sct.grab(mon)
+    img = np.asarray(g)
+    img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
+    return img
 
 
 def look_for_cancel_or_refresh():
@@ -86,21 +77,21 @@ def look_for_cancel_or_refresh():
         time.sleep(0.1)
 
 
-def next_page():
-    click('left', (2400, 300))
-    # time.sleep(0.1)
-    mouse.position = (1300, 480)
-    time.sleep(0.1)
+def look_for_tp() -> bool:
+    for x in range(2):
+        bring_new_world_to_foreground()
+        mouse.position = (1300, 480)
+        time.sleep(0.1)
+        look_for_cancel_or_refresh()
+        reference_aoi = (450, 32, 165, 64)
+        reference_grab = grab_screen(region=reference_aoi)
+        reference_image_file = resource_path('app/images/new_world/trading_post_label.png')
+        reference_img = cv2.imread(reference_image_file)
+        res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        if max_val > 0.92:
+            return True
+        else:
+            time.sleep(1)
 
-
-def grab_screen(region=None):
-
-    left, top, width, height = region
-    mon = {"top": top, "left": left, "width": width, "height": height}
-
-    sct = mss.mss()
-    g = sct.grab(mon)
-    img = np.asarray(g)
-    img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
-
-    return img
+    return False
