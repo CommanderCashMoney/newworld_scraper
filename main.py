@@ -14,7 +14,7 @@ import pynput
 import sys
 from win32gui import GetWindowText, GetForegroundWindow
 import numpy as np
-from my_timer import Timer
+from app.utils.timer import Timer
 from datetime import datetime, timedelta
 from app.overlay import overlay  # noqa
 import ocr_image
@@ -431,7 +431,7 @@ def main():
             insert_list = ocr_image.ocr.get_insert_list()
             if insert_list:
                 with open(f'{folder}/prices_data.txt', 'w') as f:
-                    f.write(json.dumps(insert_list))
+                    f.write(json.dumps(insert_list, default=str))
                 overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
             else:
                 overlay.updatetext('error_output', 'No data to export to file.', append=True)

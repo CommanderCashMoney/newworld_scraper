@@ -7,6 +7,7 @@ class TimerError(Exception):
 
 class Timer:
     timers = dict()
+
     def __init__(self, name=None, text="Elapsed time: {:0.4f} seconds"):
         self._start_time = None
         self.text = text

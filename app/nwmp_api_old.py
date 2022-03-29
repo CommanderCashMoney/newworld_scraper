@@ -7,7 +7,7 @@ from tzlocal import get_localzone
 import ocr_image
 from app.overlay import overlay
 from app.utils import format_seconds
-from my_timer import Timer
+from app.utils.timer import Timer
 from settings import SETTINGS
 
 

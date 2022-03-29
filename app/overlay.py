@@ -55,9 +55,9 @@ class Overlay:
 
             [sg.Text('_' * 60)],
             [sg.Text('Logs:')],
-            [sg.Multiline(key='log_output', size=(60,10), auto_refresh=True)],
+            [sg.Multiline(key='log_output', size=(60,10), auto_refresh=True, disabled=True)],
             [sg.Text('Errors:')],
-            [sg.Multiline(key='error_output', size=(60,5), auto_refresh=True)],
+            [sg.Multiline(key='error_output', size=(60,5), auto_refresh=True, disabled=True)],
             [sg.Button('Resend data', key='resend', visible=False), sg.In(size=(25,1), enable_events=True ,key='-FOLDER-', visible=False), sg.FolderBrowse(button_text='Download Data')],
             [sg.Frame(title='Confirm item names', key='confirm', visible=False, layout=[
                 [sg.InputText('', key='bad_name_0', size=(35, 1)), sg.Combo(['Add new'], key='good_name_0', enable_events=True, readonly=True), sg.Button('Add', key='add0', disabled=True)],
