@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -17,6 +18,8 @@ from app.ocr.utils import (
 
 
 # todo: move this somewhere on initialise
+from app.overlay.overlay_updates import OverlayUpdateHandler
+
 
 def get_current_screen_page_count(img) -> int:
     aoi = (2233, 287, 140, 32)
@@ -31,14 +34,10 @@ def get_current_screen_page_count(img) -> int:
         if int(pages) < 501:
             return int(pages)
         else:
-            print('page count greater than 500')
-            # ocr.update_overlay('error_output',
-            #                    'Page count greater than 500', True)
+            logging.error('Page count greater than 500')
             return 1
     else:
-        print('page count not numeric')
-        # ocr.update_overlay('error_output',
-        #                    'Page count not numeric', True)
+        logging.error('page count not numeric')
         return 1
 
 

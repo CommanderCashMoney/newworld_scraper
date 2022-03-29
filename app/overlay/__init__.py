@@ -1,3 +1,6 @@
+from typing import Callable
+from queue import Queue
+
 import PySimpleGUI as sg
 
 from settings import SETTINGS
@@ -10,6 +13,7 @@ class Overlay:
         self._show_spinner = True
         self.server_version: str = None
         self.download_link: str = None
+        self.logging_queue = Queue()
         is_dev = SETTINGS.is_dev
         layout1 = [
             [
@@ -55,9 +59,9 @@ class Overlay:
 
             [sg.Text('_' * 60)],
             [sg.Text('Logs:')],
-            [sg.Multiline(key='log_output', size=(60,10), auto_refresh=True, disabled=True)],
+            [sg.Multiline(key='log_output', size=(60, 10), auto_refresh=True, disabled=True)],
             [sg.Text('Errors:')],
-            [sg.Multiline(key='error_output', size=(60,5), auto_refresh=True, disabled=True)],
+            [sg.Multiline(key='error_output', size=(60, 5), auto_refresh=True, disabled=True)],
             [sg.Button('Resend data', key='resend', visible=False), sg.In(size=(25,1), enable_events=True ,key='-FOLDER-', visible=False), sg.FolderBrowse(button_text='Download Data')],
             [sg.Frame(title='Confirm item names', key='confirm', visible=False, layout=[
                 [sg.InputText('', key='bad_name_0', size=(35, 1)), sg.Combo(['Add new'], key='good_name_0', enable_events=True, readonly=True), sg.Button('Add', key='add0', disabled=True)],
@@ -131,7 +135,7 @@ class Overlay:
             else:
                 self.window[element].Update(value=val)
 
-        if size:
+        if isinstance(size, tuple):
             self.window[element].set_size(size=(size, 1))
 
     def disable(self, element):
@@ -204,6 +208,14 @@ class Overlay:
         self.spinner_step += 1
         if self.spinner_step > 470:
             self.spinner_step = 0
+
+    def queue_logging_from_external_thread(self, handler, record):
+        self.logging_queue.put((handler, record))
+
+    def flush_logging(self) -> None:
+        while self.logging_queue.qsize() > 0:
+            handler, record = self.logging_queue.get()
+            handler.emit(record)
 
 
 overlay = Overlay()

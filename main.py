@@ -1,3 +1,4 @@
+import logging
 import traceback
 import json
 import requests
@@ -5,6 +6,7 @@ import cv2
 
 from app.nwmp_api_old import api_insert, prep_for_api_insert
 from app.ocr.utils import look_for_cancel_or_refresh, look_for_tp, next_page
+from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.keyboard import press_key
 from app.utils.mouse import click, mouse
 from app.ocr.utils import grab_screen
@@ -17,6 +19,7 @@ import numpy as np
 from app.utils.timer import Timer
 from datetime import datetime, timedelta
 from app.overlay import overlay  # noqa
+from app.overlay.overlay_logging import OverlayLoggingHandler
 import ocr_image
 import difflib
 
@@ -24,6 +27,9 @@ from settings import SETTINGS
 from app.utils import format_seconds, resource_path
 from app.nwmp_api import check_latest_version
 from app.self_updating import INSTALLER_LAUNCHED_EVENT, VERSION_FETCHED_EVENT, version_update_events
+
+
+OverlayLoggingHandler.setup_overlay_logging()
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -95,7 +101,7 @@ def populate_confirm_form():
     for count, value in enumerate(confirm_list):
         if count >= 10:
             break
-        overlay.updatetext(f'bad_name_{count}', value, size=len(value))
+        OverlayUpdateHandler.update(f'bad_name_{count}', value, size=len(value))
         close_matches = difflib.get_close_matches(value, cn_list, n=5, cutoff=0.6)
         close_matches.insert(0, 'Add New')
         s = max(close_matches, key=len)
@@ -108,8 +114,8 @@ def next_confirm_page():
     global current_page
     current_page += 1
     for x in range(10):
-        overlay.updatetext(f'bad_name_{x}', '', size=10)
-        overlay.updatetext(f'good_name_{x}', '', size=10)
+        OverlayUpdateHandler.update(f'bad_name_{x}', '', size=10)
+        OverlayUpdateHandler.update(f'good_name_{x}', '', size=10)
 
     if len(ocr_image.ocr.get_confirms()) >= 10:
         ocr_image.ocr.del_confirms()
@@ -144,14 +150,14 @@ def look_for_scroll(section):
             return True
         else:
             print(f'loading_scroll {section}')
-            overlay.updatetext('status_bar', 'Loading page')
+            OverlayUpdateHandler.update('status_bar', 'Loading page')
             overlay.read()
             time.sleep(0.1)
             if loading_timer.elapsed() > 3:
                 #we have been loading too long. Somthing is wrong. Skip it.
                 page_stuck_counter += 1
                 print('loading too long. skip it')
-                overlay.updatetext(f'error_output', f'Took too long waiting for page to load - {page_stuck_counter}', append=True)
+                OverlayUpdateHandler.update(f'error_output', f'Took too long waiting for page to load - {page_stuck_counter}', append=True)
                 overlay.read()
                 return True
 
@@ -181,32 +187,23 @@ def get_img(pages, section):
     return img
 
 
-def get_updates_from_ocr():
-    ocr_updates = ocr_image.ocr.get_overlay_updates()
-    for x in ocr_updates:
-
-        overlay.updatetext(x[0], x[1], append=x[2])
-        ocr_image.ocr.remove_one_overlayupdate()
-
-
 def ocr_cycle(pages, app_timer):
     global SCANNING, img_count, canceled, page_stuck_counter
 
     for x in range(pages):
         if look_for_tp():
             if ocr_image.ocr.get_state() == 'stopped':
-                overlay.updatetext('error_output', 'Text extraction stopped prematurely due to an error', append=True)
-                overlay.updatetext('status_bar', 'ERROR')
+                logging.error('Text extraction stopped prematurely due to an error')
+                OverlayUpdateHandler.update('status_bar', 'ERROR')
                 canceled = True
                 overlay.read()
                 return True
-            overlay.updatetext('pages_left', pages-1)
+            OverlayUpdateHandler.update('pages_left', pages-1)
             img = get_img(pages, 'top')
             ocr_image.ocr.add_img(img, img_count)
-            overlay.updatetext('key_count', img_count)
-            overlay.updatetext('ocr_count', ocr_image.ocr.get_img_queue_len())
-            overlay.updatetext('status_bar', 'Capturing images')
-            get_updates_from_ocr()
+            OverlayUpdateHandler.update('key_count', img_count)
+            OverlayUpdateHandler.update('ocr_count', ocr_image.ocr.get_img_queue_len())
+            OverlayUpdateHandler.update('status_bar', 'Capturing images')
             overlay.read()
             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
             # cv2.imwrite(file_name, img)
@@ -230,7 +227,7 @@ def ocr_cycle(pages, app_timer):
 
             img = get_img(pages, 'btm')
             ocr_image.ocr.add_img(img, img_count)
-            overlay.updatetext('key_count', img_count)
+            OverlayUpdateHandler.update('key_count', img_count)
             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
             # cv2.imwrite(file_name, img)
             img_count += 1
@@ -250,7 +247,7 @@ def ocr_cycle(pages, app_timer):
             mouse.scroll(0, -2)
             img = get_img(pages, 'last')
             ocr_image.ocr.add_img(img, img_count)
-            overlay.updatetext('key_count', img_count)
+            OverlayUpdateHandler.update('key_count', img_count)
             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
             # cv2.imwrite(file_name, img)
             img_count += 1
@@ -258,22 +255,22 @@ def ocr_cycle(pages, app_timer):
             if page_stuck_counter > 2:
                 # got stuck looking for the scrollbars. exit out and skip section
                 print('page stuck too long. moving to next section')
-                overlay.updatetext('error_output', 'Page stuck too long. Moving to next section', append=True)
+                OverlayUpdateHandler.update('error_output', 'Page stuck too long. Moving to next section', append=True)
                 page_stuck_counter = 0
                 break
 
             next_page()
             pages -= 1
-            overlay.updatetext('pages', pages)
-            overlay.updatetext('elapsed', format_seconds(app_timer.elapsed()))
+            OverlayUpdateHandler.update('pages', pages)
+            OverlayUpdateHandler.update('elapsed', format_seconds(app_timer.elapsed()))
             overlay.read()
 
             if not SCANNING:
                 return True
         else:
             print('couldnt find TP marker')
-            overlay.updatetext('error_output', 'Couldnt find Trading Post window', append=True)
-            overlay.updatetext('status_bar', 'ERROR')
+            OverlayUpdateHandler.update('error_output', 'Couldnt find Trading Post window', append=True)
+            OverlayUpdateHandler.update('status_bar', 'ERROR')
             canceled = True
             overlay.read()
             SCANNING = False
@@ -286,7 +283,7 @@ def ocr_cycle(pages, app_timer):
 def clear_overlay(overlay):
     field_list = ['elapsed', 'key_count', 'ocr_count', 'accuracy', 'listings_count', 'p_fails', 'rejects', 'log_output', 'error_output']
     for x in field_list:
-        overlay.updatetext(x, '')
+        OverlayUpdateHandler.update(x, '')
 
 
 def login(overlay, env, un, pw):
@@ -294,9 +291,9 @@ def login(overlay, env, un, pw):
         url = 'http://localhost:8080/api/token/'
     else:
         url = 'https://nwmarketprices.com/api/token/'
-    print('Logging in')
+    logging.info('Logging in')
     overlay.disable('login')
-    overlay.updatetext('login_status', 'logging in..')
+    OverlayUpdateHandler.update('login_status', 'logging in..')
     overlay.read()
     json_data = {"username": un, "password": pw, "version": SETTINGS.VERSION}
     json_data = json.dumps(json_data)
@@ -307,14 +304,14 @@ def login(overlay, env, un, pw):
 
     status_code = r.status_code if r is not None else None
     if status_code == 200:
-        print('login successful')
+        logging.info('login successful')
         return r
     elif r is None:
-        print("Login failed - no connection to server")
+        logging.info("Login failed - no connection to server")
     else:
-        print('login failed!')
-        print(r.status_code)
-        print(r.json())
+        logging.info('login failed!')
+        logging.info(r.status_code)
+        logging.info(r.json())
     return None
 
 
@@ -335,6 +332,7 @@ def main():
     overlay.window.perform_long_operation(check_latest_version, VERSION_FETCHED_EVENT)
 
     while True:
+        OverlayUpdateHandler.flush_updates()
         if 'advanced' in access_groups:
             overlay.show_advanced()
         event, values = overlay.read()
@@ -357,7 +355,7 @@ def main():
         server_id = values.get('server_select', '')
 
         try:
-            pages = int(values['pages'])
+            pages = int(values.get('pages', 1))
         except ValueError:
             pages = 1
 
@@ -369,8 +367,8 @@ def main():
         if event == 'Clear':
             ocr_image.ocr.clear()
             for x in range(10):
-                overlay.updatetext(f'good_name_{x}', '')
-                overlay.updatetext(f'bad_name_{x}', '')
+                OverlayUpdateHandler.update(f'good_name_{x}', '')
+                OverlayUpdateHandler.update(f'bad_name_{x}', '')
 
                 overlay.disable('add{}'.format(x))
         if event[:3] == 'add':
@@ -383,11 +381,11 @@ def main():
             if values[f'good_name_{row_num}'] == 'Add New':
                 print(f'adding to confirmed names: {name_list}')
                 add_single_item(name_list, env, 'confirmed_names_insert')
-                overlay.updatetext('log_output', f'adding to confirmed names: {name_list}', append=True)
+                OverlayUpdateHandler.update('log_output', f'adding to confirmed names: {name_list}', append=True)
             else:
                 print(f'adding to name cleanup dict: {name_list}')
                 add_single_item(name_list, env, 'name_cleanup_insert')
-                overlay.updatetext('log_output', f'adding to name cleanup: {name_list}', append=True)
+                OverlayUpdateHandler.update('log_output', f'adding to name cleanup: {name_list}', append=True)
 
         if event == 'next_btn':
             next_confirm_page()
@@ -407,18 +405,18 @@ def main():
             response = values[LOGIN_COMPLETED_EVENT]
             if response is None:
                 overlay.enable('login')
-                overlay.updatetext('login_status', 'login failed')
+                OverlayUpdateHandler.update('login_status', 'login failed')
                 overlay.read()
             else:
                 json_response = response.json()
                 my_token = json_response['access']
-                overlay.updatetext('login_status', '')
+                OverlayUpdateHandler.update('login_status', '')
                 user_name = json_response['username']
                 access_groups = json_response['groups']
                 for x in access_groups:
                     if 'server-' in x:
                         server_access_ids.append(x[7:])
-                overlay.updatetext('server_select', server_access_ids)
+                OverlayUpdateHandler.update('server_select', server_access_ids)
                 overlay.show_main()
 
         if event == 'resend':
@@ -432,9 +430,9 @@ def main():
             if insert_list:
                 with open(f'{folder}/prices_data.txt', 'w') as f:
                     f.write(json.dumps(insert_list, default=str))
-                overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
+                OverlayUpdateHandler.update('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
             else:
-                overlay.updatetext('error_output', 'No data to export to file.', append=True)
+                OverlayUpdateHandler.update('error_output', 'No data to export to file.', append=True)
 
         if SCANNING:
             app_timer.restart()
@@ -448,16 +446,16 @@ def main():
 
             if test_run:
                 print('Starting TEST run')
-                overlay.updatetext('log_output', 'Test scan started', append=True)
-                overlay.updatetext('status_bar', 'Test scan started')
+                logging.info('Test scan started')
+                OverlayUpdateHandler.update('status_bar', 'Test scan started')
                 overlay.read()
                 img = get_img(pages, 'top')
                 ocr_image.ocr.add_img(img, 1)
 
             else:
                 print('Starting REAL run')
-                overlay.updatetext('log_output', 'Real scan started', append=True)
-                overlay.updatetext('status_bar', 'Real scan started')
+                OverlayUpdateHandler.update('log_output', 'Real scan started', append=True)
+                OverlayUpdateHandler.update('status_bar', 'Real scan started')
                 overlay.read()
                 canceled = False
                 if auto_scan_sections:
@@ -498,9 +496,9 @@ def main():
                             print(f'Starting new section: {key}')
                             keypress_exit = ocr_cycle(ocr_image.ocr.get_page_count(), app_timer)
                             if keypress_exit:
-                                overlay.updatetext('error_output', 'Exit key press', append=True)
-                                overlay.updatetext('error_output', 'Scan Canceled. No data inserted.', append=True)
-                                overlay.updatetext('status_bar', 'Scan cancelled')
+                                OverlayUpdateHandler.update('error_output', 'Exit key press', append=True)
+                                OverlayUpdateHandler.update('error_output', 'Scan Canceled. No data inserted.', append=True)
+                                OverlayUpdateHandler.update('status_bar', 'Scan cancelled')
                                 overlay.enable('Run')
                                 break
                             time.sleep(0.5)
@@ -521,24 +519,22 @@ def main():
 
             SCANNING = False
             ocr_image.ocr.set_cap_state('stopped')
-            overlay.updatetext('log_output', 'Image capture finished', append=True)
+            logging.info('Image capture finished')
 
         ocr_state = ocr_image.ocr.get_state()
         if ocr_state == 'running':
-            overlay.updatetext('elapsed', format_seconds(app_timer.elapsed()))
-            overlay.updatetext('status_bar', 'Waiting for text extraction to finish')
-            # overlay.updatetext('log_output', 'Waiting for text extraction to finish', append=True)
-            overlay.updatetext('ocr_count', ocr_image.ocr.get_img_queue_len())
-            get_updates_from_ocr()
+            OverlayUpdateHandler.update('elapsed', format_seconds(app_timer.elapsed()))
+            OverlayUpdateHandler.update('status_bar', 'Waiting for text extraction to finish')
+            # OverlayUpdateHandler.update('log_output', 'Waiting for text extraction to finish', append=True)
+            OverlayUpdateHandler.update('ocr_count', ocr_image.ocr.get_img_queue_len())
             overlay.read()
 
             if ocr_image.ocr.get_img_queue_len() == 0:
                 ocr_image.ocr.stop_OCR()
-                overlay.updatetext('status_bar', 'Finished extracting text')
-                overlay.updatetext('log_output', 'Finished extracting text', append=True)
-                overlay.updatetext('log_output', f'Total time taken: {format_seconds(app_timer.elapsed())}', append=True)
+                OverlayUpdateHandler.update('status_bar', 'Finished extracting text')
+                OverlayUpdateHandler.update('log_output', 'Finished extracting text', append=True)
+                OverlayUpdateHandler.update('log_output', f'Total time taken: {format_seconds(app_timer.elapsed())}', append=True)
                 time.sleep(1)
-                get_updates_from_ocr()
                 overlay.read()
                 time.sleep(1)
                 print('Finished: ',str(timedelta(seconds=app_timer.elapsed())))
@@ -548,14 +544,14 @@ def main():
                 populate_confirm_form()
                 if ocr_image.ocr.get_insert_list():
                     if not canceled:
-                        overlay.updatetext('status_bar', 'Cleaning data and submitting to API')
-                        overlay.updatetext('log_output', 'Cleaning data and submitting to API', append=True)
+                        OverlayUpdateHandler.update('status_bar', 'Cleaning data and submitting to API')
+                        OverlayUpdateHandler.update('log_output', 'Cleaning data and submitting to API', append=True)
                         overlay.read()
                         prep_for_api_insert(my_token, ocr_image.ocr.get_insert_list(), server_id, env)
                     else:
                         print('Scan Canceled. No data inserted.')
-                        overlay.updatetext('status_bar', 'ERROR')
-                        overlay.updatetext('error_output', 'Scan Canceled. No data inserted.', append=True)
+                        OverlayUpdateHandler.update('status_bar', 'ERROR')
+                        OverlayUpdateHandler.update('error_output', 'Scan Canceled. No data inserted.', append=True)
                         canceled = False
 
                 img_count = 1
