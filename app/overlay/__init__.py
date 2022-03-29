@@ -1,6 +1,3 @@
-from typing import Callable
-from queue import Queue
-
 import PySimpleGUI as sg
 
 from settings import SETTINGS
@@ -13,7 +10,6 @@ class Overlay:
         self._show_spinner = True
         self.server_version: str = None
         self.download_link: str = None
-        self.logging_queue = Queue()
         is_dev = SETTINGS.is_dev
         layout1 = [
             [
@@ -208,14 +204,6 @@ class Overlay:
         self.spinner_step += 1
         if self.spinner_step > 470:
             self.spinner_step = 0
-
-    def queue_logging_from_external_thread(self, handler, record):
-        self.logging_queue.put((handler, record))
-
-    def flush_logging(self) -> None:
-        while self.logging_queue.qsize() > 0:
-            handler, record = self.logging_queue.get()
-            handler.emit(record)
 
 
 overlay = Overlay()

@@ -1,14 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 added_files = [
-
-("images", "images"),
-("nw_images", "nw_images"),
-("temp", "temp"),
-("tesseract/", "tesseract")
-
+    ("app/", "app"),
+    ("tesseract/", "tesseract")
 ]
 added_binaries = [
-('tesseract/tesseract.exe', 'tesseract')
+    ('tesseract/tesseract.exe', 'tesseract')
 ]
 
 block_cipher = None
