@@ -1,10 +1,7 @@
-import json
 import logging
 import traceback
 
 from app import events
-from app.nwmp_api_old import login_event
-from app.ocr import OCRQueue
 from app.ocr.crawler import Crawler
 from app.overlay.overlay_updates import OverlayUpdateHandler
 import pytesseract
@@ -13,7 +10,6 @@ from app.overlay import overlay  # noqa
 from app.overlay.overlay_logging import OverlayLoggingHandler
 
 from app.utils import resource_path
-from app.nwmp_api import check_latest_version
 
 
 OverlayLoggingHandler.setup_overlay_logging()
@@ -29,19 +25,26 @@ pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe'
 
 
 def main():
-    overlay.window.perform_long_operation(check_latest_version, events.VERSION_FETCHED_EVENT)
+    events.handle_event(events.APP_LAUNCHED, {})
 
     while True:
         OverlayUpdateHandler.flush_updates()
         event, values = overlay.window.read()
-        events.handle_event(event, values)
-        if event is None or event == events.INSTALLER_LAUNCHED_EVENT:  # quit
+
+        if event is None:
             break
+
+        events.handle_event(event, values)
+
+        if event == events.INSTALLER_LAUNCHED_EVENT:
+            logging.info("Installing new version, see you soon!")
+            break
+
         # todo: because we aren't spamming the cycle anymore, need to move these to a timer
         overlay.perform_cycle_updates()
         Crawler.update_elapsed()
 
-        # test_t event -> Crawler
+        # ALL STUFF BELOW NEEDS TO MOVE TO CRAWLER
         # if values.get('test_t'):
         #     test_run = True
         #     ocr_image.ocr.test_run(True)
@@ -52,24 +55,16 @@ def main():
         # sections_auto -> crawler
         # auto_scan_sections = bool(values.get('sections_auto'))
 
-        # remove this, only set in settings
-        # env = 'dev' if values.get('dev') else 'prod'
-        # ocr_image.ocr.set_env(env)
-
-        # server_select only important for submission
-        server_id = values.get('server_select', '')
-
         # crawler should be handling this
         # try:
         #     pages = int(values.get('pages', 1))
         # except ValueError:
         #     pages = 1
 
-        if event == events.RUN_BUTTON and server_id != '':
-            Crawler.start()
-            OCRQueue.start()
-            OverlayUpdateHandler.disable(events.RUN_BUTTON)
+        # server_select only important for submission
+        # server_id = values.get('server_select', '')
 
+        # ALL STUFF BELOW NEEDS A NEW MODULE
         # nowhere to put this yet
         # if event == 'Clear':
         #     ocr_image.ocr.clear()

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union
 from urllib.parse import urljoin
 
-from settings import SETTINGS
+from app.settings import SETTINGS
 
 
 def get_endpoint_from_func_name(func: str, target_env: str, is_api: bool = True) -> str:

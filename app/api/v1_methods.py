@@ -10,7 +10,7 @@ from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils import format_seconds
 from app.utils.timer import Timer
-from settings import SETTINGS
+from app.settings import SETTINGS
 
 
 # todo: split this out, it's trying to do too much

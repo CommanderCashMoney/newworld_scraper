@@ -2,7 +2,9 @@ import logging
 
 import requests
 
-from settings import SETTINGS
+from app.events import VERSION_FETCHED_EVENT
+from app.overlay import overlay
+from app.settings import SETTINGS
 from app.utils import get_endpoint_from_func_name
 
 
@@ -22,3 +24,7 @@ def check_latest_version() -> str:
     except requests.exceptions.ConnectionError:
         return None
     return r.json()
+
+
+def perform_latest_version_check() -> str:
+    overlay.window.perform_long_operation(check_latest_version, VERSION_FETCHED_EVENT)

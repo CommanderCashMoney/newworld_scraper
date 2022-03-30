@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 
 from app import events
-from settings import SETTINGS
+from app.settings import SETTINGS
 from app.utils import resource_path
 
 

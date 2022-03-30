@@ -7,10 +7,9 @@ from typing import Optional
 import requests
 
 from app import events
-from app.nwmp_api import version_endpoint
+from app.api import version_endpoint
 from app.overlay import overlay
-from app.overlay.overlay_updates import OverlayUpdateHandler
-from settings import SETTINGS
+from app.settings import SETTINGS
 
 
 def installer_file_path() -> Path:

@@ -2,7 +2,7 @@ import logging
 import time
 from enum import Enum
 from threading import Thread
-from typing import Any, List
+from typing import Any
 
 import cv2
 import numpy as np
@@ -14,11 +14,11 @@ from app.ocr import OCRQueue
 from app.ocr.resolution_settings import Resolution, res_1440p
 from app.ocr.utils import grab_screen, pre_process_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
-from app.utils import format_seconds, resource_path
+from app.utils import format_seconds
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
 from app.utils.window import bring_new_world_to_foreground
-from settings import SETTINGS
+from app.settings import SETTINGS
 
 
 class ScrollState(Enum):
@@ -212,6 +212,7 @@ class _Crawler:
 
     def start(self) -> None:
         self.stopped = False
+        self.started = time.perf_counter()
         if not self.crawler_thread.is_alive():
             self.crawler_thread.start()
 
