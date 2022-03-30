@@ -1,10 +1,13 @@
 import PySimpleGUI as sg
-
+from os import path
 from settings import SETTINGS
 from utils import resource_path
+import json
 
 
 class Overlay():
+    SETTINGS_FILE = path.join(path.dirname(__file__), r'settings_file.cfg')
+    DEFAULT_SETTINGS = {'un': '', 'action_key': 'e', 'forward_key': 'w', 'backward_key': 's'}
 
     def __init__(self):
         self.spinner_step = 0  # set to -1 to hide
@@ -12,6 +15,8 @@ class Overlay():
         self.server_version: str = None
         self.download_link: str = None
         is_dev = SETTINGS.is_dev
+        saved_settings = self.load_settings()
+
         layout1 = [
             [
                 sg.Text('Trade Scraper', key="title"), sg.Text('Env?', visible=is_dev),
@@ -59,7 +64,7 @@ class Overlay():
             [sg.Multiline(key='log_output', size=(60,10), auto_refresh=True)],
             [sg.Text('Errors:')],
             [sg.Multiline(key='error_output', size=(60,5), auto_refresh=True)],
-            [sg.Button('Resend data', key='resend', visible=False), sg.In(size=(25,1), enable_events=True ,key='-FOLDER-', visible=False), sg.FolderBrowse(button_text='Download Data')],
+            [sg.Button('Resend data', key='resend', visible=False), sg.In(size=(25,1), enable_events=True ,key='-FOLDER-', visible=False), sg.FolderBrowse(button_text='Download Data'), sg.Button('Change key binds', key='keybinds')],
             [sg.Frame(title='Confirm item names', key='confirm', visible=False, layout=[
                 [sg.InputText('', key='bad_name_0', size=(35, 1)), sg.Combo(['Add new'], key='good_name_0', enable_events=True, readonly=True), sg.Button('Add', key='add0', disabled=True)],
                 [sg.InputText('', key='bad_name_1', size=(35, 1)), sg.Combo(['Add new'], key='good_name_1', enable_events=True, readonly=True), sg.Button('Add', key='add1', disabled=True)],
@@ -116,6 +121,30 @@ class Overlay():
             finalize=True,
             use_default_focus=False
         )
+        for key in saved_settings:
+            if key in self.window.AllKeysDict:
+                self.window[key].update(value=saved_settings[key])
+
+
+    def save_settings(self, new_settings: dict):
+        saved_settings = self.load_settings()
+        saved_settings.update(new_settings)
+
+        with open(self.SETTINGS_FILE, 'w') as f:
+            json.dump(saved_settings, f)
+
+    def load_settings(self) -> dict:
+        try:
+            with open(self.SETTINGS_FILE, 'r') as f:
+                saved_settings = json.load(f)
+                # if settings['action_key'] == '':
+                #     settings['action_key'] = 'e'
+        except FileNotFoundError as e:
+            print(f'Overlay settings not found. Using defaults - {e}')
+            saved_settings = self.DEFAULT_SETTINGS
+            with open(self.SETTINGS_FILE, 'w') as f:
+                json.dump(saved_settings, f)
+        return saved_settings
 
     def read(self):
         event, values = self.window.read(timeout=0)
@@ -206,12 +235,38 @@ class Overlay():
         if self.spinner_step > 470:
             self.spinner_step = 0
 
+    def popup_keybinds(self, saved_settings):
+        keybinds_layout = [
+            [
+
+                [sg.Text('Action Key', auto_size_text=True), sg.InputText(key='action_key', size=(2, 1))],
+                [sg.Text('Move Forward', auto_size_text=True), sg.InputText(key='forward_key', size=(2, 1))],
+                [sg.Text('Move Backward', auto_size_text=True), sg.InputText(key='backward_key', size=(2, 1))],
+                [sg.Button('Save')]
+
+            ],
+
+        ]
+
+        popup_loc = tuple(map(sum, zip(self.window.CurrentLocation(), (300, 650))))
+        window = sg.Window("Change key bindings", keybinds_layout, use_default_focus=False, finalize=True, modal=True, location=popup_loc)
+
+
+        for key in saved_settings:
+            if key in window.AllKeysDict:
+                window[key].update(value=saved_settings[key])
+        event, values = window.read()
+        window.close()
+
+        return values
+
+
 
 overlay = Overlay()
 
 
-# overlay = overlay()
-#
+
+
 # enabled = False
 # layout = 1
 # while True:
@@ -231,14 +286,10 @@ overlay = Overlay()
 #
 #         for key in keys:
 #             if key == 'F1':
-#                 # overlay.updatetext('pages', 4)
-#                 # overlay.togglebutton('Flasks', enabled)
-#                 # print('Toggled flasks enable', enabled)
+#
 #                 overlay.show_main()
 #                 time.sleep(0.5)
 #             if key == 'F2':
-#                 # overlay.updatetext('pages', 4)
-#                 # overlay.togglebutton('Flasks', enabled)
-#                 # print('Toggled flasks enable', enabled)
-#                 overlay.show_login()
+#
+#                 overlay.popup_keybinds
 #                 time.sleep(0.5)
