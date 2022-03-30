@@ -1,9 +1,8 @@
-from time import perf_counter
-
 import PySimpleGUI as sg
 
+from app import events
 from settings import SETTINGS
-from app.utils import format_seconds, resource_path
+from app.utils import resource_path
 
 
 class Overlay:
@@ -28,7 +27,7 @@ class Overlay:
                 sg.InputText(key='pw', size=(25, 1), password_char='*', default_text=SETTINGS.api_password)
             ],
             [
-                sg.Button('Checking Version', key='login', size=(15, 1), bind_return_key=True, disabled=True),
+                sg.Button('Checking Version', key=events.LOGIN_BUTTON, size=(15, 1), bind_return_key=True, disabled=True),
                 sg.Text('', key='login_status'),
                 sg.Image(size=(30, 30), key='-LOADING-IMAGE-', source=resource_path("app/images/spinner/0.png")),
             ],
@@ -36,7 +35,7 @@ class Overlay:
 
         layout3 = [[
             sg.Text('Trade Scraper')],
-            [sg.Button('Start Scan',  size=(15, 1), key='Run'), sg.Text('Test Run?'),
+            [sg.Button('Start Scan',  size=(15, 1), key=events.RUN_BUTTON), sg.Text('Test Run?'),
              sg.Radio('Y', group_id='1', key='test_t', default=True), sg.Radio('N', group_id='1', key='test_f')],
             [sg.Text('_' * 60)],
             [sg.Frame(title='Advanced', key='advanced', layout=[[
@@ -94,7 +93,7 @@ class Overlay:
         version_update_layout = [
             [sg.Text('', key='download_update_text')],
             [
-                sg.Button('Update Now', key='download_update'),
+                sg.Button('Update Now', key=events.BEGIN_DOWNLOAD_UPDATE),
                 sg.Image(size=(30, 30), key='-LOADING-IMAGE-2-', source=resource_path("app/images/spinner/0.png")),
             ],
         ]
@@ -190,7 +189,7 @@ class Overlay:
         version = version_info["version"]
         self.download_link = version_info["download_link"]
         self.server_version = version
-        login = self.window.find_element("login")
+        login = self.window.find_element(events.LOGIN_BUTTON)
         login.update("Login", disabled=False)
 
     def set_spinner_visibility(self, show=True) -> None:

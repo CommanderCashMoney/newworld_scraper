@@ -6,13 +6,15 @@ from typing import Any, List
 
 import cv2
 import numpy as np
+import pynput
 from pytesseract import pytesseract
+from win32gui import GetForegroundWindow, GetWindowText
 
 from app.ocr import OCRQueue
 from app.ocr.resolution_settings import Resolution, res_1440p
 from app.ocr.utils import grab_screen, pre_process_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
-from app.utils import resource_path
+from app.utils import format_seconds, resource_path
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
 from app.utils.window import bring_new_world_to_foreground
@@ -230,177 +232,25 @@ class _Crawler:
     @property
     def running(self) -> bool:
         return not self.stopped and self.crawler_thread.is_alive()
-#
-#
-# def ocr_cycle(pages, app_timer):
-#     global SCANNING, img_count, canceled, page_stuck_counter
-#
-#     for x in range(pages):
-#         if look_for_tp():
-#             if ocr_image.ocr.get_state() == 'stopped':
-#                 overlay.updatetext('error_output', 'Text extraction stopped prematurely due to an error', append=True)
-#                 overlay.updatetext('status_bar', 'ERROR')
-#                 canceled = True
-#                 overlay.read()
-#                 return True
-#             overlay.updatetext('pages_left', pages-1)
-#             img = get_img(pages, 'top')
-#             ocr_image.ocr.add_img(img, img_count)
-#             overlay.updatetext('key_count', img_count)
-#             overlay.updatetext('ocr_count', ocr_image.ocr.get_img_queue_len())
-#             overlay.updatetext('status_bar', 'Capturing images')
-#             get_updates_from_ocr()
-#             overlay.read()
-#             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
-#             # cv2.imwrite(file_name, img)
-#             img_count += 1
-#
-#             if pages == 1:
-#                 # see if scroll bar exists on last page
-#                 reference_aoi = (2438, 418, 34, 34)
-#                 reference_image_file = resource_path('app/images/new_world/top_of_scroll.png')
-#                 reference_grab = grab_screen(region=reference_aoi)
-#                 reference_img = cv2.imread(reference_image_file)
-#                 res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
-#                 min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-#                 if max_val < 0.98:
-#                     break
-#
-#
-#             if not SCANNING:
-#                 return True
-#             mouse.scroll(0, -11)
-#
-#             img = get_img(pages, 'btm')
-#             ocr_image.ocr.add_img(img, img_count)
-#             overlay.updatetext('key_count', img_count)
-#             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
-#             # cv2.imwrite(file_name, img)
-#             img_count += 1
-#
-#             #scroll to last 2 items
-#             if pages == 1:
-#                 #confirm we have a full scroll bar
-#                 reference_aoi = (2442, 874, 27, 27)
-#                 reference_image_file = resource_path('app/images/new_world/btm_of_scroll.png')
-#                 reference_grab = grab_screen(region=reference_aoi)
-#                 reference_img = cv2.imread(reference_image_file)
-#                 res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
-#                 min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-#                 if max_val < 0.98:
-#                     break
-#
-#             mouse.scroll(0, -2)
-#             img = get_img(pages, 'last')
-#             ocr_image.ocr.add_img(img, img_count)
-#             overlay.updatetext('key_count', img_count)
-#             # file_name = 'testimgs/imgcap-{}.png'.format(img_count)
-#             # cv2.imwrite(file_name, img)
-#             img_count += 1
-#
-#             if page_stuck_counter > 2:
-#                 # got stuck looking for the scrollbars. exit out and skip section
-#                 print('page stuck too long. moving to next section')
-#                 overlay.updatetext('error_output', 'Page stuck too long. Moving to next section', append=True)
-#                 page_stuck_counter = 0
-#                 break
-#
-#             next_page()
-#             pages -= 1
-#             overlay.updatetext('pages', pages)
-#             overlay.updatetext('elapsed', format_seconds(app_timer.elapsed()))
-#             overlay.read()
-#
-#             if not SCANNING:
-#                 return True
-#         else:
-#             print('couldnt find TP marker')
-#             overlay.updatetext('error_output', 'Couldnt find Trading Post window', append=True)
-#             overlay.updatetext('status_bar', 'ERROR')
-#             canceled = True
-#             overlay.read()
-#             SCANNING = False
-#             return True
-#     # need to clear the old price list since we are moving to a new section
-#     ocr_image.ocr.set_section_end(img_count)
-#     print('finished ocr cycle')
-#
-# def crawl():
-#     overlay = None
-#     app_timer = None
-#     clear_overlay = None
-#     ocr_image = None
-#     test_run = None
-#     get_img = None
-#     pages = None
-#     auto_scan_sections = None
-#     round_timer = None
-#     ocr_cycle = None
-#
-#     app_timer.restart()
-#     clear_overlay(overlay)
-#     overlay.hide_confirm()
-#     overlay.hide('resend')
-#     img_count = 1
-#     ocr_image.ocr.clean_insert_list()
-#     ocr_image.ocr.set_cap_state('running')
-#     ocr_image.ocr.start_OCR()
-#
-#     if test_run:
-#         print('Starting TEST run')
-#         overlay.updatetext('log_output', 'Test scan started', append=True)
-#         overlay.updatetext('status_bar', 'Test scan started')
-#         overlay.read()
-#         img = get_img(pages, 'top')
-#         ocr_image.ocr.add_img(img, 1)
-#
-#     else:
-#         print('Starting REAL run')
-#         overlay.updatetext('log_output', 'Real scan started', append=True)
-#         overlay.updatetext('status_bar', 'Real scan started')
-#         overlay.read()
-#         canceled = False
-#         if auto_scan_sections:
-#             round_timer.restart()
-#
-#             keypress_exit = False
-#             # click resources twice because screen won't have focus
-#             click('left', (170, 796))
-#             time.sleep(0.2)
-#             click('left', (170, 796))
-#             time.sleep(1)
-#             for key in section_list:
-#                 click('left', section_list[key])
-#                 time.sleep(1)
-#                 mouse.position = (1300, 480)
-#                 if section_list[key] != (170, 796):
-#                     print(f'Starting new section: {key}')
-#                     keypress_exit = ocr_cycle(ocr_image.ocr.get_page_count(), app_timer)
-#                     if keypress_exit:
-#                         overlay.updatetext('error_output', 'Exit key press', append=True)
-#                         overlay.updatetext('error_output', 'Scan Canceled. No data inserted.', append=True)
-#                         overlay.updatetext('status_bar', 'Scan cancelled')
-#                         overlay.enable('Run')
-#                         break
-#                     time.sleep(0.5)
-#
-#                     # check time to see if moving is required to stop idle check
-#                     if round_timer.elapsed() > 600:
-#                         print('Mid cycle pause: ', str(timedelta(seconds=app_timer.elapsed())))
-#                         press_key(pynput.keyboard.Key.esc)
-#                         time.sleep(0.5)
-#                         rand_time = np.random.uniform(0.10, 0.15)
-#                         press_key('w', rand_time)
-#                         press_key('s', rand_time)
-#                         press_key('e')
-#                         time.sleep(1)
-#                         round_timer.restart()
-#         else:
-#             ocr_cycle(pages, app_timer)
 
-    # SCANNING = False
-    # ocr_image.ocr.set_cap_state('stopped')
-    # overlay.updatetext('log_output', 'Image capture finished', append=True)
+    def update_elapsed(self) -> None:
+        # todo: not ideal
+        if self.running:
+            elapsed = time.perf_counter() - Crawler.started
+            OverlayUpdateHandler.update("elapsed", format_seconds(elapsed))
 
 
 Crawler = _Crawler()
+
+
+# todo: the listener should be part of the class
+def on_press(key):
+    active_window_text = GetWindowText(GetForegroundWindow())
+    if active_window_text in ['Trade Price Scraper', "New World"]:
+        if key == pynput.keyboard.KeyCode(char='/'):
+            Crawler.stop("Manually cancelled!", is_interrupt=True)
+
+
+listener = pynput.keyboard.Listener(on_press=on_press)
+listener.start()
+

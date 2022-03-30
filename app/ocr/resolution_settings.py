@@ -10,7 +10,7 @@ from app.utils import resource_path
 class ImageReference(BaseModel):
     screen_bbox: Tuple[int, int, int, int]
     file_name: str
-    conf: float
+    min_conf: float
 
     def compare_image_reference(self) -> bool:
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
@@ -19,7 +19,7 @@ class ImageReference(BaseModel):
         reference_img = cv2.imread(reference_image_file)
         res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        return max_val > self.conf
+        return max_val > self.min_conf
 
     @property
     def x(self) -> int:
@@ -71,12 +71,12 @@ class Resolution(BaseModel):
 
 
 res_1440p = Resolution(
-    trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", conf=0.92),
-    top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", conf=0.95),
-    mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="btm_of_scroll.png", conf=0.95),
-    bottom_scroll=ImageReference(screen_bbox=(2444, 1378, 25, 25), file_name="btm_of_scroll2.png", conf=0.95),
-    cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", conf=0.95),
-    refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", conf=0.95),
+    trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.92),
+    top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
+    mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="btm_of_scroll.png", min_conf=0.95),
+    bottom_scroll=ImageReference(screen_bbox=(2444, 1378, 25, 25), file_name="btm_of_scroll2.png", min_conf=0.95),
+    cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", min_conf=0.95),
+    refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", min_conf=0.95),
     next_page_coords=(2400, 300),
     pages_bbox=(2233, 287, 140, 32),
     items_bbox=(927, 430, 1510, 919),

@@ -35,6 +35,21 @@ class _OverlayUpdates:
     def disable(self, field: str) -> None:
         return self.enable(field, False)
 
+    def clear(self) -> None:
+        field_list = [
+            'elapsed',
+            'key_count',
+            'ocr_count',
+            'accuracy',
+            'listings_count',
+            'p_fails',
+            'rejects',
+            'log_output',
+            'error_output'
+        ]
+        for field in field_list:
+            OverlayUpdateHandler.update(field, '')
+
     def flush_updates(self) -> None:
         while self.updates.qsize() > 0:
             update = self.updates.get()
