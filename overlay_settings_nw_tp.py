@@ -260,36 +260,5 @@ class Overlay():
 
         return values
 
-
-
 overlay = Overlay()
 
-
-
-
-# enabled = False
-# layout = 1
-# while True:
-#
-#     event, values = overlay.read()
-#     if event != '__TIMEOUT__':
-#         print(event, values)
-#
-#     if event in (None, 'Exit'):
-#         break
-#     if event == 'Clear':
-#         overlay.updatetext('bad_name_0', 'asdfas', 50)
-#
-#
-#     keys = key_check()
-#     if keys:
-#
-#         for key in keys:
-#             if key == 'F1':
-#
-#                 overlay.show_main()
-#                 time.sleep(0.5)
-#             if key == 'F2':
-#
-#                 overlay.popup_keybinds
-#                 time.sleep(0.5)

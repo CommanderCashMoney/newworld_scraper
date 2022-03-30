@@ -615,8 +615,7 @@ def main():
         overlay.update_spinner()
 
         if event != '__TIMEOUT__':
-            saved_settings = dict(un=values['un'])
-            overlay.save_settings(saved_settings)
+            overlay.save_settings(dict(un=values['un']))
         if values['test_t']:
             test_run = True
             ocr_image.ocr.test_run(True)
