@@ -1,3 +1,4 @@
+import logging
 import time
 import os
 import numpy as np
@@ -10,6 +11,7 @@ import requests
 import json
 
 from app.ocr.utils import grab_screen
+from app.overlay.overlay_updates import OverlayUpdateHandler
 
 
 def resource_path(relative_path):
@@ -66,7 +68,7 @@ def process_image(img, blur=3):
     width = int(img.shape[1] * scale_percent / 100)
     height = int(img.shape[0] * scale_percent / 100)
     dim = (width, height)
-    img = cv2.resize(img, dim, interpolation=cv2.INTER_BITS)
+    img = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
 
     lower_color = np.array([75, 40, 40])
     upper_color = np.array([255, 255, 255])
@@ -76,7 +78,7 @@ def process_image(img, blur=3):
 
     res = cv2.cvtColor(res, cv2.COLOR_RGB2GRAY)
 
-    res = cv2.bilateralFilter(res, 5, 50, 100)
+    res = cv2.GaussianBlur(res, (blur, blur), cv2.BORDER_ISOLATED)
     res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     res = np.invert(res)
     # cv2.imshow('win1', res)
@@ -106,9 +108,7 @@ def price_check(curr_price, prev_price, s_curr_price):
 
     if curr_price <= 1:
         if abs(curr_price - prev_price) > 1:
-            print('price was low and differed by more than 1')
-            ocr.update_overlay('error_output',
-                                   'Price was low and differed by more than 1', True)
+            logging.error('Price was low and differed by more than 1')
             price_is_good = False
     if curr_price > 1.00:
         if diff > 101:
@@ -125,9 +125,7 @@ def price_check(curr_price, prev_price, s_curr_price):
             except ZeroDivisionError:
                 diff2 = 0
             if diff2 < 10 and s_curr_price >= prev_price:
-                print(f'Updated price from {curr_price} to {s_curr_price}')
-                ocr.update_overlay('log_output',
-                                       f'Updated price from {curr_price} to {s_curr_price}', True)
+                logging.info(f'Updated price from {curr_price} to {s_curr_price}')
                 return True, s_curr_price, diff2
 
 
@@ -149,15 +147,11 @@ def ocr_pages():
         if int(pages) < 501:
             return int(pages)
         else:
-            print('page count greater than 500')
-            ocr.update_overlay('error_output',
-                                   'Page count greater than 500', True)
+            logging.error('Page count greater than 500')
             return 1
 
     else:
-        print('page count not numeric')
-        ocr.update_overlay('error_output',
-                               'Page count not numeric', True)
+        logging.error('page count not numeric')
         return 1
 
 
@@ -168,7 +162,7 @@ def ocr_items():
         time.sleep(5)
     else:
         time.sleep(2)
-    ocr.update_overlay('log_output', 'Started extracting text from images', True)
+    logging.info('Started extracting text from images')
     path = resource_path('temp/')
     while True:
         img_count2 = ocr.get_img_count2()
@@ -182,15 +176,12 @@ def ocr_items():
                 time.sleep(5)
                 continue
             else:
-                print('queue is empty. stopping loop')
-                ocr.update_overlay('error_output', 'Ran out of images to process prematurely', True)
+                logging.error('Ran out of images to process prematurely')
                 ocr.set_state('stopped')
                 break
         file_name = resource_path(f'temp/img-{img_count2}.png')
         if not os.path.isfile(file_name):
-
-            print(f'couldnt find img_count2 = {img_count2}')
-            ocr.update_overlay('error_output', f'Couldnt find the correct image for text extraction. id={img_count2}', True)
+            logging.error(f'Couldnt find the correct image for text extraction. id={img_count2}')
             ocr.set_state('stopped')
             break
         else:
@@ -250,8 +241,7 @@ def ocr_items():
 
         if stop_loop:
             stop_loop = False
-            print('stopped loop')
-            ocr.update_overlay('log_output', 'Text extraction finished', True)
+            logging.info('Text extraction finished')
             ocr.set_state('finished')
             break
 
@@ -337,10 +327,7 @@ def prep_insert(d_items, testrun, img_count2):
                     name_id = None
                     result = False
             if not result:
-                print(clean_list[0], ' not found in list of approved names')
-                ocr.update_overlay('log_output',
-                                       f'{clean_list[0]} not found in list of approved names',
-                                       True)
+                logging.info(f'{clean_list[0]} not found in list of approved names')
                 ocr.add_confirms(clean_list[0])
                 good_to_insert = False
             old_list = ocr.get_old_list()
@@ -355,10 +342,7 @@ def prep_insert(d_items, testrun, img_count2):
                 passed_price_check, updated_price, price_diff = price_check(clean_list[1], old_list[1], s_curr_price)
                 print('price diff of: {}'.format(price_diff))
                 if not passed_price_check:
-                    print(f'{clean_list[0]} price of {clean_list[1]} varied too much from {old_list[1]} previous price')
-                    ocr.update_overlay('error_output',
-                                           f'{clean_list[0]} price of {clean_list[1]} varied too much from {old_list[1]} previous price',
-                                           True)
+                    logging.error(f'{clean_list[0]} price of {clean_list[1]} varied too much from {old_list[1]} previous price')
                     # confirm_list.append([clean_list[0], clean_list[1], clean_list[2], old_list[1]], )
                     ocr.add_price_fail([clean_list[0], clean_list[1], old_list[1]])
                     good_to_insert = False
@@ -368,8 +352,7 @@ def prep_insert(d_items, testrun, img_count2):
 
         if ocr.get_price_fail_count() > 2:
             ocr.too_many_fails()
-            print('ERROR - Too many price fails deleting last and resetting price barrier.')
-            ocr.update_overlay('error_output', 'ERROR - Too many price fails deleting last and resetting price barrier.', True)
+            logging.error('Too many price fails deleting last and resetting price barrier.')
             good_to_insert = False
 
         if good_to_insert:
@@ -377,8 +360,7 @@ def prep_insert(d_items, testrun, img_count2):
             p_fail = len(ocr.get_price_fail())
             rejects = len(ocr.get_rejects())
             print(f'{clean_list} p_fails: {p_fail} rejects: {rejects}')
-            ocr.update_overlay('log_output', f'Listing to insert: {clean_list}', True)
-            ocr.update_overlay('log_output', f'Listing to insert: {clean_list}', True)
+            logging.info(f'Listing to insert: {clean_list}')
             ocr.update_overlay('p_fails', p_fail)
             ocr.update_overlay('rejects', rejects)
             total = ocr.get_total() + 1
@@ -489,14 +471,8 @@ class OCR_Image:
             t2 = threading.Thread(target=ocr_items, name='ocr_running')
             t2.start()
 
-    def update_overlay(self, field, val, append=None):
-        self.overlay_updates.append((field, val, append))
-
-    def get_overlay_updates(self):
-        return self.overlay_updates
-
-    def remove_one_overlayupdate(self):
-        del self.overlay_updates[0]
+    def update_overlay(self, field, val, append=False):
+        OverlayUpdateHandler.update(field, val, append)
 
     def stop_OCR(self):
         global stop_loop

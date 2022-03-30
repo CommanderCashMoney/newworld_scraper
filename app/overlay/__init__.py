@@ -1,7 +1,9 @@
+from time import perf_counter
+
 import PySimpleGUI as sg
 
 from settings import SETTINGS
-from app.utils import resource_path
+from app.utils import format_seconds, resource_path
 
 
 class Overlay:
@@ -55,9 +57,9 @@ class Overlay:
 
             [sg.Text('_' * 60)],
             [sg.Text('Logs:')],
-            [sg.Multiline(key='log_output', size=(60,10), auto_refresh=True)],
+            [sg.Multiline(key='log_output', size=(60, 10), auto_refresh=True, disabled=True)],
             [sg.Text('Errors:')],
-            [sg.Multiline(key='error_output', size=(60,5), auto_refresh=True)],
+            [sg.Multiline(key='error_output', size=(60, 5), auto_refresh=True, disabled=True)],
             [sg.Button('Resend data', key='resend', visible=False), sg.In(size=(25,1), enable_events=True ,key='-FOLDER-', visible=False), sg.FolderBrowse(button_text='Download Data')],
             [sg.Frame(title='Confirm item names', key='confirm', visible=False, layout=[
                 [sg.InputText('', key='bad_name_0', size=(35, 1)), sg.Combo(['Add new'], key='good_name_0', enable_events=True, readonly=True), sg.Button('Add', key='add0', disabled=True)],
@@ -131,7 +133,7 @@ class Overlay:
             else:
                 self.window[element].Update(value=val)
 
-        if size:
+        if isinstance(size, tuple):
             self.window[element].set_size(size=(size, 1))
 
     def disable(self, element):
@@ -194,6 +196,9 @@ class Overlay:
     def set_spinner_visibility(self, show=True) -> None:
         self._show_spinner = show
         self.spinner.update(visible=show)
+
+    def perform_cycle_updates(self) -> None:
+        self.update_spinner()
 
     def update_spinner(self) -> None:
         if not self._show_spinner:

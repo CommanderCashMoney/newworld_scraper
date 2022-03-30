@@ -1,45 +1,22 @@
+import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import cv2
 from PIL import Image
-from pytesseract import pytesseract
 
 from app.ocr.utils import (
     EVERYTHING_CONFIG,
     INTEGERS_ONLY_CONFIG,
     NUMBERS_PERIODS_COMMAS_CONFIG,
     get_txt_from_im,
-    grab_screen,
     pre_process_image
 )
 
 
 # todo: move this somewhere on initialise
-
-def get_current_screen_page_count(img) -> int:
-    aoi = (2233, 287, 140, 32)
-    img = grab_screen(aoi)
-    img = pre_process_image(img, blur=1)
-    # i = Image.fromarray(img)
-    # i.show()
-    custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
-    txt = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
-    pages = txt['text'][-1]
-    if pages.isnumeric():
-        if int(pages) < 501:
-            return int(pages)
-        else:
-            print('page count greater than 500')
-            # ocr.update_overlay('error_output',
-            #                    'Page count greater than 500', True)
-            return 1
-    else:
-        print('page count not numeric')
-        # ocr.update_overlay('error_output',
-        #                    'Page count not numeric', True)
-        return 1
+from app.overlay.overlay_updates import OverlayUpdateHandler
 
 
 class OCRImage:
@@ -50,6 +27,7 @@ class OCRImage:
         self.errors = 0
 
     def parse_prices(self) -> defaultdict:
+        # todo: move me to resolution
         columns_1440p = {
             "name": {
                 "config": EVERYTHING_CONFIG,
@@ -94,8 +72,8 @@ class OCRImage:
         # now process the results
         # in 1440p, the row height is roughly 256px
         row_height = 256
+        final_data = []
         for result in results:
-            final_data = []
             row_data = defaultdict(lambda: defaultdict(str))
             for col_data in result:
                 column_name = col_data["column_name"]
@@ -108,11 +86,11 @@ class OCRImage:
                     row_data[current_row][column_name] += f"{append}{text}"
 
             # should do a check here that all the important keys exist
-            final_data.append(row_data)
+            final_data.extend([values for values in row_data.values()])
 
         for _, item in row_data.items():
             if "price" not in item or "avail" not in item or "name" not in item or "." not in item["price"]:
                 self.errors += 1
 
         self.price_data = row_data
-        return row_data
+        return final_data

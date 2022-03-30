@@ -1,9 +1,12 @@
 import subprocess
+import traceback
 from pathlib import Path
 from typing import Optional
 
 import requests
 
+from app.nwmp_api import version_endpoint
+from app.overlay import overlay
 from settings import SETTINGS
 
 VERSION_FETCHED_EVENT = "-VERSION FETCHED-"
