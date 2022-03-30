@@ -57,6 +57,18 @@ class Resolution(BaseModel):
     items_bbox: Tuple[int, int, int, int]
     items_bbox_last: Tuple[int, int, int, int]
 
+    # column start/end. didn't include owned/time
+    tp_row_height: int
+    tp_name_col_x_coords: Tuple[int, int]
+    tp_price_col_x_coords: Tuple[int, int]
+    tp_avail_col_x_coords: Tuple[int, int]
+    tp_tier_col_x_coords: Tuple[int, int]
+    tp_gs_col_x_coords: Tuple[int, int]
+    tp_gem_col_x_coords: Tuple[int, int]
+    tp_perk_col_x_coords: Tuple[int, int]
+    tp_rarity_col_x_coords: Tuple[int, int]
+    tp_location_col_x_coords: Tuple[int, int]
+
 
 res_1440p = Resolution(
     trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", conf=0.92),
@@ -69,6 +81,16 @@ res_1440p = Resolution(
     pages_bbox=(2233, 287, 140, 32),
     items_bbox=(927, 430, 1510, 919),
     items_bbox_last=(927, 1198, 1510, 200),
+    tp_row_height=256,
+    tp_name_col_x_coords=(0, 380),
+    tp_price_col_x_coords=(380, 550),
+    tp_avail_col_x_coords=(1080, 1165),
+    tp_tier_col_x_coords=(551, 630),
+    tp_gs_col_x_coords=(631, 712),
+    tp_gem_col_x_coords=(712, 802),
+    tp_perk_col_x_coords=(0, 0),  # don't actually know
+    tp_rarity_col_x_coords=(957, 1079),
+    tp_location_col_x_coords=(1342, 1510),
     sections={
            'Resources Reset 0': (170, 796),
            'Raw Resources': (368, 488),

@@ -6,6 +6,7 @@ from pathlib import Path
 import cv2
 from PIL import Image
 
+from app.ocr.resolution_settings import res_1440p
 from app.ocr.utils import (
     EVERYTHING_CONFIG,
     INTEGERS_ONLY_CONFIG,
@@ -25,37 +26,28 @@ class OCRImage:
         self.original_image = cv2.imread(str(img_src))
         self.price_data: defaultdict = None
         self.errors = 0
+        self.resolution = res_1440p
 
     def parse_prices(self) -> defaultdict:
-        # todo: move me to resolution
+
         columns_1440p = {
             "name": {
                 "config": EVERYTHING_CONFIG,
-                "coords": [0, 380],  # name
+                "coords": self.resolution.tp_name_col_x_coords,
             },
             "price": {
                 "config": NUMBERS_PERIODS_COMMAS_CONFIG,
-                "coords": [380, 550],  # price
+                "coords": self.resolution.tp_price_col_x_coords,
             },
             "avail": {
                 "config": INTEGERS_ONLY_CONFIG,
-                "coords": [1080, 1165],  # qty
+                "coords": self.resolution.tp_avail_col_x_coords,
             }
-            # "tier": [551, 630],   # tier - we don't even send this
-            # "gs": [631, 712],   # gs - useless right now
-            # "gem": [712, 802],   # gem - useless?
-            # "perk": [],           # perk.. is image, useless
-            # "rarity": [957, 1079],  # rarity - in current state, can't get this as the color gets completely filtered out
-            # [1164, 1255], # owned
-            # [1254, 1342],  # time
-            # "location": [1342, img.width]  # location
         }
         results = []
         cv2_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2BGR)
         img_arr = pre_process_image(cv2_img)
         img = Image.fromarray(img_arr)
-        # if fn == "temp\img-1022.png":
-        #     img.show()
         results.append([])
         broken_up_images = []
         # break the image up into columns for processing
@@ -71,14 +63,13 @@ class OCRImage:
 
         # now process the results
         # in 1440p, the row height is roughly 256px
-        row_height = 256
         final_data = []
         for result in results:
             row_data = defaultdict(lambda: defaultdict(str))
             for col_data in result:
                 column_name = col_data["column_name"]
                 for top, conf, text in zip(col_data["top"], col_data["conf"], col_data["text"]):
-                    current_row = int(top / row_height)
+                    current_row = int(top / self.resolution.tp_row_height)
                     if conf == "-1":
                         continue
                     # if data already exists for this column name, add a space.
