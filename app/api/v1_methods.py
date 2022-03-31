@@ -67,7 +67,6 @@ def api_insert(
         return my_token, json_data, env, total_count, server_id, func
     elif r.status_code in [200, 400]:
         OverlayUpdateHandler.update('error_output', r.json()["message"], append=True)
-        print(r.json())
     else:
         overlay.unhide('resend')
         overlay.enable('resend')
@@ -76,8 +75,6 @@ def api_insert(
 
     overlay.read()
     post_timer.stop()
-    print(r.status_code)
-    # print(r.json())
 
 
 def prep_for_api_insert(my_token, data_list, server_id, env):
@@ -162,7 +159,7 @@ def login_completed(response) -> None:
         overlay.read()
     else:
         json_response = response.json()
-        logging.info(json.dumps(json_response))
+        # logging.info(json.dumps(json_response))
         SELECTED_SETTINGS.access_token = json_response['access']
         OverlayUpdateHandler.update('login_status', '')
         access_groups = json_response['groups']
