@@ -21,12 +21,13 @@ class Settings(BaseSettings):
     api_password: str = ""
     APPDATA: str = None
 
-    def app_data_folder(self, relative_path: str) -> Path:
+    def app_data_folder(self, relative_path: str, is_dir=True) -> Path:
         if self.APPDATA is None:
             raise ValueError("No appdata folder found. TODO: set a default")
         app_data_base = Path(self.APPDATA)
         app_data_folder = app_data_base / "Cash Money Development" / "Trading Post Scraper" / relative_path
-        app_data_folder.mkdir(parents=True, exist_ok=True)
+        if is_dir:
+            app_data_folder.mkdir(parents=True, exist_ok=True)
         return app_data_folder
 
     @property

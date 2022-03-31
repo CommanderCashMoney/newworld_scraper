@@ -6,7 +6,7 @@ import json
 
 
 class Overlay():
-    SETTINGS_FILE = path.join(path.dirname(__file__), r'settings_file.cfg')
+    SETTINGS_FILE = str(SETTINGS.app_data_folder("keybind_settings.json", is_dir=False))
     DEFAULT_SETTINGS = {'un': '', 'action_key': 'e', 'forward_key': 'w', 'backward_key': 's'}
 
     def __init__(self):
@@ -248,8 +248,8 @@ class Overlay():
 
         ]
 
-        popup_loc = tuple(map(sum, zip(self.window.CurrentLocation(), (300, 650))))
-        window = sg.Window("Change key bindings", keybinds_layout, use_default_focus=False, finalize=True, modal=True, location=popup_loc)
+        popup_loc = tuple(map(sum, zip(self.window.CurrentLocation(), (132, 564))))
+        window = sg.Window("Change key bindings", keybinds_layout, use_default_focus=False, finalize=True, modal=True, location=popup_loc, grab_anywhere=True, no_titlebar=True)
 
 
         for key in saved_settings:

@@ -614,8 +614,7 @@ def main():
             break
         overlay.update_spinner()
 
-        if event != '__TIMEOUT__':
-            overlay.save_settings(dict(un=values['un']))
+
         if values['test_t']:
             test_run = True
             ocr_image.ocr.test_run(True)
@@ -680,6 +679,7 @@ def main():
             else:
                 login_env = 'dev'
             login(overlay, login_env, un, pw)
+            overlay.save_settings(dict(un=values['un']))
 
         if event == 'resend':
             overlay.disable('resend')
@@ -689,11 +689,11 @@ def main():
         if event == '-FOLDER-':
             folder = values['-FOLDER-']
             insert_list = ocr_image.ocr.get_insert_list()
-            # insert_list = '[asdfasdf, asdfasdfasdf,asdfasdfasdf,asdfasdfasdfasdf,asdfasdf]'
+
             if insert_list:
-                with open(f'{folder}/prices_data.txt', 'w') as f:
-                    f.write(json.dumps(insert_list))
-                overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
+                with open(f'{folder}/prices_data.json', 'w') as f:
+                    f.write(json.dumps(insert_list, default=str))
+                overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.json', append=True)
             else:
                 overlay.updatetext('error_output', 'No data to export to file.', append=True)
 
