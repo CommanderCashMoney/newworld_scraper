@@ -16,20 +16,17 @@ from app.ocr.utils import (
 )
 
 
-# todo: move this somewhere on initialise
-from app.overlay.overlay_updates import OverlayUpdateHandler
-
-
 class OCRImage:
     def __init__(self, img_src: Path) -> None:
         self.original_path = img_src
-        self.original_image = cv2.imread(str(img_src))
-        self.price_data: defaultdict = None
-        self.errors = 0
         self.resolution = res_1440p
 
-    def parse_prices(self) -> defaultdict:
+    @property
+    def original_image(self):
+        return cv2.imread(str(self.original_path))
 
+    def parse_prices(self) -> defaultdict:
+        """Parse prices from images, do no validation yet."""
         columns_1440p = {
             "name": {
                 "config": EVERYTHING_CONFIG,
@@ -79,9 +76,4 @@ class OCRImage:
             # should do a check here that all the important keys exist
             final_data.extend([values for values in row_data.values()])
 
-        for _, item in row_data.items():
-            if "price" not in item or "avail" not in item or "name" not in item or "." not in item["price"]:
-                self.errors += 1
-
-        self.price_data = row_data
         return final_data

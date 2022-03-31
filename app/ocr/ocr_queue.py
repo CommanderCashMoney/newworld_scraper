@@ -4,6 +4,7 @@ from queue import Queue
 from threading import Thread
 
 from app.ocr.ocr_image import OCRImage
+from app.ocr.price_validation import PriceValidator
 from app.overlay.overlay_updates import OverlayUpdateHandler
 
 
@@ -14,7 +15,9 @@ class _OCRQueue:
         self.queue.empty()
         self._processing_thread = Thread(target=self.process_queue, name="OCR Queue", daemon=True)
         self.total_images = 0
-        self.processed_items = []
+        self.total_removals = 0
+        self.ocr_processed_items = []
+        self.validator = PriceValidator(self.ocr_processed_items)
 
     def add_to_queue(self, img_path: Path):
         self.total_images += 1
@@ -28,10 +31,17 @@ class _OCRQueue:
             next_item: OCRImage = self.queue.get()
             if not self.continue_processing or next_item is None:  # a none object was put in to unstick the queue
                 break
-            self.processed_items.extend(next_item.parse_prices())
-            OverlayUpdateHandler.update("listings_count", len(self.processed_items))
+
+            self.validator.validate_next_batch()
+            self.ocr_processed_items.extend(next_item.parse_prices())
+            OverlayUpdateHandler.update("listings_count", len(self.ocr_processed_items))
             OverlayUpdateHandler.update("ocr_count", self.queue.qsize())
+            bad_indexes = len(self.validator.bad_indexes)
+            accuracy = 1 - bad_indexes / (len(self.ocr_processed_items) + bad_indexes)
+            accuracy_pc = round(accuracy * 100, 1)
+            OverlayUpdateHandler.update("accuracy", f"{accuracy_pc}%")
             logging.debug(f"Processed `{next_item.original_path}`")
+
         logging.info("OCRQueue stopped processing.")
 
     def start(self) -> None:
@@ -44,6 +54,11 @@ class _OCRQueue:
         self.continue_processing = False
         if self.queue.qsize() == 0:
             self.queue.put(None)  # noqa - unstick the queue since it is waiting
+
+    def clear(self) -> None:
+        self.ocr_processed_items = []
+        self.total_images = 0
+        # delete images
 
 
 OCRQueue = _OCRQueue()

@@ -10,10 +10,13 @@ import pynput
 from pytesseract import pytesseract
 from win32gui import GetForegroundWindow, GetWindowText
 
+from app import events
 from app.ocr import OCRQueue
 from app.ocr.resolution_settings import Resolution, res_1440p
 from app.ocr.utils import grab_screen, pre_process_image
+from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
+from app.selected_settings import SELECTED_SETTINGS
 from app.utils import format_seconds
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
@@ -53,15 +56,22 @@ class _SectionCrawler:
     def resolution(self) -> Resolution:
         return res_1440p
 
-    def crawl(self) -> None:
+    def crawl(self, pages_to_parse: int = 500) -> None:
         bring_new_world_to_foreground()
         if not self.look_for_tp():
             self.parent.stop(reason="trading post could not be found.")
         self.select_section()
+        if "Reset" in self.section:
+            return
         self.pages = self.get_current_screen_page_count()
+        if pages_to_parse:
+            self.pages = min(self.pages, pages_to_parse)
+            logging.info(f"Parsing {self.pages} pages in section {self.section}.")
         success = self.crawl_section()
-        if not self.stopped and success:
+        if not self.stopped and not success:
             self.parent.stop(f"something is wrong - couldn't find any items at all in section {self.section}")
+        else:
+            logging.info(f"Crawl for section {self.section} complete.")
 
     def crawl_section(self) -> bool:
         for i in range(self.pages):
@@ -85,8 +95,6 @@ class _SectionCrawler:
             OCRQueue.add_to_queue(file_name)
             self.scroll()
         OverlayUpdateHandler.update("pages_left", self.pages - self.current_page)
-
-
         return True
 
     def snap_items(self) -> Any:  # todo: what type is this?
@@ -123,7 +131,7 @@ class _SectionCrawler:
         cancel_button = self.resolution.cancel_button
         if cancel_button.compare_image_reference():
             click('left', cancel_button.center)
-            logging.info("Clicked Cancel")
+            logging.info("Accidentally clicked an item - cancelling purchase")
             time.sleep(0.5)
 
         refresh_button = self.resolution.refresh_button
@@ -195,20 +203,57 @@ class _Crawler:
     def __init__(self) -> None:
         self.section_crawlers = [_SectionCrawler(self, k) for k in res_1440p.sections.keys()]
         self.current_section = 0
-        self.crawler_thread = Thread(target=self.crawl, name="OCR Queue", daemon=True)
+        self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self.stopped = False
         self.started = None
+        self.timer_thread = Thread(target=self.update_timer, name="Crawl Timer", daemon=True)
 
     def __str__(self) -> str:
         return f"{self.section_crawlers}: {self.current_section}"
 
+    def update_timer(self) -> None:
+        while self.running:
+            elapsed = time.perf_counter() - Crawler.started
+            OverlayUpdateHandler.update("elapsed", format_seconds(elapsed))
+            time.sleep(1)
+
     def crawl(self) -> None:
+        if SELECTED_SETTINGS.test_run:
+            logging.info(f"Starting test run")
+            pages_to_parse = 1
+            self.section_crawlers = self.section_crawlers[:1]
+        else:
+            logging.info(f"Starting full run")
+            pages_to_parse = SELECTED_SETTINGS.pages
+
         logging.info("Started Crawling")
         self.started = time.perf_counter()
+        self.timer_thread.start()
         for section_crawler in self.section_crawlers:
             if self.stopped:
                 break
-            section_crawler.crawl()
+            self.current_section += 1
+            section_crawler.crawl(pages_to_parse)
+        logging.info("Crawl complete.")
+        self.wait_for_parse()
+        logging.info("Parsing complete.")
+        self.parse_results()
+        logging.info("Parsing results complete.")
+        self.stopped = True
+
+    @staticmethod
+    def wait_for_parse() -> None:
+        if OCRQueue.queue.qsize() > 0:
+            msg = "Waiting for image parsing."
+            logging.info(msg)
+            OverlayUpdateHandler.update("status_bar", msg)
+            while OCRQueue.queue.qsize() > 0:
+                time.sleep(1)
+        OCRQueue.stop()
+
+    def parse_results(self) -> None:
+        results = OCRQueue.ocr_processed_items
+        OCRQueue.clear()
 
     def start(self) -> None:
         self.stopped = False
@@ -217,6 +262,7 @@ class _Crawler:
             self.crawler_thread.start()
 
     def stop(self, reason: str, is_interrupt=False) -> None:
+        logging.info("Stop signal received for Crawler.")
         self.stopped = True
         if is_interrupt:
             for crawler in self.section_crawlers:
@@ -228,30 +274,23 @@ class _Crawler:
             OverlayUpdateHandler.update('status_bar', 'Error while crawling TP')
         else:
             OverlayUpdateHandler.update('status_bar', 'Manually stopped crawl.')
-        OverlayUpdateHandler.enable("Run")
+        OverlayUpdateHandler.enable(events.RUN_BUTTON)
 
     @property
     def running(self) -> bool:
         return not self.stopped and self.crawler_thread.is_alive()
 
-    def update_elapsed(self) -> None:
-        # todo: not ideal
-        if self.running:
-            elapsed = time.perf_counter() - Crawler.started
-            OverlayUpdateHandler.update("elapsed", format_seconds(elapsed))
-
 
 Crawler = _Crawler()
 
 
-# todo: the listener should be part of the class
+# todo: this is broken, it's not working when new world is focused.
 def on_press(key):
     active_window_text = GetWindowText(GetForegroundWindow())
-    if active_window_text in ['Trade Price Scraper', "New World"]:
-        if key == pynput.keyboard.KeyCode(char='/'):
-            Crawler.stop("Manually cancelled!", is_interrupt=True)
+    # if active_window_text in ['Trade Price Scraper', "New World"]:
+    if key == pynput.keyboard.KeyCode(char='/'):
+        Crawler.stop("Manually cancelled!", is_interrupt=True)
 
 
 listener = pynput.keyboard.Listener(on_press=on_press)
 listener.start()
-

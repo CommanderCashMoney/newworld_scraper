@@ -1,14 +1,13 @@
 import logging
 import traceback
+import sys
+
+import pytesseract
 
 from app import events
-from app.ocr.crawler import Crawler
-from app.overlay.overlay_updates import OverlayUpdateHandler
-import pytesseract
-import sys
 from app.overlay import overlay  # noqa
 from app.overlay.overlay_logging import OverlayLoggingHandler
-
+from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils import resource_path
 
 
@@ -25,6 +24,7 @@ pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe'
 
 
 def main():
+    from app.ocr.crawler import Crawler
     events.handle_event(events.APP_LAUNCHED, {})
 
     while True:
@@ -42,7 +42,6 @@ def main():
 
         # todo: because we aren't spamming the cycle anymore, need to move these to a timer
         overlay.perform_cycle_updates()
-        Crawler.update_elapsed()
 
 
 if __name__ == "__main__":

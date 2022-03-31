@@ -8,6 +8,7 @@ from tzlocal import get_localzone
 from app import events
 from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
+from app.selected_settings import SELECTED_SETTINGS, update_server_select
 from app.utils import format_seconds
 from app.utils.timer import Timer
 from app.settings import SETTINGS
@@ -140,8 +141,8 @@ def login(overlay, env, un, pw):
 
 
 def login_event(values: dict) -> None:
-    un = values['un']
-    pw = values['pw']
+    un = SELECTED_SETTINGS.username
+    pw = SELECTED_SETTINGS.password
     if values['prod']:
         login_env = 'prod'
     else:
@@ -162,15 +163,15 @@ def login_completed(response) -> None:
     else:
         json_response = response.json()
         logging.info(json.dumps(json_response))
-        my_token = json_response['access']
+        SELECTED_SETTINGS.access_token = json_response['access']
         OverlayUpdateHandler.update('login_status', '')
-        user_name = json_response['username']
         access_groups = json_response['groups']
         server_access_ids = []
         for group in access_groups:
             if 'server-' in group:
                 server_access_ids.append(group[7:])
-        OverlayUpdateHandler.update('server_select', server_access_ids)
+        OverlayUpdateHandler.update(events.SERVER_SELECT, server_access_ids)
+        update_server_select(server_access_ids[0])
         overlay.show_main()
         if 'advanced' in access_groups:
             overlay.show_advanced()
