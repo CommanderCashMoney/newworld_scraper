@@ -53,7 +53,7 @@ def api_insert(
         "server_id": server_id,
         "timezone": my_tz
     }, headers={'Authorization': f'Bearer {my_token}'})
-    print(f'{func} API submit time: {post_timer.elapsed()}')
+    logging.info(f'{func} API submit time: {post_timer.elapsed()}')
     OverlayUpdateHandler.update('status_bar', f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
     logging.info(f'{func} API Submit Finished in {format_seconds(post_timer.elapsed())}')
     if r.status_code == 201:
@@ -82,7 +82,7 @@ def prep_for_api_insert(my_token, data_list, server_id, env):
     correct_columns = [row for row in data_list if len(row) == correct_number_of_columns]
     bad_columns = [row for row in data_list if len(row) != correct_number_of_columns]
     if bad_columns:
-        print(f"The following rows had bad data: {bad_columns}")
+        logging.info(f"The following rows had bad data: {bad_columns}")
     payload = [
         {
             "name": row[0],
@@ -105,7 +105,7 @@ def prep_for_api_insert(my_token, data_list, server_id, env):
     OverlayUpdateHandler.update('log_output', f'Total clean listings added: {total_count}', append=True)
     OverlayUpdateHandler.update('status_bar', 'Ready')
     overlay.read()
-    print(f'totalcount: {total_count}')
+    logging.info(f'totalcount: {total_count}')
 
 
 def login(overlay, env, un, pw):

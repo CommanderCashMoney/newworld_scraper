@@ -56,6 +56,7 @@ class Resolution(BaseModel):
     pages_bbox: Tuple[int, int, int, int]
     items_bbox: Tuple[int, int, int, int]
     items_bbox_last: Tuple[int, int, int, int]
+    first_item_listing_bbox: Tuple[int, int, int, int]
 
     # column start/end. didn't include owned/time
     tp_row_height: int
@@ -91,6 +92,7 @@ res_1440p = Resolution(
     tp_perk_col_x_coords=(0, 0),  # don't actually know
     tp_rarity_col_x_coords=(957, 1079),
     tp_location_col_x_coords=(1342, 1510),
+    first_item_listing_bbox=(842, 444, 200, 70),
     sections={
            'Resources Reset 0': (170, 796),
            'Raw Resources': (368, 488),

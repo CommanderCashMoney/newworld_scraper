@@ -1,9 +1,10 @@
-import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from pathlib import Path
 
 import cv2
+import tzlocal
 from PIL import Image
 
 from app.ocr.resolution_settings import res_1440p
@@ -19,6 +20,8 @@ from app.ocr.utils import (
 class OCRImage:
     def __init__(self, img_src: Path) -> None:
         self.original_path = img_src
+        path = Path(img_src)
+        self.captured = datetime.fromtimestamp(path.stat().st_mtime)
         self.resolution = res_1440p
 
     @property
@@ -74,6 +77,6 @@ class OCRImage:
                     row_data[current_row][column_name] += f"{append}{text}"
 
             # should do a check here that all the important keys exist
-            final_data.extend([values for values in row_data.values()])
+            final_data.extend([{**values, **{"timestamp": self.captured}} for values in row_data.values()])
 
         return final_data

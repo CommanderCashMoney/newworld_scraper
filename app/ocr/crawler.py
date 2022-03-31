@@ -11,6 +11,7 @@ from pytesseract import pytesseract
 from win32gui import GetForegroundWindow, GetWindowText
 
 from app import events
+from app.api import submit_results
 from app.ocr import OCRQueue
 from app.ocr.resolution_settings import Resolution, res_1440p
 from app.ocr.utils import grab_screen, pre_process_image
@@ -18,6 +19,7 @@ from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.selected_settings import SELECTED_SETTINGS
 from app.utils import format_seconds
+from app.utils.keyboard import press_key
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
 from app.utils.window import bring_new_world_to_foreground
@@ -44,13 +46,16 @@ class _SectionCrawler:
         self.pages = None
         self.current_page = 1
         self.scroll_state = ScrollState.top
-        self.stopped = False
 
     def __str__(self) -> str:
         return f"{self.section}: Page {self.current_page} / {self.pages}"
 
     def __repr__(self) -> str:
         return f"<SectionCrawler: {self}>"
+
+    @property
+    def stopped(self) -> bool:
+        return self.parent.stopped
 
     @property
     def resolution(self) -> Resolution:
@@ -177,7 +182,7 @@ class _SectionCrawler:
         elif self.scroll_state == ScrollState.btm:
             scroll_ref = self.resolution.bottom_scroll
 
-        for attempt in range(10):
+        for attempt in range(30):
             if scroll_ref.compare_image_reference():
                 return True
             OverlayUpdateHandler.update('status_bar', 'Loading page')
@@ -189,12 +194,12 @@ class _SectionCrawler:
         if self.pages > 1:
             self.check_scrollbar()
         else:
-            aoi = (842, 444, 200, 70)
-            img = grab_screen(aoi)
+            first_listing = self.resolution.first_item_listing_bbox
+            img = grab_screen(first_listing)
             ref_grab = pre_process_image(img)
-            while np.count_nonzero(ref_grab) == 112500:  # ?????
-                aoi = (842, 444, 200, 70)
-                img = grab_screen(aoi)
+            pure_black = 112500
+            while np.count_nonzero(ref_grab) == pure_black:
+                img = grab_screen(first_listing)
                 ref_grab = pre_process_image(img)
             logging.info('Page finished loading')
 
@@ -207,6 +212,8 @@ class _Crawler:
         self.stopped = False
         self.started = None
         self.timer_thread = Thread(target=self.update_timer, name="Crawl Timer", daemon=True)
+        self.last_moved = 0
+        self.final_results = []
 
     def __str__(self) -> str:
         return f"{self.section_crawlers}: {self.current_section}"
@@ -216,6 +223,24 @@ class _Crawler:
             elapsed = time.perf_counter() - Crawler.started
             OverlayUpdateHandler.update("elapsed", format_seconds(elapsed))
             time.sleep(1)
+
+    def check_move(self) -> None:
+        if self.last_moved == 0:
+            self.move()
+        elif time.perf_counter() - self.last_moved > 60 * 10:
+            self.move()
+
+    def move(self) -> None:
+        bring_new_world_to_foreground()
+        time.sleep(0.5)
+        press_key(pynput.keyboard.Key.esc)
+        time.sleep(0.5)
+        rand_time = np.random.uniform(0.10, 0.15)
+        press_key('w', 0.1)
+        time.sleep(rand_time)
+        press_key('s', 0.1)
+        press_key('e')
+        self.last_moved = time.perf_counter()
 
     def crawl(self) -> None:
         if SELECTED_SETTINGS.test_run:
@@ -230,6 +255,8 @@ class _Crawler:
         self.started = time.perf_counter()
         self.timer_thread.start()
         for section_crawler in self.section_crawlers:
+            if "Reset" in section_crawler.section:
+                self.check_move()  # safe because we are about to reset
             if self.stopped:
                 break
             self.current_section += 1
@@ -237,23 +264,28 @@ class _Crawler:
         logging.info("Crawl complete.")
         self.wait_for_parse()
         logging.info("Parsing complete.")
-        self.parse_results()
+        self.submit_results()
         logging.info("Parsing results complete.")
         self.stopped = True
 
-    @staticmethod
-    def wait_for_parse() -> None:
+    def wait_for_parse(self) -> None:
         if OCRQueue.queue.qsize() > 0:
             msg = "Waiting for image parsing."
             logging.info(msg)
             OverlayUpdateHandler.update("status_bar", msg)
             while OCRQueue.queue.qsize() > 0:
                 time.sleep(1)
+        self.final_results = [
+            prices
+            for idx, prices in enumerate(OCRQueue.ocr_processed_items)
+            if idx not in OCRQueue.validator.bad_indexes
+        ]
         OCRQueue.stop()
 
-    def parse_results(self) -> None:
-        results = OCRQueue.ocr_processed_items
-        OCRQueue.clear()
+    def submit_results(self) -> None:
+        # todo: need to check for cancel
+        if submit_results(self.final_results):
+            OCRQueue.clear()
 
     def start(self) -> None:
         self.stopped = False
@@ -264,11 +296,9 @@ class _Crawler:
     def stop(self, reason: str, is_interrupt=False) -> None:
         logging.info("Stop signal received for Crawler.")
         self.stopped = True
-        if is_interrupt:
-            for crawler in self.section_crawlers:
-                crawler.stopped = True
-                while self.crawler_thread.is_alive():
-                    time.sleep(0.1)
+        while self.crawler_thread.is_alive():
+            logging.info("Waiting for crawler to die.")
+            time.sleep(2)
         logging.warning(f"Stopped crawling because {reason}")
         if not is_interrupt:
             OverlayUpdateHandler.update('status_bar', 'Error while crawling TP')

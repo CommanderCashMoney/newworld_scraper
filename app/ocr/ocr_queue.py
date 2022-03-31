@@ -32,12 +32,12 @@ class _OCRQueue:
             if not self.continue_processing or next_item is None:  # a none object was put in to unstick the queue
                 break
 
-            self.validator.validate_next_batch()
             self.ocr_processed_items.extend(next_item.parse_prices())
+            self.validator.validate_next_batch()
             OverlayUpdateHandler.update("listings_count", len(self.ocr_processed_items))
             OverlayUpdateHandler.update("ocr_count", self.queue.qsize())
             bad_indexes = len(self.validator.bad_indexes)
-            accuracy = 1 - bad_indexes / (len(self.ocr_processed_items) + bad_indexes)
+            accuracy = 1 - bad_indexes / len(self.ocr_processed_items) or 1
             accuracy_pc = round(accuracy * 100, 1)
             OverlayUpdateHandler.update("accuracy", f"{accuracy_pc}%")
             logging.debug(f"Processed `{next_item.original_path}`")
