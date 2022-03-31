@@ -42,10 +42,8 @@ SCAN_INFO_LAYOUT = [
         sg.Text('0', key='listings_count', auto_size_text=True)
     ],
     [
-        sg.Text('Price fails: '),
-        sg.Text('0', key='p_fails', auto_size_text=True),
-        sg.Text('Data Rejects: '),
-        sg.Text('0', key='rejects', auto_size_text=True)
+        sg.Text('Validation Fails: '),
+        sg.Text('0', key='validate_fails', auto_size_text=True),
     ],
     [sg.Text('_' * 60)],
     [sg.Text('Logs:')],
@@ -53,7 +51,7 @@ SCAN_INFO_LAYOUT = [
     [sg.Text('Errors:')],
     [sg.Multiline(key='error_output', size=(60, 5), auto_refresh=True, disabled=True)],
     [
-        sg.Button('Resend data', key='resend', visible=False),
+        sg.Button('Resend data', key=events.RESEND_DATA, visible=False),
         sg.In(size=(25, 1), enable_events=True, key='-FOLDER-', visible=False),
         sg.FolderBrowse(button_text='Download Data')
     ]

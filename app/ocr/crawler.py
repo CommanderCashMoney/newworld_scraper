@@ -64,6 +64,7 @@ class _SectionCrawler:
     def crawl(self, pages_to_parse: int = 500) -> None:
         bring_new_world_to_foreground()
         if not self.look_for_tp():
+            logging.error("Couldn't find TP")
             self.parent.stop(reason="trading post could not be found.")
         self.select_section()
         if "Reset" in self.section:
@@ -283,9 +284,13 @@ class _Crawler:
         OCRQueue.stop()
 
     def submit_results(self) -> None:
-        # todo: need to check for cancel
+        resend_data_visible = False
         if submit_results(self.final_results):
+            resend_data_visible = True
             OCRQueue.clear()
+        else:
+            logging.info(f"Submission failed, enabling resend data button.")
+        OverlayUpdateHandler.visible(events.RESEND_DATA, visible=resend_data_visible)
 
     def start(self) -> None:
         self.stopped = False

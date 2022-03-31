@@ -40,6 +40,7 @@ class _OCRQueue:
             accuracy = 1 - bad_indexes / len(self.ocr_processed_items) or 1
             accuracy_pc = round(accuracy * 100, 1)
             OverlayUpdateHandler.update("accuracy", f"{accuracy_pc}%")
+            OverlayUpdateHandler.update("validate_fails", bad_indexes)
             logging.debug(f"Processed `{next_item.original_path}`")
 
         logging.info("OCRQueue stopped processing.")

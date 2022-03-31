@@ -3,6 +3,7 @@ from app.api import perform_latest_version_check
 from app.api.v1_methods import login_event, login_completed
 from app.ocr import start_run
 from app import selected_settings
+from app.ocr.crawler import Crawler
 from app.self_updating import download_update, version_fetched, download_complete
 
 DO_NOTHING = lambda x: ...  # noqa
@@ -23,7 +24,9 @@ EVENT_MAP = {
     events.PASSWORD_INPUT: selected_settings.update_password,
     events.TEST_RUN_TOGGLE: selected_settings.update_test_run,
     events.AUTO_SECTIONS_TOGGLE: selected_settings.update_auto_sections,
-    events.SERVER_SELECT: selected_settings.update_server_select
+    events.SERVER_SELECT: selected_settings.update_server_select,
+
+    events.RESEND_DATA: Crawler.submit_results
 }
 
 
