@@ -14,7 +14,7 @@ from app import events
 from app.api import submit_results
 from app.ocr import OCRQueue
 from app.ocr.resolution_settings import Resolution, res_1440p
-from app.ocr.utils import grab_screen, pre_process_image
+from app.ocr.utils import grab_screen, populate_confirm_form, pre_process_image
 from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.selected_settings import SELECTED_SETTINGS
@@ -247,7 +247,7 @@ class _Crawler:
         if SELECTED_SETTINGS.test_run:
             logging.info(f"Starting test run")
             pages_to_parse = 1
-            self.section_crawlers = self.section_crawlers[:1]
+            self.section_crawlers = self.section_crawlers[:2]
         else:
             logging.info(f"Starting full run")
             pages_to_parse = SELECTED_SETTINGS.pages
@@ -282,15 +282,22 @@ class _Crawler:
             if idx not in OCRQueue.validator.bad_indexes
         ]
         OCRQueue.stop()
+        self.populate_confirm_form()
 
     def submit_results(self) -> None:
         resend_data_visible = False
         if submit_results(self.final_results):
-            resend_data_visible = True
             OCRQueue.clear()
         else:
+            resend_data_visible = True
             logging.info(f"Submission failed, enabling resend data button.")
         OverlayUpdateHandler.visible(events.RESEND_DATA, visible=resend_data_visible)
+
+    def populate_confirm_form(self) -> None:
+        populate_confirm_form(
+            bad_names=list(OCRQueue.validator.bad_names),
+            confirmed_names=[val["name"] for val in OCRQueue.validator.confirmed_names.values()]
+        )
 
     def start(self) -> None:
         self.stopped = False

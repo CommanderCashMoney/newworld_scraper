@@ -34,12 +34,14 @@ class _OverlayUpdates:
             update = Update(field, enable=enable)
             self.updates.put(update)
 
-    def visible(self, field, visible: bool = True):
+    def visible(self, field, visible: bool = True, size=None):
         try:
             overlay.window[field].update(visible=visible)
+            if size:
+                overlay.window[field].set_size(size)
         except RuntimeError:
             # we are in a different thread. queue the update.
-            update = Update(field, visible=visible)
+            update = Update(field, visible=visible, size=size)
             self.updates.put(update)
 
     def disable(self, field: str) -> None:

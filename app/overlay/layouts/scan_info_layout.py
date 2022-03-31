@@ -46,10 +46,15 @@ SCAN_INFO_LAYOUT = [
         sg.Text('0', key='validate_fails', auto_size_text=True),
     ],
     [sg.Text('_' * 60)],
-    [sg.Text('Logs:')],
-    [sg.Multiline(key='log_output', size=(60, 10), auto_refresh=True, disabled=True)],
-    [sg.Text('Errors:')],
-    [sg.Multiline(key='error_output', size=(60, 5), auto_refresh=True, disabled=True)],
+    [
+        sg.pin(
+            sg.Column(key='logging', visible=True, layout=[
+                [sg.Text('Logs:')],
+                [sg.Multiline(key='log_output', size=(60, 10), auto_refresh=True, disabled=True)],
+                [sg.Text('Errors:')],
+                [sg.Multiline(key='error_output', size=(60, 5), auto_refresh=True, disabled=True)],
+            ])
+        )],
     [
         sg.Button('Resend data', key=events.RESEND_DATA, visible=False),
         sg.In(size=(25, 1), enable_events=True, key='-FOLDER-', visible=False),

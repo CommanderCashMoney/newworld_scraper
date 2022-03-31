@@ -15,7 +15,7 @@ class PriceValidator:
         self.api_fetched = False
         self.confirmed_names = None
         self.name_swaps = None
-        self.bad_names = set()
+        self.bad_names = {"lron Hide", "iron gunsman insigian", "iron battle roar", "mahjong stain", "orichalcum more", "starstruck ingot", "steel ingles", "iron inggy", "iron more", "bread mate", "oat stain", "orichalcum void gauntlet charred"}
 
     def get_confirmed_names(self) -> Dict[str, int]:
         returned_json = requests.get("https://nwmarketprices.com/cn/").json()

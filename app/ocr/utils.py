@@ -1,10 +1,13 @@
+import difflib
 import time
+from typing import List
 
 import cv2
 import mss
 import numpy as np
 from pytesseract import pytesseract
 
+from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils import resource_path
 from app.utils.mouse import click, mouse
 from app.utils.window import bring_new_world_to_foreground
@@ -50,4 +53,17 @@ def grab_screen(region=None):
     img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
     return img
 
+
+def populate_confirm_form(bad_names: List[str], confirmed_names: List[str]):
+    for count, value in enumerate(bad_names):
+        if count >= 10:
+            break
+        OverlayUpdateHandler.update(f'bad-name-{count}', value, size=len(value))
+        close_matches = difflib.get_close_matches(value, confirmed_names, n=5, cutoff=0.6)
+        close_matches.insert(0, 'Add New')
+        size = max(close_matches, key=len)
+        OverlayUpdateHandler.visible("logging", False)
+        OverlayUpdateHandler.update(f'good-name-{count}', close_matches, size=size)
+        OverlayUpdateHandler.enable('add-confirmed-name-{}'.format(count))
+        OverlayUpdateHandler.visible("confirm")
 
