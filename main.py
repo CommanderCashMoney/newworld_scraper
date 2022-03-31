@@ -614,6 +614,7 @@ def main():
             break
         overlay.update_spinner()
 
+
         if values['test_t']:
             test_run = True
             ocr_image.ocr.test_run(True)
@@ -678,6 +679,7 @@ def main():
             else:
                 login_env = 'dev'
             login(overlay, login_env, un, pw)
+            overlay.save_settings(dict(un=values['un']))
 
         if event == 'resend':
             overlay.disable('resend')
@@ -687,15 +689,20 @@ def main():
         if event == '-FOLDER-':
             folder = values['-FOLDER-']
             insert_list = ocr_image.ocr.get_insert_list()
-            # insert_list = '[asdfasdf, asdfasdfasdf,asdfasdfasdf,asdfasdfasdfasdf,asdfasdf]'
+
             if insert_list:
-                with open(f'{folder}/prices_data.txt', 'w') as f:
-                    f.write(json.dumps(insert_list))
-                overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
+                with open(f'{folder}/prices_data.json', 'w') as f:
+                    f.write(json.dumps(insert_list, default=str))
+                overlay.updatetext('log_output', f'Data saved to: {folder}/prices_data.json', append=True)
             else:
                 overlay.updatetext('error_output', 'No data to export to file.', append=True)
 
-
+        if event == 'keybinds':
+            keybinds = overlay.popup_keybinds(overlay.load_settings())
+            if keybinds:
+                for key in keybinds:
+                    keybinds[key] = keybinds[key][0]
+                overlay.save_settings(keybinds)
 
         if enabled:
             app_timer.restart()
@@ -706,6 +713,7 @@ def main():
             ocr_image.ocr.clean_insert_list()
             ocr_image.ocr.set_cap_state('running')
             ocr_image.ocr.start_OCR()
+            keybinds = overlay.load_settings()
 
             if test_run:
                 print('Starting TEST run')
@@ -774,9 +782,9 @@ def main():
                                 press(pynput.keyboard.Key.esc)
                                 time.sleep(0.5)
                                 rand_time = np.random.uniform(0.10, 0.15)
-                                press('w', rand_time)
-                                press('s', rand_time)
-                                press('e')
+                                press(keybinds['forward_key'], rand_time)
+                                press(keybinds['backward_key'], rand_time)
+                                press(keybinds['action_key'])
                                 time.sleep(1)
                                 round_timer.restart()
 
