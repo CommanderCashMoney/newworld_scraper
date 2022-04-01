@@ -11,11 +11,10 @@ from pytesseract import pytesseract
 from win32gui import GetForegroundWindow, GetWindowText
 
 from app import events
-from app.api import submit_results
+from app.api import submit_bad_names, submit_price_data
 from app.ocr import OCRQueue
 from app.ocr.resolution_settings import Resolution, res_1440p
-from app.ocr.utils import grab_screen, populate_confirm_form, pre_process_image
-from app.overlay import overlay
+from app.ocr.utils import grab_screen, pre_process_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.selected_settings import SELECTED_SETTINGS
 from app.utils import format_seconds
@@ -241,6 +240,7 @@ class _Crawler:
         time.sleep(rand_time)
         press_key('s', 0.1)
         press_key('e')
+        time.sleep(2)
         self.last_moved = time.perf_counter()
 
     def crawl(self) -> None:
@@ -265,6 +265,8 @@ class _Crawler:
         logging.info("Crawl complete.")
         self.wait_for_parse()
         logging.info("Parsing complete.")
+        submit_bad_names(OCRQueue.validator.bad_names)
+        logging.info("Submitting bad names complete.")
         self.submit_results()
         logging.info("Parsing results complete.")
         self.stopped = True
@@ -282,22 +284,16 @@ class _Crawler:
             if idx not in OCRQueue.validator.bad_indexes
         ]
         OCRQueue.stop()
-        self.populate_confirm_form()
 
     def submit_results(self) -> None:
         resend_data_visible = False
-        if submit_results(self.final_results):
+        if submit_price_data(self.final_results):
             OCRQueue.clear()
         else:
             resend_data_visible = True
             logging.info(f"Submission failed, enabling resend data button.")
         OverlayUpdateHandler.visible(events.RESEND_DATA, visible=resend_data_visible)
 
-    def populate_confirm_form(self) -> None:
-        populate_confirm_form(
-            bad_names=list(OCRQueue.validator.bad_names),
-            confirmed_names=[val["name"] for val in OCRQueue.validator.confirmed_names.values()]
-        )
 
     def start(self) -> None:
         self.stopped = False

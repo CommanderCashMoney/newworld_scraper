@@ -10,8 +10,6 @@ from app.settings import SETTINGS
 def get_endpoint_from_func_name(func: str, target_env: str, is_api: bool = True) -> str:
     func_to_endpoint_map = {
         "price_insert": "scanner_upload/",
-        "name_cleanup_insert": "name_cleanup_upload/",
-        "confirmed_names_insert": "confirmed_names_upload/",
     }
 
     if target_env == "dev":

@@ -1,10 +1,13 @@
 import decimal
-import json
 import logging
+from collections import defaultdict
 from decimal import Decimal
 from typing import Dict, List
+from urllib.parse import urljoin
 
 import requests
+
+from app.settings import SETTINGS
 
 
 class PriceValidator:
@@ -15,26 +18,15 @@ class PriceValidator:
         self.api_fetched = False
         self.confirmed_names = None
         self.name_swaps = None
-        self.bad_names = {"lron Hide", "iron gunsman insigian", "iron battle roar", "mahjong stain", "orichalcum more", "starstruck ingot", "steel ingles", "iron inggy", "iron more", "bread mate", "oat stain", "orichalcum void gauntlet charred"}
+        self.bad_names = defaultdict(int)
 
     def get_confirmed_names(self) -> Dict[str, int]:
-        returned_json = requests.get("https://nwmarketprices.com/cn/").json()
-        cns = json.loads(returned_json["cn"])
-        return_dict = {}
-        for cn in cns:
-            return_dict[cn[0].lower()] = {
-                "name": cn[0],
-                "db_id": cn[1]
-            }
-        return return_dict
+        url = urljoin(SETTINGS.base_web_url, "api/confirmed_names/")
+        return requests.get(url).json()
 
     def get_name_swaps(self) -> Dict[str, str]:
-        returned_json = requests.get("https://nwmarketprices.com/nc/").json()
-        cns = json.loads(returned_json["nc"])
-        return_dict = {}
-        for cn in cns:
-            return_dict[cn[0].lower()] = cn[1].lower()
-        return return_dict
+        url = urljoin(SETTINGS.base_web_url, "api/get_mapping_corrections/")
+        return requests.get(url).json()
 
     def prev_item(self) -> dict:
         prev_index = self.current_index - 1
@@ -55,6 +47,10 @@ class PriceValidator:
             return False
         if "." not in price_test:
             return False  # could check if inserting a . makes it sensible
+        try:
+            Decimal(price_test)
+        except:  # noqa
+            return False
         return True
 
     def validate_price(self) -> bool:
@@ -119,28 +115,21 @@ class PriceValidator:
 
     def validate_name(self) -> bool:
         name = self.price_list[self.current_index].get("name")
-        if name is None or name in self.bad_names:
+        if name is None or name == "":
             return False
-        # try look it up
-        name_lower = name.lower()
-        confirmed = self.confirmed_names.get(name_lower)
-        if confirmed:
-            self.price_list[self.current_index]["name_id"] = confirmed["db_id"]
-            self.price_list[self.current_index]["name"] = confirmed["name"]
+        # first check if there's a name swap
+        name_swap = self.name_swaps.get(name)
+        if name_swap:
+            logging.debug(f"Swapped name of {name} for {name_swap['name']}")
+            self.price_list[self.current_index].update(name_swap)
             return True
-        logging.info(f"{name_lower} not found in confirmed")
-        mapped_name = self.name_swaps.get(name_lower)
-        if mapped_name is None:
-            self.bad_names.add(name)
-            return False
-        confirmed = self.confirmed_names.get(mapped_name.lower())
-        if confirmed is None:
-            self.bad_names.add(name)
-            return False
-        self.price_list[self.current_index]["name_id"] = confirmed["name"]
-        self.price_list[self.current_index]["db_id"] = confirmed["db_id"]
-        logging.info(f"{name_lower} found from swaps")
-        return True
+
+        if name in self.confirmed_names:
+            self.price_list[self.current_index].update(self.confirmed_names[name])
+            return True
+
+        self.bad_names[name] += 1
+        return False
 
     def validate_next_batch(self) -> None:
         if not self.api_fetched:

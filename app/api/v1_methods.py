@@ -30,16 +30,6 @@ def api_insert(
             url = 'http://localhost:8080/api/scanner_upload/'
         else:
             url = 'https://nwmarketprices.com/api/scanner_upload/'
-    if func == 'name_cleanup_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/name_cleanup_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/name_cleanup_upload/'
-    if func == 'confirmed_names_insert':
-        if env == 'dev':
-            url = 'http://localhost:8080/api/confirmed_names_upload/'
-        else:
-            url = 'https://nwmarketprices.com/api/confirmed_names_upload/'
     logging.info('Starting submit to API')
     OverlayUpdateHandler.update('status_bar', 'API Submit started')
     logging.info('API Submit started')

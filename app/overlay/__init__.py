@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 
 from app import events
-from app.overlay.layouts.confirm_item_name_layout import CONFIRM_ITEM_NAMES_LAYOUT
 from app.overlay.layouts.login_layout import LOGIN_LAYOUT
 from app.overlay.layouts.scan_info_layout import SCAN_INFO_LAYOUT
 from app.settings import SETTINGS
@@ -17,7 +16,6 @@ class Overlay:
         layout1 = LOGIN_LAYOUT
 
         layout3 = SCAN_INFO_LAYOUT
-        layout3.append(CONFIRM_ITEM_NAMES_LAYOUT)
 
         version_update_layout = [
             [sg.Text('', key='download_update_text')],
@@ -96,12 +94,6 @@ class Overlay:
 
     def show_advanced(self):
         self.window['advanced'].update(visible=True)
-
-    def show_confirm(self):
-        self.window['confirm'].update(visible=True)
-
-    def hide_confirm(self):
-        self.window['confirm'].update(visible=False)
 
     def add_names(self, element, vals, size=None):
         self.window[element].update(values=vals, set_to_index=1, size=(35, 6))

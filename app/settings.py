@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     def is_dev(self) -> bool:
         return self.environment == Environment.dev
 
+    @property
+    def base_web_url(self) -> str:
+        return self.nwmp_dev_api_host if self.is_dev else self.nwmp_prod_api_host
+
     class Config:
         env_file = ".env"
 
