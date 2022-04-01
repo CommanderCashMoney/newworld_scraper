@@ -19,14 +19,18 @@ class PriceValidator:
         self.confirmed_names = None
         self.name_swaps = None
         self.bad_names = defaultdict(int)
+        self.word_cleanup = None
 
-    def get_confirmed_names(self) -> Dict[str, int]:
+    def set_api_info(self) -> None:
+        if self.api_fetched:
+            return
         url = urljoin(SETTINGS.base_web_url, "api/confirmed_names/")
-        return requests.get(url).json()
-
-    def get_name_swaps(self) -> Dict[str, str]:
+        self.confirmed_names = requests.get(url).json()
         url = urljoin(SETTINGS.base_web_url, "api/get_mapping_corrections/")
-        return requests.get(url).json()
+        self.name_swaps = requests.get(url).json()
+        url = urljoin(SETTINGS.base_web_url, "api/word-cleanup/")
+        self.word_cleanup = requests.get(url).json()
+        self.api_fetched = True
 
     def prev_item(self) -> dict:
         prev_index = self.current_index - 1
@@ -117,6 +121,15 @@ class PriceValidator:
         name = self.price_list[self.current_index].get("name")
         if name is None or name == "":
             return False
+
+        # replace commonly incorrect words
+        name_parts = name.split(" ")
+        for idx, word in enumerate(name_parts):
+            cleaned_word = self.word_cleanup.get(word)
+            if cleaned_word:
+                name_parts[idx] = cleaned_word
+        name = " ".join(name_parts)
+
         # first check if there's a name swap
         name_swap = self.name_swaps.get(name)
         if name_swap:
@@ -132,11 +145,7 @@ class PriceValidator:
         return False
 
     def validate_next_batch(self) -> None:
-        if not self.api_fetched:
-            self.confirmed_names = self.get_confirmed_names()
-            self.name_swaps = self.get_name_swaps()
-            self.api_fetched = True
-
+        self.set_api_info()
         while self.current_index < len(self.price_list):
             name_invalid = not self.validate_name()
             price_invalid = not self.validate_price()

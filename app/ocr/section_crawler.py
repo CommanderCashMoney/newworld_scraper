@@ -172,7 +172,8 @@ class SectionCrawler:
                 return True
             OverlayUpdateHandler.update('status_bar', 'Loading page')
             time.sleep(0.1)
-        logging.error(f'Took too long waiting for page to load {self}, skipping page.')
+        if self.current_page != self.pages:
+            logging.error(f'Took too long waiting for page to load {self}, skipping page.')
         return False
 
     def wait_for_load(self):

@@ -11,12 +11,13 @@ from app.selected_settings import SELECTED_SETTINGS, update_server_select
 from app.settings import SETTINGS
 
 
-def login(overlay, env, un, pw):
-    token_ep = urljoin(SETTINGS.base_web_url, "api/token")
+def login():
+    un = SELECTED_SETTINGS.username
+    pw = SELECTED_SETTINGS.password
+    token_ep = urljoin(SETTINGS.base_web_url, "api/token/")
     logging.info('Logging in')
     OverlayUpdateHandler.disable(events.LOGIN_BUTTON)
     OverlayUpdateHandler.update('login_status', 'logging in..')
-    overlay.read()
     json_data = {"username": un, "password": pw, "version": SETTINGS.VERSION}
     json_data = json.dumps(json_data)
     try:
@@ -37,14 +38,10 @@ def login(overlay, env, un, pw):
     return None
 
 
-def login_event(values: dict) -> None:
-    un = SELECTED_SETTINGS.username
-    pw = SELECTED_SETTINGS.password
+def login_event() -> None:
     overlay.set_spinner_visibility(True)
     # use long operation to avoid hang
-    overlay.window.perform_long_operation(
-        lambda: login(overlay, un, pw), events.LOGIN_COMPLETED_EVENT
-    )
+    overlay.window.perform_long_operation(login, events.LOGIN_COMPLETED_EVENT)
 
 
 def login_completed(response) -> None:

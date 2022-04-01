@@ -97,17 +97,18 @@ class Crawler:
             section_crawler.crawl(pages_to_parse)
         logging.info("Crawl complete.")
         if self._cancelled:
-            # todo: shut down ocrqueue
+            self.ocr_queue.stop()
             logging.info("Not parsing due to cancellation.")
             return
         self.wait_for_parse()
         logging.info("Parsing complete.")
-        pending_submissions = APISubmission(
-            price_data=self.final_results,
-            bad_name_data=self.ocr_queue.validator.bad_names
-        )
-        SELECTED_SETTINGS.pending_submission_data = pending_submissions
-        self.send_pending_submissions()
+        if not SELECTED_SETTINGS.test_run:
+            pending_submissions = APISubmission(
+                price_data=self.final_results,
+                bad_name_data=self.ocr_queue.validator.bad_names
+            )
+            SELECTED_SETTINGS.pending_submission_data = pending_submissions
+            self.send_pending_submissions()
         logging.info("Parsing results complete.")
         self.stop(reason="run completed.", wait_for_sweet_release_of_death=False)
 
