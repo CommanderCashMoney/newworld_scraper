@@ -1,4 +1,3 @@
-import logging
 from queue import Queue
 from typing import Any
 
@@ -24,6 +23,15 @@ class Event:
         overlay.window.write_event_value(self.event_name, self.value)
 
 
+class Visible:
+    def __init__(self, field, visibility) -> None:
+        self.field = field
+        self.visibility = visibility
+
+    def set_visibility(self) -> None:
+        overlay.window[self.field].update(visible=self.visibility)
+
+
 class _OverlayUpdates:
     def __init__(self) -> None:
         self.updates = Queue()
@@ -44,14 +52,12 @@ class _OverlayUpdates:
             update = Update(field, enable=enable)
             self.updates.put(update)
 
-    def visible(self, field, visible: bool = True, size=None):
+    def visible(self, field, visible: bool = True):
+        update = Visible(field, visible)
         try:
-            overlay.window[field].update(visible=visible)
-            if size:
-                overlay.window[field].set_size(size)
+            update.set_visibility()
         except RuntimeError:
             # we are in a different thread. queue the update.
-            update = Update(field, visible=visible, size=size)
             self.updates.put(update)
 
     def disable(self, field: str) -> None:
@@ -84,10 +90,10 @@ class _OverlayUpdates:
             update = self.updates.get()
             if isinstance(update, Event):
                 update.fire()
+            elif isinstance(update, Visible):
+                update.set_visibility()
             if update.enable is not None:
                 overlay.window[update.field].update(disabled=not update.enable)
-            elif update.visible is not None:
-                overlay.window[update.field].update(visible=update.visible)
             else:
                 overlay.updatetext(update.field, update.text, update.size, update.append)
 

@@ -2,7 +2,7 @@ from app import events
 from app.api import perform_latest_version_check
 from app.api.v1_methods import login_event, login_completed
 from app.ocr import start_run
-from app import selected_settings
+from app import session_data
 from app.self_updating import download_update, version_fetched, download_complete
 
 DO_NOTHING = lambda x: ...  # noqa
@@ -18,12 +18,13 @@ EVENT_MAP = {
     events.RUN_BUTTON: start_run,
 
     # update settings
-    events.PAGE_INPUT: selected_settings.update_pages,
-    events.USERNAME_INPUT: selected_settings.update_username,
-    events.PASSWORD_INPUT: selected_settings.update_password,
-    events.TEST_RUN_TOGGLE: selected_settings.update_test_run,
-    events.AUTO_SECTIONS_TOGGLE: selected_settings.update_auto_sections,
-    events.SERVER_SELECT: selected_settings.update_server_select,
+    events.PAGE_INPUT: session_data.update_pages,
+    events.USERNAME_INPUT: session_data.update_username,
+    events.PASSWORD_INPUT: session_data.update_password,
+    events.TEST_RUN_TOGGLE: session_data.update_test_run,
+    events.AUTO_SECTIONS_TOGGLE: session_data.update_auto_sections,
+    events.SERVER_SELECT: session_data.update_server_select,
 
-    events.RESEND_DATA: selected_settings.SELECTED_SETTINGS.submit_pending_submission_data
+    events.RESEND_DATA: session_data.SESSION_DATA.submit_pending_submission_data,
+    events.DOWNLOAD_SCAN_DATA: session_data.save_scan_data,
 }

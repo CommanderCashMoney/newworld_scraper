@@ -7,13 +7,13 @@ import requests
 from app import events
 from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
-from app.selected_settings import SELECTED_SETTINGS, update_server_select
+from app.session_data import SESSION_DATA, update_server_select
 from app.settings import SETTINGS
 
 
 def login():
-    un = SELECTED_SETTINGS.username
-    pw = SELECTED_SETTINGS.password
+    un = SESSION_DATA.username
+    pw = SESSION_DATA.password
     token_ep = urljoin(SETTINGS.base_web_url, "api/token/")
     logging.info('Logging in')
     OverlayUpdateHandler.disable(events.LOGIN_BUTTON)
@@ -53,7 +53,7 @@ def login_completed(response) -> None:
     else:
         json_response = response.json()
         # logging.info(json.dumps(json_response))
-        SELECTED_SETTINGS.access_token = json_response['access']
+        SESSION_DATA.access_token = json_response['access']
         OverlayUpdateHandler.update('login_status', '')
         access_groups = json_response['groups']
         server_access_ids = []

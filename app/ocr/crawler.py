@@ -12,7 +12,8 @@ from app.ocr.ocr_queue import OCRQueue
 from app.ocr.resolution_settings import res_1440p
 from app.ocr.section_crawler import SectionCrawler
 from app.overlay.overlay_updates import OverlayUpdateHandler
-from app.selected_settings import SELECTED_SETTINGS
+from app.session_data import SESSION_DATA
+from app.settings import SETTINGS
 from app.utils import format_seconds
 from app.utils.keyboard import press_key
 from app.utils.window import bring_new_world_to_foreground
@@ -77,13 +78,13 @@ class Crawler:
 
     def crawl(self) -> None:
         self.ocr_queue.start()
-        if SELECTED_SETTINGS.test_run:
+        if SESSION_DATA.test_run:
             logging.info(f"Starting test run")
             pages_to_parse = 1
             self.section_crawlers = self.section_crawlers[:2]
         else:
             logging.info(f"Starting full run")
-            pages_to_parse = SELECTED_SETTINGS.pages
+            pages_to_parse = SESSION_DATA.pages
 
         logging.info("Started Crawling")
         self.started = time.perf_counter()
@@ -102,12 +103,14 @@ class Crawler:
             return
         self.wait_for_parse()
         logging.info("Parsing complete.")
-        if not SELECTED_SETTINGS.test_run:
+        should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
+        if should_submit:
             pending_submissions = APISubmission(
                 price_data=self.final_results,
                 bad_name_data=self.ocr_queue.validator.bad_names
             )
-            SELECTED_SETTINGS.pending_submission_data = pending_submissions
+            SESSION_DATA.pending_submission_data = pending_submissions
+            SESSION_DATA.last_scan_data = pending_submissions
             self.send_pending_submissions()
         logging.info("Parsing results complete.")
         self.stop(reason="run completed.", wait_for_sweet_release_of_death=False)
@@ -127,7 +130,7 @@ class Crawler:
         self.ocr_queue.stop()
 
     def send_pending_submissions(self) -> None:
-        submission_data = SELECTED_SETTINGS.pending_submission_data
+        submission_data = SESSION_DATA.pending_submission_data
         submission_data.submit()
 
     def start(self) -> None:

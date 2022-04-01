@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 
 from app import events
 from app.overlay.layouts.login_layout import LOGIN_LAYOUT
-from app.overlay.layouts.scan_info_layout import SCAN_INFO_LAYOUT
+from app.overlay.layouts.scan_info_layout import scan_info_layout
 from app.settings import SETTINGS
 from app.utils import resource_path
 
@@ -15,7 +15,7 @@ class Overlay:
         self.download_link: str = None
         layout1 = LOGIN_LAYOUT
 
-        layout3 = SCAN_INFO_LAYOUT
+        layout3 = scan_info_layout()
 
         version_update_layout = [
             [sg.Text('', key='download_update_text')],

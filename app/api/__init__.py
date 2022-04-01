@@ -7,7 +7,6 @@ import requests
 from tzlocal import get_localzone
 
 from app.events import VERSION_FETCHED_EVENT
-from app.overlay import overlay
 from app.settings import SETTINGS
 
 
@@ -29,7 +28,7 @@ def check_latest_version() -> str:
 
 
 def submit_price_data(price_data) -> bool:
-    from app.selected_settings import SELECTED_SETTINGS
+    from app.session_data import SESSION_DATA
     url = urljoin(SETTINGS.base_web_url, "/api/scanner_upload/")
     my_tz = get_localzone().zone
 
@@ -37,10 +36,10 @@ def submit_price_data(price_data) -> bool:
         r = requests.post(url, timeout=200, data=json.dumps({
             "version": SETTINGS.VERSION,
             "price_data": price_data,
-            "server_id": SELECTED_SETTINGS.server_id,
+            "server_id": SESSION_DATA.server_id,
             "timezone": my_tz
         }, default=str), headers={
-            'Authorization': f'Bearer {SELECTED_SETTINGS.access_token}',
+            'Authorization': f'Bearer {SESSION_DATA.access_token}',
             'Content-Type': "application/json"
         })
         logging.info(r.json())
@@ -52,7 +51,7 @@ def submit_price_data(price_data) -> bool:
 
 
 def submit_bad_names(bad_names: DefaultDict[str, int]) -> None:
-    from app.selected_settings import SELECTED_SETTINGS
+    from app.session_data import SESSION_DATA
     url = urljoin(SETTINGS.base_web_url, "/api/submit_bad_names/")
 
     try:
@@ -62,7 +61,7 @@ def submit_bad_names(bad_names: DefaultDict[str, int]) -> None:
                 "bad_name": name,
                 "number_times_seen": seen_no,
             } for name, seen_no in bad_names.items()],
-            headers={'Authorization': f'Bearer {SELECTED_SETTINGS.access_token}'}
+            headers={'Authorization': f'Bearer {SESSION_DATA.access_token}'}
         )
         logging.info(r.json())
     except requests.exceptions.ConnectionError:
@@ -75,4 +74,5 @@ def submit_bad_names(bad_names: DefaultDict[str, int]) -> None:
 
 
 def perform_latest_version_check() -> str:
+    from app.overlay import overlay
     overlay.window.perform_long_operation(check_latest_version, VERSION_FETCHED_EVENT)

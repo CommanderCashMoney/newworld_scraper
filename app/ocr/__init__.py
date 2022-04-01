@@ -1,5 +1,7 @@
 import logging
 
+from app import events
+
 
 def start_run(values) -> None:
     from app.ocr.crawler import Crawler
@@ -9,12 +11,12 @@ def start_run(values) -> None:
     from app.events import RUN_BUTTON
     from app.ocr.crawler import Crawler
     from app.overlay.overlay_updates import OverlayUpdateHandler
-    from app.selected_settings import SELECTED_SETTINGS
+    from app.session_data import SESSION_DATA
 
-    if SELECTED_SETTINGS.server_id is None:
+    if SESSION_DATA.server_id is None:
         logging.error("Can't start run because server ID is not set. Please let us know on Discord!")
         return
-
-    SELECTED_SETTINGS.crawler = Crawler(OCRQueue())
-    SELECTED_SETTINGS.crawler.start()
+    OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=False)
+    SESSION_DATA.crawler = Crawler(OCRQueue())
+    SESSION_DATA.crawler.start()
     OverlayUpdateHandler.disable(RUN_BUTTON)
