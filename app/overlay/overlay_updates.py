@@ -1,5 +1,6 @@
 import logging
 from queue import Queue
+from typing import Any
 
 from app.overlay import overlay
 
@@ -12,6 +13,15 @@ class Update:
         self.size = size
         self.enable = enable
         self.visible = visible
+
+
+class Event:
+    def __init__(self, event_name, value) -> None:
+        self.event_name = event_name
+        self.value = value
+
+    def fire(self) -> None:
+        overlay.window.write_event_value(self.event_name, self.value)
 
 
 class _OverlayUpdates:
@@ -62,9 +72,18 @@ class _OverlayUpdates:
         for field in field_list:
             OverlayUpdateHandler.update(field, '')
 
+    def fire_event(self, event: str, with_value: Any = None) -> None:
+        event = Event(event, with_value)
+        try:
+            event.fire()
+        except RuntimeError:
+            self.updates.append(event)
+
     def flush_updates(self) -> None:
         while self.updates.qsize() > 0:
             update = self.updates.get()
+            if isinstance(update, Event):
+                update.fire()
             if update.enable is not None:
                 overlay.window[update.field].update(disabled=not update.enable)
             elif update.visible is not None:

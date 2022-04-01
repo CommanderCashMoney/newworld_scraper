@@ -2,6 +2,9 @@ import logging
 
 from pydantic import BaseModel
 
+from app import events
+from app.ocr.api_submission_data import APISubmission
+from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.settings import SETTINGS
 
 
@@ -14,6 +17,17 @@ class SelectedSettings(BaseModel):
     auto_sections: bool = True  # doesn't do anything atm
     access_token: str = ""
     refresh_token: str = ""
+    crawler: "Crawler" = None
+    pending_submission_data: APISubmission = None
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def submit_pending_submission_data(self) -> None:
+        self.pending_submission_data.submit()
+        if self.pending_submission_data.submit_success:
+            self.pending_submission_data = None
+        OverlayUpdateHandler.visible(events.RESEND_DATA, visible=self.pending_submission_data is not None)
 
 
 SELECTED_SETTINGS = SelectedSettings()

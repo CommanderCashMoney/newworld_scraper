@@ -24,7 +24,6 @@ pytesseract.pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe'
 
 
 def main():
-    from app.ocr.crawler import Crawler
     events.handle_event(events.APP_LAUNCHED, {})
 
     while True:

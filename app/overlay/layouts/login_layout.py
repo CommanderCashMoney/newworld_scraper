@@ -5,11 +5,10 @@ from app.utils import resource_path
 from app.settings import SETTINGS
 
 is_dev = SETTINGS.is_dev
+title = 'Trade Scraper' if not is_dev else 'Trade Scraper (DEVELOPMENT)'
 LOGIN_LAYOUT = [
     [
-        sg.Text('Trade Scraper', key="title"), sg.Text('Env?', visible=is_dev),
-        sg.Radio('Prod', group_id='4', key='prod', default=not is_dev, visible=is_dev),
-        sg.Radio('Dev', group_id='4', key='dev', default=is_dev, visible=is_dev)
+        sg.Text(title, key="title")
     ],
     [
         sg.Text('User Name: ', key="un_text"),

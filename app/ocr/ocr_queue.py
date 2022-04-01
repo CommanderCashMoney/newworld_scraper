@@ -8,9 +8,9 @@ from app.ocr.price_validation import PriceValidator
 from app.overlay.overlay_updates import OverlayUpdateHandler
 
 
-class _OCRQueue:
+class OCRQueue:
     def __init__(self) -> None:
-        self.continue_processing = True
+        self._continue_processing = True
         self.queue = Queue()
         self.queue.empty()
         self._processing_thread = Thread(target=self.process_queue, name="OCR Queue", daemon=True)
@@ -18,6 +18,7 @@ class _OCRQueue:
         self.total_removals = 0
         self.ocr_processed_items = []
         self.validator = PriceValidator(self.ocr_processed_items)
+        self.crawler = None  # type: Crawler
 
     def add_to_queue(self, img_path: Path):
         self.total_images += 1
@@ -51,8 +52,12 @@ class _OCRQueue:
         else:
             logging.warning("start() called on OCRQueue, but it is already running!")
 
+    @property
+    def continue_processing(self) -> None:
+        return not self.crawler.stopped or self._continue_processing is False
+
     def stop(self) -> None:
-        self.continue_processing = False
+        self._continue_processing = False
         if self.queue.qsize() == 0:
             self.queue.put(None)  # noqa - unstick the queue since it is waiting
 
@@ -60,6 +65,3 @@ class _OCRQueue:
         self.ocr_processed_items = []
         self.total_images = 0
         # delete images
-
-
-OCRQueue = _OCRQueue()

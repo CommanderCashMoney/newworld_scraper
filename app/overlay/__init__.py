@@ -41,7 +41,8 @@ class Overlay:
             keep_on_top=False,
             location=(0, 0),
             finalize=True,
-            use_default_focus=False
+            use_default_focus=False,
+            background_color='red' if SETTINGS.use_dev_colors else None,
         )
 
     def read(self):

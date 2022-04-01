@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 import cv2
-import tzlocal
 from PIL import Image
 
 from app.ocr.resolution_settings import res_1440p

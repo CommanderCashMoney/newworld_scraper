@@ -3,7 +3,6 @@ from app.api import perform_latest_version_check
 from app.api.v1_methods import login_event, login_completed
 from app.ocr import start_run
 from app import selected_settings
-from app.ocr.crawler import Crawler
 from app.self_updating import download_update, version_fetched, download_complete
 
 DO_NOTHING = lambda x: ...  # noqa
@@ -26,18 +25,5 @@ EVENT_MAP = {
     events.AUTO_SECTIONS_TOGGLE: selected_settings.update_auto_sections,
     events.SERVER_SELECT: selected_settings.update_server_select,
 
-    events.RESEND_DATA: Crawler.submit_results
+    events.RESEND_DATA: selected_settings.SELECTED_SETTINGS.submit_pending_submission_data
 }
-
-
-# unhandled events:
-
-# if event == '-FOLDER-':
-#     folder = values['-FOLDER-']
-#     insert_list = ocr_image.ocr.get_insert_list()
-#     if insert_list:
-#         with open(f'{folder}/prices_data.txt', 'w') as f:
-#             f.write(json.dumps(insert_list, default=str))
-#         OverlayUpdateHandler.update('log_output', f'Data saved to: {folder}/prices_data.txt', append=True)
-#     else:
-#         OverlayUpdateHandler.update('error_output', 'No data to export to file.', append=True)

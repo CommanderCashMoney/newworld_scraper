@@ -2,24 +2,6 @@ import os
 import sys
 from pathlib import Path
 from typing import Union
-from urllib.parse import urljoin
-
-from app.settings import SETTINGS
-
-
-def get_endpoint_from_func_name(func: str, target_env: str, is_api: bool = True) -> str:
-    func_to_endpoint_map = {
-        "price_insert": "scanner_upload/",
-    }
-
-    if target_env == "dev":
-        base_url = SETTINGS.nwmp_dev_api_host
-    else:
-        base_url = SETTINGS.nwmp_prod_api_host
-    if is_api:
-        base_url = urljoin(base_url, "api/")
-    relative_url = func_to_endpoint_map.get(func, f"{func}/")
-    return urljoin(base_url, relative_url)
 
 
 def resource_path(relative_path: Path, as_path=False) -> Union[str, Path]:
