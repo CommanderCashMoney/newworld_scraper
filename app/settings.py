@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     api_password: str = ""
     APPDATA: str = None
 
+    log_file: str = "logging.txt"
+
     def app_data_folder(self, relative_path: str) -> Path:
         if self.APPDATA is None:
             raise ValueError("No appdata folder found. TODO: set a default")

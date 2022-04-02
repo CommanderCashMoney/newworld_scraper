@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime
 from tkinter import TclError
 
 from app.overlay.overlay_updates import OverlayUpdateHandler
+from app.settings import SETTINGS
 
 
 class OverlayLoggingHandler(logging.Handler):
@@ -34,3 +36,10 @@ class OverlayLoggingHandler(logging.Handler):
                 cls()
             ]
         )
+        target_dir = SETTINGS.app_data_folder("logging")
+        target_file = target_dir / datetime.now().strftime("%Y%m%d_%H%M%S.log.txt")
+
+        handler = logging.FileHandler(target_file, mode="w")
+        handler.setLevel(logging.DEBUG)
+        logging.root.addHandler(handler)
+        logging.info(f"Logging file created at `{target_file}`")
