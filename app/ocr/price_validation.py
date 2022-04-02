@@ -1,4 +1,5 @@
 import decimal
+import json
 import logging
 from collections import defaultdict
 from decimal import Decimal
@@ -53,10 +54,10 @@ class PriceValidator:
         if "." not in price_test:
             return False  # could check if inserting a . makes it sensible
         try:
-            num = Decimal(price_test)
+            num = round(Decimal(price_test), 2)
         except:  # noqa
             return False
-        return num > 0
+        return num >= Decimal("0.01")
 
     def validate_price(self) -> bool:
         price = self.price_list[self.current_index].get("price")
@@ -104,7 +105,12 @@ class PriceValidator:
         if prev_price_is_valid:
             last_price_float = float(prev_price)
             cur_price_float = price_test_float
-            percent_diff = (cur_price_float / last_price_float) - 1
+            try:
+                percent_diff = (cur_price_float / last_price_float) - 1
+            except ZeroDivisionError:
+                last_price_json = json.dumps(self.price_list[self.current_index-1], indent=2)
+                logging.error(f"Encountered zero division error on prev price: {last_price_json}")
+                return False
             # eg: 0.02 vs 0.1 is ok, 500% diff is not
             return (
                 cur_price_float > last_price_float
