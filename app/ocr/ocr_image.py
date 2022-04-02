@@ -20,6 +20,7 @@ class OCRImage:
     def __init__(self, img_src: Path) -> None:
         self.original_path = img_src
         path = Path(img_src)
+        self.original_path_obj = path
         self.captured = datetime.fromtimestamp(path.stat().st_mtime)
         self.resolution = res_1440p
 
@@ -71,11 +72,16 @@ class OCRImage:
                     current_row = int(top / self.resolution.tp_row_height)
                     if conf == "-1":
                         continue
+                    if column_name == "price":
+                        text = text.replace(",", "").strip()
                     # if data already exists for this column name, add a space.
                     append = " " if row_data[current_row][column_name] else ""
                     row_data[current_row][column_name] += f"{append}{text}"
 
             # should do a check here that all the important keys exist
-            final_data.extend([{**values, **{"timestamp": self.captured}} for values in row_data.values()])
+            final_data.extend([{**values, **{
+                "timestamp": self.captured,
+                "filename": self.original_path_obj,
+            }} for values in row_data.values()])
 
         return final_data

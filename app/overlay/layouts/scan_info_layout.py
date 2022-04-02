@@ -13,7 +13,7 @@ def scan_info_layout():
         ],
         [sg.Text('_' * 60)],
         [
-            sg.Frame(title='Advanced', key='advanced', visible=False, layout=[
+            sg.pin(sg.Frame(title='Advanced', key='advanced', visible=False, layout=[
                 [
                     sg.Text('Pages'),
                     sg.InputText(key=events.PAGE_INPUT, size=(4, 1), enable_events=True, default_text=SESSION_DATA.pages),
@@ -21,7 +21,7 @@ def scan_info_layout():
                     sg.Text('Server: '),
                     sg.Combo([0], size=(2, 1), key=events.SERVER_SELECT, enable_events=True, readonly=True)
                 ]
-            ])
+            ]))
         ],
         [
             sg.Text('Status: '),

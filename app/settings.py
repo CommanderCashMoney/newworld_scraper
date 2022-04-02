@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     @property
     def temp_app_data(self) -> Path:
-        return self.app_data_folder("../temp")
+        return self.app_data_folder("temp")
 
     @property
     def is_dev(self) -> bool:

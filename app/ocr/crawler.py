@@ -1,5 +1,6 @@
 import logging
 import time
+from copy import deepcopy
 from threading import Thread
 
 import numpy as np
@@ -52,6 +53,7 @@ class Crawler:
 
     def check_move(self) -> None:
         if self.last_moved == 0:
+            time.sleep(2)
             self.move()
         elif time.perf_counter() - self.last_moved > 60 * 10:
             self.move()
@@ -60,9 +62,8 @@ class Crawler:
         try:
             bring_new_world_to_foreground()
         except:  # noqa
-            self.stop(reason="New World doesn't seem to be open.", is_error=True)
+            self.stop(reason="New World doesn't seem to be open.", is_error=True, wait_for_death=False)
             return
-        time.sleep(0.5)
         press_key(pynput.keyboard.Key.esc)
         time.sleep(0.5)
         rand_time = np.random.uniform(0.10, 0.15)
@@ -70,10 +71,9 @@ class Crawler:
         time.sleep(rand_time)
         press_key('s', 0.1)
         press_key('e')
-        time.sleep(2)
         # hack time
         if not self.section_crawlers[0].look_for_tp():
-            self.stop(reason="couldn't find TP", is_error=True)
+            self.stop(reason="couldn't find TP", is_error=True, wait_for_death=False)
         self.last_moved = time.perf_counter()
 
     def crawl(self) -> None:
@@ -113,7 +113,7 @@ class Crawler:
             SESSION_DATA.last_scan_data = pending_submissions
             self.send_pending_submissions()
         logging.info("Parsing results complete.")
-        self.stop(reason="run completed.", wait_for_sweet_release_of_death=False)
+        self.stop(reason="run completed.", wait_for_death=False)
 
     def wait_for_parse(self) -> None:
         if self.ocr_queue.queue.qsize() > 0:
@@ -128,22 +128,33 @@ class Crawler:
             if idx not in self.ocr_queue.validator.bad_indexes
         ]
         self.ocr_queue.stop()
+        dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
+        for filename, info in dict_copy.items():
+            file_accuracy = info["bad_percent"]
+            if file_accuracy > 50:
+                logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
+            else:
+                p = SETTINGS.temp_app_data / filename
+                p.unlink()
+
 
     def send_pending_submissions(self) -> None:
         submission_data = SESSION_DATA.pending_submission_data
         submission_data.submit()
+        OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-")
 
     def start(self) -> None:
+        OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", False)
         self._cancelled = False
         self.started = time.perf_counter()
         if not self.crawler_thread.is_alive():
             self.crawler_thread.start()
 
-    def stop(self, reason: str, is_interrupt=False, is_error=False, wait_for_sweet_release_of_death=True) -> None:
+    def stop(self, reason: str, is_interrupt=False, is_error=False, wait_for_death=True) -> None:
         self._cancelled = True
         logging.warning(f"Stopped crawling because {reason}")
-        while wait_for_sweet_release_of_death and self.crawler_thread.is_alive():
-            logging.info("Stopping crawler - waiting for thread to die.")
+        while wait_for_death and self.crawler_thread.is_alive():
+            logging.info("Stopping crawler - waiting to die.")
             time.sleep(1)
 
         if is_error:
@@ -155,9 +166,12 @@ class Crawler:
         self.reset_ui_state()
 
     def reset_ui_state(self) -> None:
-        # todo: this should just fire the event that we're complete
+        OverlayUpdateHandler.visible("advanced", visible=True)
+        OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
         OverlayUpdateHandler.enable(events.RUN_BUTTON)
+        # todo: need to check this actually works
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
+
 
     @property
     def stopped(self) -> bool:

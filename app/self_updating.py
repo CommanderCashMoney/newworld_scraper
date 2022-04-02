@@ -49,7 +49,13 @@ def version_fetched(response) -> None:
             overlay.show_update_window()
         return
     # otherwise, we error out.
-    hide = ["un_text", events.USERNAME_INPUT, "pw_text", events.PASSWORD_INPUT, events.LOGIN_BUTTON]
+    hide = [
+        "un_text",
+        events.USERNAME_INPUT,
+        "pw_text",
+        events.PASSWORD_INPUT,
+        events.LOGIN_BUTTON,
+    ]
     for element in hide:
         overlay.window[element].update(visible=False)
     endpoint = version_endpoint()

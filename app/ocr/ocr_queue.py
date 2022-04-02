@@ -5,11 +5,11 @@ from threading import Thread
 
 from app.ocr.ocr_image import OCRImage
 from app.ocr.price_validation import PriceValidator
-from app.overlay.overlay_updates import OverlayUpdateHandler
 
 
 class OCRQueue:
-    def __init__(self) -> None:
+    def __init__(self, overlay_update_handler: "OverlayUpdateHandler" = None) -> None:
+        self.overlay_update_handler = overlay_update_handler
         self._continue_processing = True
         self.queue = Queue()
         self.queue.empty()
@@ -20,9 +20,14 @@ class OCRQueue:
         self.validator = PriceValidator(self.ocr_processed_items)
         self.crawler = None  # type: Crawler
 
+    def update_overlay(self, key, value) -> None:
+        if not self.overlay_update_handler:
+            return
+        self.overlay_update_handler.update(key, value)
+
     def add_to_queue(self, img_path: Path):
         self.total_images += 1
-        OverlayUpdateHandler.update("key_count", self.total_images)
+        self.update_overlay("key_count", self.total_images)
         ocr_image = OCRImage(img_path)
         self.queue.put(ocr_image)
 
@@ -35,13 +40,13 @@ class OCRQueue:
 
             self.ocr_processed_items.extend(next_item.parse_prices())
             self.validator.validate_next_batch()
-            OverlayUpdateHandler.update("listings_count", len(self.ocr_processed_items))
-            OverlayUpdateHandler.update("ocr_count", self.queue.qsize())
+            self.update_overlay("listings_count", len(self.ocr_processed_items))
+            self.update_overlay("ocr_count", self.queue.qsize())
             bad_indexes = len(self.validator.bad_indexes)
             accuracy = 1 - bad_indexes / len(self.ocr_processed_items) or 1
             accuracy_pc = round(accuracy * 100, 1)
-            OverlayUpdateHandler.update("accuracy", f"{accuracy_pc}%")
-            OverlayUpdateHandler.update("validate_fails", bad_indexes)
+            self.update_overlay("accuracy", f"{accuracy_pc}%")
+            self.update_overlay("validate_fails", bad_indexes)
             logging.debug(f"Processed `{next_item.original_path}`")
 
         logging.info("OCRQueue stopped processing.")
@@ -54,10 +59,13 @@ class OCRQueue:
 
     @property
     def continue_processing(self) -> None:
-        return not self.crawler.stopped or self._continue_processing is False
+        has_crawler = bool(self.crawler)
+        keep_going = not has_crawler or not self.crawler.stopped
+        return keep_going and self._continue_processing is True
 
     def stop(self) -> None:
         self._continue_processing = False
+        self.queue.empty()
         if self.queue.qsize() == 0:
             self.queue.put(None)  # noqa - unstick the queue since it is waiting
 

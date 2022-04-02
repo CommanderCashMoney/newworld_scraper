@@ -20,6 +20,7 @@ class PriceValidator:
         self.name_swaps = None
         self.bad_names = defaultdict(int)
         self.word_cleanup = None
+        self.image_accuracy = defaultdict(lambda: defaultdict(int))  # dict of image file name: image accuracy
 
     def set_api_info(self) -> None:
         if self.api_fetched:
@@ -146,12 +147,19 @@ class PriceValidator:
 
     def validate_next_batch(self) -> None:
         self.set_api_info()
+
         while self.current_index < len(self.price_list):
+            current_price = self.price_list[self.current_index]
             name_invalid = not self.validate_name()
             price_invalid = not self.validate_price()
             qty_invalid = not self.validate_quantity()
-
+            filename = current_price["filename"].name
+            self.image_accuracy[filename]["processed"] += 1
             if name_invalid or price_invalid or qty_invalid:
-                logging.debug(f"Could not validate {self.price_list[self.current_index]}")
+                logging.debug(f"Could not validate {current_price}")
                 self.bad_indexes.add(self.current_index)
+                self.image_accuracy[filename]["bad_rows"] += 1
+            processed = self.image_accuracy[filename]["processed"]
+            bad_rows = self.image_accuracy[filename]["bad_rows"]
+            self.image_accuracy[filename]["bad_percent"] = bad_rows / processed * 100
             self.current_index += 1
