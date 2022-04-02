@@ -75,7 +75,6 @@ def load_settings() -> Settings:
             keybinds = KeyBindings(**settings_values)
             return Settings(api_username=username, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
-        print("err!!")
         pass
     return Settings()
 
