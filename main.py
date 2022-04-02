@@ -8,13 +8,23 @@ from app import events
 from app.overlay import overlay  # noqa
 from app.overlay.overlay_logging import OverlayLoggingHandler
 from app.overlay.overlay_updates import OverlayUpdateHandler
+from app.settings import SETTINGS
 from app.utils import resource_path
 
 
 OverlayLoggingHandler.setup_overlay_logging()
 
 
+def delete_temp_folder() -> None:
+    try:
+        SETTINGS.temp_app_data.rmdir()
+    except PermissionError:
+        logging.warning("Couldn't delete temp app data folder as it appears to be in use.")
+        logging.info(f"Temp folder is: `{str(SETTINGS.temp_app_data)}`.")
+
+
 def show_exception_and_exit(exc_type, exc_value, tb):
+    delete_temp_folder()
     traceback.print_exception(exc_type, exc_value, tb)
     sys.exit(-1)
 
@@ -45,3 +55,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    delete_temp_folder()

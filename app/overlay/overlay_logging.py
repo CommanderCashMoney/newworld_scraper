@@ -1,4 +1,5 @@
 import logging
+from tkinter import TclError
 
 from app.overlay.overlay_updates import OverlayUpdateHandler
 
@@ -18,6 +19,8 @@ class OverlayLoggingHandler(logging.Handler):
             OverlayUpdateHandler.update(output_to, msg, True)
         except (KeyboardInterrupt, SystemExit):
             raise
+        except TclError:
+            pass
         except:
             self.handleError(record)
 

@@ -21,7 +21,8 @@ from app.utils.window import bring_new_world_to_foreground
 
 
 class Crawler:
-    def __init__(self, ocr_queue: OCRQueue) -> None:
+    def __init__(self, ocr_queue: OCRQueue, run_id: str) -> None:
+        self.run_id = run_id
         self.ocr_queue = ocr_queue
         self.ocr_queue.crawler = self
         self.section_crawlers = [SectionCrawler(self, k) for k in res_1440p.sections.keys()]
@@ -134,9 +135,8 @@ class Crawler:
             if file_accuracy > 50:
                 logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
             else:
-                p = SETTINGS.temp_app_data / filename
+                p = SETTINGS.temp_app_data / self.run_id / filename
                 p.unlink()
-
 
     def send_pending_submissions(self) -> None:
         submission_data = SESSION_DATA.pending_submission_data

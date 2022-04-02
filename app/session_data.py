@@ -20,6 +20,8 @@ class CurrentData(BaseModel):
     auto_sections: bool = True  # doesn't do anything atm
     access_token: str = ""
     refresh_token: str = ""
+
+    current_run_id: str = datetime.now().strftime("%Y%m%d-%H%M%S")
     crawler: "Crawler" = None
     pending_submission_data: APISubmission = None
     last_scan_data: APISubmission = None
@@ -41,6 +43,9 @@ class CurrentData(BaseModel):
         with store_file_path.open("w") as out_f:
             json.dump(self.last_scan_data.price_data_archive, out_f, default=str)
         logging.info(f"Data saved to `{store_file_path}`")
+
+    def update_run_id(self) -> None:
+        self.current_run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
 SESSION_DATA = CurrentData()

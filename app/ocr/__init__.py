@@ -16,8 +16,10 @@ def start_run(values) -> None:
     if SESSION_DATA.server_id is None:
         logging.error("Can't start run because server ID is not set. Please let us know on Discord!")
         return
+    SESSION_DATA.update_run_id()
     OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=False)
-    SESSION_DATA.crawler = Crawler(OCRQueue(overlay_update_handler=OverlayUpdateHandler))
+    queue = OCRQueue(overlay_update_handler=OverlayUpdateHandler)
+    SESSION_DATA.crawler = Crawler(queue, run_id=SESSION_DATA.current_run_id)
     SESSION_DATA.crawler.start()
     OverlayUpdateHandler.disable(RUN_BUTTON)
     OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=False)

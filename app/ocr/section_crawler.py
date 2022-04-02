@@ -74,13 +74,15 @@ class SectionCrawler:
         return True
 
     def crawl_page(self) -> bool:
-        app_data_temp = SETTINGS.temp_app_data
+        app_data_temp = SETTINGS.temp_app_data / self.parent.run_id
+        app_data_temp.mkdir(exist_ok=True)
         for _ in ScrollState:
             if self.stopped or not self.check_scrollbar():
                 return False
             self.reset_mouse_position()
             image = self.snap_items()
-            file_name = app_data_temp / f"{self.section}-{self.current_page}-{self.scroll_state.value}.png"
+            fn = f"{self.section}-{self.current_page}-{self.scroll_state.value}.png"
+            file_name = app_data_temp / fn
             cv2.imwrite(str(file_name), image)
             self.parent.ocr_queue.add_to_queue(file_name)
             self.scroll()
@@ -155,7 +157,7 @@ class SectionCrawler:
 
     @staticmethod
     def reset_mouse_position() -> None:
-        mouse.position = (1300, 480)  # for scroll
+        mouse.position = (1300, 480)  # for scroll - put in config
 
     def check_scrollbar(self) -> bool:
         self.press_cancel_or_refresh()
@@ -177,7 +179,7 @@ class SectionCrawler:
         return False
 
     def wait_for_load(self):
-        if self.pages > 1:
+        if self.pages != self.current_page:
             self.check_scrollbar()
         else:
             first_listing = self.resolution.first_item_listing_bbox
