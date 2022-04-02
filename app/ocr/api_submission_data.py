@@ -23,6 +23,7 @@ class APISubmission:
             OverlayUpdateHandler.visible(events.RESEND_DATA, visible=True)
             logging.info("Data sending success.")
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=True)
+        OverlayUpdateHandler.visible(events.CHANGE_KEY_BINDS, visible=True)
 
     @property
     def submit_success(self) -> bool:

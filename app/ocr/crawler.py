@@ -131,8 +131,8 @@ class Crawler:
         self.ocr_queue.stop()
         dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
         for filename, info in dict_copy.items():
-            file_accuracy = info["bad_percent"]
-            if file_accuracy > 50:
+            file_accuracy = 100 - info["bad_percent"]
+            if file_accuracy < 50:
                 logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
             else:
                 p = SETTINGS.temp_app_data / self.run_id / filename

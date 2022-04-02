@@ -71,6 +71,7 @@ class SectionCrawler:
             if self.stopped:
                 return False
             self.next_page()
+        OverlayUpdateHandler.update("pages_left", "-")
         return True
 
     def crawl_page(self) -> bool:
