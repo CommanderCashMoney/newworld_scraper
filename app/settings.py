@@ -12,7 +12,7 @@ class Environment(Enum):
 class Settings(BaseSettings):
     VERSION = "1.1.1"
 
-    environment: Environment = Environment.prod
+    environment: Environment = Environment.dev
     use_dev_colors: bool = False
 
     nwmp_dev_api_host: str = "http://localhost:8080/"

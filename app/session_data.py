@@ -54,33 +54,33 @@ SESSION_DATA = CurrentData()
 def update_pages(value: str) -> None:
     if not value.isnumeric():
         value = 500
-    logging.info(f"Updated setting `pages` to {value}")
+    logging.debug(f"Updated setting `pages` to {value}")
     SESSION_DATA.pages = int(value)
 
 
 def update_username(value: str) -> None:
     SESSION_DATA.username = value
-    logging.info(f"Username updated.")
+    logging.debug(f"Username updated.")
 
 
 def update_password(value: str) -> None:
     SESSION_DATA.password = value
-    logging.info(f"Password updated.")
+    logging.debug(f"Password updated.")
 
 
 def update_test_run(value: bool) -> None:
     SESSION_DATA.test_run = value
-    logging.info(f"Test run is now {value}.")
+    logging.debug(f"Test run is now {value}.")
 
 
 def update_auto_sections(value: bool) -> None:
     SESSION_DATA.auto_sections = value
-    logging.info(f"Auto sections is now {value}.")
+    logging.debug(f"Auto sections is now {value}.")
 
 
 def update_server_select(value: str) -> None:
     SESSION_DATA.server_id = value
-    logging.info(f"Server is now {value}.")
+    logging.debug(f"Server is now {value}.")
 
 
 def save_scan_data(value) -> None:

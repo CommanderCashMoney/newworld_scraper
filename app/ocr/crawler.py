@@ -53,10 +53,9 @@ class Crawler:
             time.sleep(1)
 
     def check_move(self) -> None:
-        if self.last_moved == 0:
+        if self.last_moved == 0 or time.perf_counter() - self.last_moved > 60 * 5:  # 5 min
+            logging.info("Moving character...")
             time.sleep(2)
-            self.move()
-        elif time.perf_counter() - self.last_moved > 60 * 10:
             self.move()
 
     def move(self) -> None:
@@ -106,6 +105,7 @@ class Crawler:
         logging.info("Parsing complete.")
         should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
         if should_submit:
+            logging.info("Submitting data to API.")
             pending_submissions = APISubmission(
                 price_data=self.final_results,
                 bad_name_data=self.ocr_queue.validator.bad_names

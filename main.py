@@ -1,6 +1,7 @@
 import logging
 import traceback
 import sys
+from pathlib import Path
 
 import pytesseract
 
@@ -15,9 +16,18 @@ from app.utils import resource_path
 OverlayLoggingHandler.setup_overlay_logging()
 
 
+def rm_dir_recurse(path: Path) -> None:
+    for file in path.iterdir():
+        if file.is_dir():
+            rm_dir_recurse(file)
+        else:
+            file.unlink()
+    path.rmdir()
+
+
 def delete_temp_folder() -> None:
     try:
-        SETTINGS.temp_app_data.rmdir()
+        rm_dir_recurse(SETTINGS.temp_app_data)
     except PermissionError:
         logging.warning("Couldn't delete temp app data folder as it appears to be in use.")
         logging.info(f"Temp folder is: `{str(SETTINGS.temp_app_data)}`.")

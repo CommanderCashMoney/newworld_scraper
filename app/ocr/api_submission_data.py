@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 from typing import DefaultDict, List
 
@@ -13,12 +14,14 @@ class APISubmission:
 
     def submit(self):
         from app.overlay.overlay_updates import OverlayUpdateHandler
+        OverlayUpdateHandler.update('status_bar', "Submitting data to API")
         if submit_bad_names(self.bad_name_data):
             self.bad_name_data.clear()
         if submit_price_data(self.price_data):
             self.price_data.clear()
         if not self.submit_success:
             OverlayUpdateHandler.visible(events.RESEND_DATA, visible=True)
+            logging.info("Data sending success.")
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=True)
 
     @property
