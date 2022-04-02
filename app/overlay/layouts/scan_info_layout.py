@@ -72,6 +72,6 @@ def scan_info_layout():
                     ]
                 ])
             ),
-            sg.pin(sg.Button('Change key binds', key=events.CHANGE_KEY_BINDS))
+            sg.pin(sg.Button('Settings', key=events.CHANGE_KEY_BINDS))
         ]
     ]

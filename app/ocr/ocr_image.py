@@ -6,7 +6,7 @@ from pathlib import Path
 import cv2
 from PIL import Image
 
-from app.ocr.resolution_settings import res_1440p
+from app.ocr.resolution_settings import get_resolution_obj
 from app.ocr.utils import (
     EVERYTHING_CONFIG,
     INTEGERS_ONLY_CONFIG,
@@ -22,7 +22,7 @@ class OCRImage:
         path = Path(img_src)
         self.original_path_obj = path
         self.captured = datetime.fromtimestamp(path.stat().st_mtime)
-        self.resolution = res_1440p
+        self.resolution = get_resolution_obj()
 
     @property
     def original_image(self):
@@ -30,7 +30,7 @@ class OCRImage:
 
     def parse_prices(self) -> defaultdict:
         """Parse prices from images, do no validation yet."""
-        columns_1440p = {
+        columns = {
             "name": {
                 "config": EVERYTHING_CONFIG,
                 "coords": self.resolution.tp_name_col_x_coords,
@@ -51,18 +51,17 @@ class OCRImage:
         results.append([])
         broken_up_images = []
         # break the image up into columns for processing
-        for name, values in columns_1440p.items():
+        for name, values in columns.items():
             x_start, x_end = values["coords"]
             config = values["config"]
             img_cropped = img.crop((x_start * 2.5, 0, x_end * 2.5, img.height * 2.5))
             broken_up_images.append((name, config, img_cropped))
         # concurrently execute pytesseract
-        with ThreadPoolExecutor(max_workers=len(columns_1440p)) as executor:
+        with ThreadPoolExecutor(max_workers=len(columns)) as executor:
             futures = executor.map(lambda arr: get_txt_from_im(*arr), broken_up_images)
             results[-1] = futures
 
         # now process the results
-        # in 1440p, the row height is roughly 256px
         final_data = []
         for result in results:
             row_data = defaultdict(lambda: defaultdict(str))

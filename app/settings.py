@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # user/pass can be set for development purposes in .env to avoid having to type each time
     api_username: str = ""
     api_password: str = ""
+    resolution: str = "1440p"
 
     log_file: str = "logging.txt"
 
@@ -72,8 +73,9 @@ def load_settings() -> Settings:
         with SETTINGS_FILE_LOC.open() as f:
             settings_values = json.load(f)
             username = settings_values.pop("un", "")
+            resolution = settings_values.pop("resolution", "1440p")
             keybinds = KeyBindings(**settings_values)
-            return Settings(api_username=username, keybindings=keybinds)
+            return Settings(api_username=username, resolution=resolution, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
     return Settings()
@@ -84,9 +86,11 @@ SETTINGS = load_settings()
 
 def save(values) -> None:
     from app.overlay import overlay
+    resolution = values.pop("resolution", SETTINGS.resolution)
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": SETTINGS.api_username,
+            "resolution": resolution,
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
@@ -98,5 +102,6 @@ def save_username(username) -> None:
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": username,
+            "resolution": SETTINGS.resolution,
             **SETTINGS.keybindings.dict()
         }, f)

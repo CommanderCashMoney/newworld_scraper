@@ -4,6 +4,7 @@ import cv2
 from pydantic import BaseModel
 
 from app.ocr.utils import grab_screen
+from app.settings import SETTINGS
 from app.utils import resource_path
 
 
@@ -15,9 +16,11 @@ class ImageReference(BaseModel):
     def compare_image_reference(self) -> bool:
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
         reference_grab = grab_screen(region=self.screen_bbox)
-        reference_image_file = resource_path(f"app/images/new_world/{self.file_name}")
+        reference_image_file = resource_path(f"app/images/new_world/{SETTINGS.resolution}/{self.file_name}")
         reference_img = cv2.imread(reference_image_file)
-        res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)
+        img_gray = cv2.cvtColor(reference_img, cv2.COLOR_BGR2GRAY)
+        img_grab_gray = cv2.cvtColor(reference_grab, cv2.COLOR_BGR2GRAY)
+        res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         return max_val > self.min_conf
 
@@ -117,3 +120,60 @@ res_1440p = Resolution(
            'House Furnishings': (165, 1091)
        },
 )
+
+
+res_1080p = Resolution(
+    trading_post=ImageReference(screen_bbox=(341, 29, 103, 28), file_name="trading_post_label.png", min_conf=0.92),
+    top_scroll=ImageReference(screen_bbox=(1833, 651, 19, 29), file_name="top_of_scroll.png", min_conf=0.95),
+    mid_scroll=ImageReference(screen_bbox=(1833, 973, 19, 38), file_name="btm_of_scroll.png", min_conf=0.95),
+    bottom_scroll=ImageReference(screen_bbox=(1833, 681, 16, 33), file_name="btm_of_scroll2.png", min_conf=0.95),
+    cancel_button=ImageReference(screen_bbox=(721, 775, 63, 17), file_name="cancel_btn.png", min_conf=0.95),
+    refresh_button=ImageReference(screen_bbox=(1165, 678, 118, 22), file_name="refresh_btn.png", min_conf=0.95),
+    next_page_coords=(1801, 226),
+    pages_bbox=(1665, 214, 114, 22),
+    items_bbox=(694, 316, 1138, 694),
+    items_bbox_last=(692, 896, 1139, 152),
+    tp_row_height=72*2.5,
+    tp_name_col_x_coords=(0, 273),
+    tp_price_col_x_coords=(273, 416),
+    tp_avail_col_x_coords=(813, 876),
+    tp_tier_col_x_coords=(416, 475),
+    tp_gs_col_x_coords=(475, 537),
+    tp_gem_col_x_coords=(537, 604),
+    tp_perk_col_x_coords=(604, 721),
+    tp_rarity_col_x_coords=(721, 813),
+    tp_location_col_x_coords=(1010, 1122),
+    first_item_listing_bbox=(620, 319, 261, 71),
+
+    sections={
+           'Resources Reset 0': (122, 597),
+           'Raw Resources': (230, 370),
+           'Resources Reset 1': (122, 597),
+           'Refined Resources': (243, 421),
+           'Resources Reset 2': (122, 597),
+           'Cooking Ingredients': (283, 476),
+           'Resources Reset 3': (122, 597),
+           'Craft Mods': (233, 526),
+           'Resources Reset 4': (122, 597),
+           'Components': (234, 586),
+           'Resources Reset 5': (122, 597),
+           'Potion Reagents': (248, 637),
+           'Resources Reset 6': (122, 597),
+           'Dyes': (209, 690),
+           'Resources Reset 7': (122, 597),
+           'Azoth': (204, 746),
+           'Resources Reset 8': (122, 597),
+           'Arcana': (221, 796),
+           'Consumables': (125, 670),
+           'Ammunition': (121, 740),
+           'House Furnishings': (122, 818)
+       },
+)
+
+
+def get_resolution_obj():
+    if SETTINGS.resolution == "1440p":
+        return res_1440p
+    elif SETTINGS.resolution == "1080p":
+        return res_1080p
+    return res_1440p  # don't think this will ever happen, but safer than assuming

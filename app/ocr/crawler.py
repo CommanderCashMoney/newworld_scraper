@@ -10,7 +10,7 @@ from win32gui import GetForegroundWindow, GetWindowText
 from app import events
 from app.ocr.api_submission_data import APISubmission
 from app.ocr.ocr_queue import OCRQueue
-from app.ocr.resolution_settings import res_1440p
+from app.ocr.resolution_settings import get_resolution_obj
 from app.ocr.section_crawler import SectionCrawler
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.session_data import SESSION_DATA
@@ -25,7 +25,7 @@ class Crawler:
         self.run_id = run_id
         self.ocr_queue = ocr_queue
         self.ocr_queue.crawler = self
-        self.section_crawlers = [SectionCrawler(self, k) for k in res_1440p.sections.keys()]
+        self.section_crawlers = [SectionCrawler(self, k) for k in get_resolution_obj().sections.keys()]
         self.current_section = 0
         self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self._cancelled = False

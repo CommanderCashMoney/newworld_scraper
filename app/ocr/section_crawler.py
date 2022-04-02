@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from pytesseract import pytesseract
 
-from app.ocr.resolution_settings import Resolution, res_1440p
+from app.ocr.resolution_settings import Resolution, get_resolution_obj
 from app.ocr.utils import grab_screen, pre_process_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
@@ -44,7 +44,7 @@ class SectionCrawler:
 
     @property
     def resolution(self) -> Resolution:
-        return res_1440p
+        return get_resolution_obj()
 
     def crawl(self, pages_to_parse: int = 500) -> None:
         bring_new_world_to_foreground()
