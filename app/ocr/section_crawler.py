@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from enum import Enum
 from typing import Any
@@ -54,9 +55,9 @@ class SectionCrawler:
         if "Reset" in self.section:
             return
         self.pages = self.get_current_screen_page_count()
+        logging.info(f"Found {self.pages} pages for section {self.section}")
         if pages_to_parse:
             self.pages = min(self.pages, pages_to_parse)
-            logging.info(f"Parsing {self.pages} pages in section {self.section}.")
         success = self.crawl_section()
         if not self.stopped and not success:
             self.parent.stop(f"something is wrong - couldn't find any items at all in section {self.section}")
@@ -110,14 +111,38 @@ class SectionCrawler:
         custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
         txt = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
         pages_str = txt['text'][-1]
-        if not pages_str.isnumeric():
-            logging.error('Page count not numeric - assuming 1 page.')
+        logging.debug(f"Number of pages looks like: {pages_str}")
+        if not pages_str:
+            logging.error("Could not find ANY page count information. Assuming 1.")
             return 1
-        pages = int(pages_str)
+
+        pages_str = pages_str.strip()
+
+        if pages_str.isnumeric():
+            if int(pages_str) > 500:
+                # try see if the o was mistaken for a 0
+                try:
+                    last_zero = pages_str[:-1].rindex("0")
+                except ValueError:
+                    logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                    return 1
+                pages_str = pages_str[last_zero+1:]
+                if not pages_str.isnumeric() or int(pages_str) > 500:
+                    logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                    return 1
+            return int(pages_str)
+
+        groups = re.search(r"(\d*)\s?o?f?\s?(\d*)", pages_str).groups()
+        last = groups[-1]
+        if not last.isnumeric():
+            logging.error(f"Captured page count info is not numeric. Original capture: {pages_str}")
+            return 1
+
+        pages = int(last)
         if pages > 500:
             logging.error('Page count greater than 500 - assuming 1 page.')
             return 1
-        logging.info(f"Found {pages} pages for section {self.section}")
+
         return pages
 
     def press_cancel_or_refresh(self):
