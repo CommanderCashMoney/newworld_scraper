@@ -152,7 +152,8 @@ class Crawler:
 
     def stop(self, reason: str, is_interrupt=False, is_error=False, wait_for_death=True) -> None:
         self._cancelled = True
-        logging.warning(f"Stopped crawling because {reason}")
+        logging_func = logging.warning if is_error else logging.info
+        logging_func(f"Stopped crawling because {reason}")
         while wait_for_death and self.crawler_thread.is_alive():
             logging.info("Stopping crawler - waiting to die.")
             time.sleep(1)
