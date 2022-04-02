@@ -36,7 +36,7 @@ class OverlayLoggingHandler(logging.Handler):
                 cls()
             ]
         )
-        target_dir = SETTINGS.app_data_folder("logging")
+        target_dir = SETTINGS.app_data_sub_path("logging")
         target_file = target_dir / datetime.now().strftime("%Y%m%d_%H%M%S.log.txt")
 
         handler = logging.FileHandler(target_file, mode="w")

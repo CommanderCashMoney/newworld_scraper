@@ -12,8 +12,12 @@ LOGIN_LAYOUT = [
     ],
     [
         sg.Text('User Name: ', key="un_text"),
-        sg.InputText(key=events.USERNAME_INPUT, size=(25, 1), default_text=SETTINGS.api_username,
-                     enable_events=True)
+        sg.InputText(
+            key=events.USERNAME_INPUT,
+            size=(25, 1),
+            default_text=SETTINGS.api_username,
+            enable_events=True
+        )
     ],
     [
         sg.Text('Password:   ', key="pw_text"),

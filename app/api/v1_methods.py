@@ -8,7 +8,7 @@ from app import events
 from app.overlay import overlay
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.session_data import SESSION_DATA, update_server_select
-from app.settings import SETTINGS
+from app.settings import SETTINGS, save_username
 
 
 def login():
@@ -65,3 +65,4 @@ def login_completed(response) -> None:
         overlay.show_main()
         if 'advanced' in access_groups:
             overlay.show_advanced()
+        save_username(json_response["username"])

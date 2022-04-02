@@ -13,7 +13,7 @@ from app.settings import SETTINGS
 
 
 def installer_file_path() -> Path:
-    installer_path = SETTINGS.app_data_folder("Installer")
+    installer_path = SETTINGS.app_data_sub_path("Installer")
     installer_path.mkdir(exist_ok=True)
     downloaded_file_path = installer_path / "Installer.msi"
     return downloaded_file_path

@@ -67,10 +67,10 @@ class Crawler:
         press_key(pynput.keyboard.Key.esc)
         time.sleep(0.5)
         rand_time = np.random.uniform(0.10, 0.15)
-        press_key('w', 0.1)
+        press_key(SETTINGS.keybindings.backward_key, 0.1)
         time.sleep(rand_time)
-        press_key('s', 0.1)
-        press_key('e')
+        press_key(SETTINGS.keybindings.forward_key, 0.1)
+        press_key(SETTINGS.keybindings.action_key)
         # hack time
         if not self.section_crawlers[0].look_for_tp():
             self.stop(reason="couldn't find TP", is_error=True, wait_for_death=False)

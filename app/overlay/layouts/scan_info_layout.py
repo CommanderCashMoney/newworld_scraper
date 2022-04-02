@@ -71,6 +71,7 @@ def scan_info_layout():
                         sg.FolderBrowse(button_text='Download Data')
                     ]
                 ])
-            )
+            ),
+            sg.Button('Change key binds', key=events.CHANGE_KEY_BINDS)
         ]
     ]

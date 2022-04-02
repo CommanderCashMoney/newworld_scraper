@@ -6,10 +6,10 @@ from pathlib import Path
 import pytesseract
 
 from app import events
+from app.settings import SETTINGS
 from app.overlay import overlay  # noqa
 from app.overlay.overlay_logging import OverlayLoggingHandler
 from app.overlay.overlay_updates import OverlayUpdateHandler
-from app.settings import SETTINGS
 from app.utils import resource_path
 
 

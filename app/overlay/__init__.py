@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 
 from app import events
+from app.overlay.layouts.key_settings_layout import key_settings_layout
 from app.overlay.layouts.login_layout import LOGIN_LAYOUT
 from app.overlay.layouts.scan_info_layout import scan_info_layout
 from app.settings import SETTINGS
@@ -130,6 +131,30 @@ class Overlay:
         self.spinner_step += 1
         if self.spinner_step > 470:
             self.spinner_step = 0
+
+    def popup_keybinds(self):
+        x, y = self.window.current_location(more_accurate=True)
+        width, height = self.window.size
+        window = sg.Window(
+            "Change key bindings",
+            key_settings_layout(),
+            use_default_focus=False,
+            finalize=True,
+            modal=True,
+            grab_anywhere=True,
+            no_titlebar=True,
+            border_depth=2,
+        )
+        middle_x = int(x + width / 2 - window.size[0] / 2)
+        middle_y = int(y + height / 2 - window.size[1] / 2)
+        window.move(middle_x, middle_y)
+        self.window.set_alpha(0.4)
+
+        event, values = window.read()
+        self.window.write_event_value(event, values)
+        window.close()
+
+        return values
 
 
 overlay = Overlay()
