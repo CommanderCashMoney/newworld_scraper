@@ -53,10 +53,10 @@ class PriceValidator:
         if "." not in price_test:
             return False  # could check if inserting a . makes it sensible
         try:
-            Decimal(price_test)
+            num = Decimal(price_test)
         except:  # noqa
             return False
-        return True
+        return num > 0
 
     def validate_price(self) -> bool:
         price = self.price_list[self.current_index].get("price")
