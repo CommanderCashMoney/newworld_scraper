@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 
 from app.ocr.ocr_image import OCRImage
-from app.ocr.price_validation import ListingValidator
+from app.ocr.validation.listing_validation import ListingValidator
 
 
 class OCRQueue:
@@ -16,10 +16,11 @@ class OCRQueue:
         self._processing_thread = Thread(target=self.process_queue, name="OCR Queue", daemon=True)
         self.total_images = 0
         self.total_removals = 0
-        self.ocr_processed_items = []
-        self.validator = ListingValidator(self.ocr_processed_items)
+        self.validator = ListingValidator()
         self.crawler = None  # type: Crawler
-        self.last_received_section = None
+        self.to_validate = []
+        self.SECTION_COMPLETE_EVENT = "RESET"
+        self.ocr_processed_listings = 0
 
     def update_overlay(self, key, value) -> None:
         if not self.overlay_update_handler:
@@ -27,15 +28,13 @@ class OCRQueue:
         self.overlay_update_handler.update(key, value)
 
     def add_to_queue(self, img_path: Path, section: str = None):
-        reset_price = self.last_received_section != section
-        if reset_price:
-            self.last_received_section = section
-            self.queue.put("RESET")
-
         self.total_images += 1
         self.update_overlay("key_count", self.total_images)
-        ocr_image = OCRImage(img_path)
+        ocr_image = OCRImage(img_path, section)
         self.queue.put(ocr_image)
+
+    def notify_section_complete(self) -> None:
+        self.queue.put(self.SECTION_COMPLETE_EVENT)
 
     def process_queue(self) -> None:
         logging.info(f"OCR Queue is ready to accept images.")
@@ -44,26 +43,30 @@ class OCRQueue:
             if not self.continue_processing or next_item is None:  # a none object was put in to unstick the queue
                 break
 
-            if next_item == "RESET":
-                self.validator.last_good_price = None
+            self.update_overlay("ocr_count", self.queue.qsize())
+
+            if next_item != self.SECTION_COMPLETE_EVENT:
+                parsed_prices = next_item.parse_prices()
+                self.ocr_processed_listings += len(parsed_prices)
+                self.update_overlay("listings_count", self.ocr_processed_listings)
+                self.to_validate.extend(parsed_prices)
+                continue
+            elif len(self.to_validate) == 0:
                 continue
 
-            parsed_prices = next_item.parse_prices()
-            self.ocr_processed_items.extend(parsed_prices)
-            self.validator.validate_next_batch()
-            self.update_overlay("listings_count", len(self.ocr_processed_items))
-            self.update_overlay("ocr_count", self.queue.qsize())
+            section = self.to_validate[0]["section"]
+            self.update_overlay('status_bar', f'Validating section {section}')
+            self.validator.validate_section(self.to_validate)
+            self.to_validate.clear()
+
             bad_indexes = len(self.validator.bad_indexes)
-            accuracy = 1 - bad_indexes / len(self.ocr_processed_items) or 1
+            accuracy = 1 - bad_indexes / len(self.validator.price_list) or 1
             accuracy_pc = round(accuracy * 100, 1)
             self.update_overlay("accuracy", f"{accuracy_pc}%")
             self.update_overlay("validate_fails", bad_indexes)
-            logging.debug(f"Processed `{next_item.original_path}`")
+            logging.info(f"Section validated: `{section}`")
 
-        invalid = sum([1 for values in self.ocr_processed_items if values["valid"] is False])
-        none = sum([1 for values in self.ocr_processed_items if values["valid"] is None])
-        valid = sum([1 for values in self.ocr_processed_items if values["valid"] is True])
-        logging.info(f"OCRQueue stopped processing. {valid} valid - {invalid} invalid - {none} none")
+        logging.info(f"OCRQueue stopped processing")
 
     def start(self) -> None:
         if not self._processing_thread.is_alive():
@@ -88,6 +91,5 @@ class OCRQueue:
             self.queue.put(None)  # noqa - unstick the queue since it is waiting
 
     def clear(self) -> None:
-        self.ocr_processed_items = []
         self.total_images = 0
         # delete images

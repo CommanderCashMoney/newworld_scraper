@@ -75,9 +75,11 @@ class SectionCrawler:
                 self.parent.stop("Couldn't find TP.")
                 return False
         OverlayUpdateHandler.update("pages_left", "-")
+        self.parent.ocr_queue.notify_section_complete()
         return True
 
     def crawl_page(self) -> bool:
+        OverlayUpdateHandler.update('status_bar', f'Crawling section {self.section}')
         app_data_temp = SETTINGS.temp_app_data / self.parent.run_id
         app_data_temp.mkdir(exist_ok=True)
         for _ in ScrollState:
@@ -162,12 +164,12 @@ class SectionCrawler:
 
     def look_for_tp(self) -> bool:
         for _ in range(2):
-            logging.debug("Checking for TP...")
             self.press_cancel_or_refresh()
             trading_post_ref = self.resolution.trading_post
             if trading_post_ref.compare_image_reference():
                 return True
             else:
+                logging.debug("Couldn't find TP, trying again")
                 time.sleep(1)
         return False
 
@@ -202,7 +204,6 @@ class SectionCrawler:
         for attempt in range(30):
             if scroll_ref.compare_image_reference():
                 return True
-            OverlayUpdateHandler.update('status_bar', 'Loading page')
             time.sleep(0.1)
         if self.current_page != self.pages:
             logging.error(f'Took too long waiting for page to load {self}, skipping page.')

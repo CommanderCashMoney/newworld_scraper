@@ -1,3 +1,4 @@
+import uuid
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -17,8 +18,9 @@ from app.ocr.utils import (
 
 
 class OCRImage:
-    def __init__(self, img_src: Path) -> None:
+    def __init__(self, img_src: Path, section: str) -> None:
         self.original_path = img_src
+        self.section = section
         path = Path(img_src)
         self.original_path_obj = path
         self.captured = datetime.fromtimestamp(path.stat().st_mtime)
@@ -80,9 +82,11 @@ class OCRImage:
 
             # should do a check here that all the important keys exist
             final_data.extend([{**values, **{
+                "listing_id": uuid.uuid1(),
                 "timestamp": self.captured,
                 "filename": self.original_path_obj,
                 "valid": None,
+                "section": self.section
             }} for values in row_data.values()])
 
         return final_data

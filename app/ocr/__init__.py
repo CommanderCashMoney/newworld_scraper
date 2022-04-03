@@ -21,6 +21,9 @@ def start_run(values) -> None:
     queue = OCRQueue(overlay_update_handler=OverlayUpdateHandler)
     SESSION_DATA.crawler = Crawler(queue, run_id=SESSION_DATA.current_run_id)
     SESSION_DATA.crawler.start()
+    for key in ["key_count", "ocr_count", "listings_count", "validate_fails"]:
+        OverlayUpdateHandler.update(key, "0")
+    OverlayUpdateHandler.update("accuracy", "-")
     OverlayUpdateHandler.disable(RUN_BUTTON)
     OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=False)
     OverlayUpdateHandler.visible("advanced", visible=False)

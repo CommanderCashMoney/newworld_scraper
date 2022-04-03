@@ -40,9 +40,9 @@ def scan_info_layout():
         ],
         [
             sg.Text('Accuracy: '),
-            sg.Text('0%', key='accuracy', auto_size_text=True),
+            sg.Text('-', key='accuracy', auto_size_text=True),
             sg.Text('Listings processed: '),
-            sg.Text('0', key='listings_count', auto_size_text=True)
+            sg.Text('-', key='listings_count', auto_size_text=True)
         ],
         [
             sg.Text('Validation Fails: '),

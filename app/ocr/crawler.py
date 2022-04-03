@@ -122,7 +122,7 @@ class Crawler:
         self.stop(reason="run completed.", wait_for_death=False)
 
     def wait_for_parse(self) -> None:
-        if self.ocr_queue.queue.qsize() > 0:
+        if self.ocr_queue.thread_is_alive:
             msg = "Waiting for image parsing."
             logging.info(msg)
             OverlayUpdateHandler.update("status_bar", msg)
@@ -130,13 +130,14 @@ class Crawler:
                 time.sleep(1)
         raw_f = SETTINGS.app_data_sub_path("raw_data.json", is_dir=False)
         with raw_f.open("w") as f:
-            json.dump(self.ocr_queue.raw_data, f, default=str, indent=2)
+            json.dump(self.ocr_queue.validator.price_list, f, default=str, indent=2)
 
         self.final_results = [
             prices
-            for idx, prices in enumerate(self.ocr_queue.ocr_processed_items)
+            for idx, prices in enumerate(self.ocr_queue.validator.price_list)
             if idx not in self.ocr_queue.validator.bad_indexes
         ]
+        print(len(self.ocr_queue.validator.price_list), len(self.ocr_queue.validator.bad_indexes))
         self.ocr_queue.stop()
         dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
         for filename, info in dict_copy.items():
