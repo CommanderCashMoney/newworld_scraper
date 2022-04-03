@@ -82,6 +82,7 @@ class OCRImage:
             final_data.extend([{**values, **{
                 "timestamp": self.captured,
                 "filename": self.original_path_obj,
+                "valid": None,
             }} for values in row_data.values()])
 
         return final_data

@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 from copy import deepcopy
@@ -34,6 +35,7 @@ class Crawler:
         self.timer_thread = Thread(target=self.update_timer, name="Crawl Timer", daemon=True)
         self.last_moved = 0
         self.final_results = []
+        self._stop_reason = None
 
         listener = pynput.keyboard.Listener(on_press=self.on_press)
         listener.start()
@@ -126,6 +128,10 @@ class Crawler:
             OverlayUpdateHandler.update("status_bar", msg)
             while self.ocr_queue.queue.qsize() > 0:
                 time.sleep(1)
+        raw_f = SETTINGS.app_data_sub_path("raw_data.json", is_dir=False)
+        with raw_f.open("w") as f:
+            json.dump(self.ocr_queue.raw_data, f, default=str, indent=2)
+
         self.final_results = [
             prices
             for idx, prices in enumerate(self.ocr_queue.ocr_processed_items)
@@ -153,9 +159,8 @@ class Crawler:
             self.crawler_thread.start()
 
     def stop(self, reason: str, is_interrupt=False, is_error=False, wait_for_death=True) -> None:
+        self._stop_reason = reason
         self._cancelled = True
-        logging_func = logging.warning if is_error else logging.info
-        logging_func(f"Stopped crawling because {reason}")
         while wait_for_death and self.crawler_thread.is_alive():
             logging.info("Stopping crawler - waiting to die.")
             time.sleep(1)
@@ -181,7 +186,9 @@ class Crawler:
 
     @property
     def stop_reason(self) -> Optional[str]:
-        if self._cancelled:
+        if self._stop_reason:
+            return self._stop_reason
+        elif self._cancelled:
             return "user requested cancellation"
         elif not self.crawler_thread.is_alive():
             return "there was an error in the crawl thread"

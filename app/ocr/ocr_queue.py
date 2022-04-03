@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 
 from app.ocr.ocr_image import OCRImage
-from app.ocr.price_validation import PriceValidator
+from app.ocr.price_validation import ListingValidator
 
 
 class OCRQueue:
@@ -17,7 +17,7 @@ class OCRQueue:
         self.total_images = 0
         self.total_removals = 0
         self.ocr_processed_items = []
-        self.validator = PriceValidator(self.ocr_processed_items)
+        self.validator = ListingValidator(self.ocr_processed_items)
         self.crawler = None  # type: Crawler
         self.last_received_section = None
 
@@ -48,7 +48,8 @@ class OCRQueue:
                 self.validator.last_good_price = None
                 continue
 
-            self.ocr_processed_items.extend(next_item.parse_prices())
+            parsed_prices = next_item.parse_prices()
+            self.ocr_processed_items.extend(parsed_prices)
             self.validator.validate_next_batch()
             self.update_overlay("listings_count", len(self.ocr_processed_items))
             self.update_overlay("ocr_count", self.queue.qsize())
@@ -59,7 +60,10 @@ class OCRQueue:
             self.update_overlay("validate_fails", bad_indexes)
             logging.debug(f"Processed `{next_item.original_path}`")
 
-        logging.info("OCRQueue stopped processing.")
+        invalid = sum([1 for values in self.ocr_processed_items if values["valid"] is False])
+        none = sum([1 for values in self.ocr_processed_items if values["valid"] is None])
+        valid = sum([1 for values in self.ocr_processed_items if values["valid"] is True])
+        logging.info(f"OCRQueue stopped processing. {valid} valid - {invalid} invalid - {none} none")
 
     def start(self) -> None:
         if not self._processing_thread.is_alive():

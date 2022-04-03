@@ -71,7 +71,9 @@ class SectionCrawler:
             self.crawl_page()
             if self.stopped:
                 return False
-            self.next_page()
+            if not self.next_page():
+                self.parent.stop("Couldn't find TP.")
+                return False
         OverlayUpdateHandler.update("pages_left", "-")
         return True
 
@@ -176,10 +178,13 @@ class SectionCrawler:
         time.sleep(2)  # wait
 
     def next_page(self):
+        if not self.look_for_tp():
+            return False
         click('left', self.resolution.next_page_coords)
         self.scroll_state = ScrollState.top
         self.current_page += 1
         self.reset_mouse_position()
+        return True
 
     def reset_mouse_position(self) -> None:
         mouse.position = self.resolution.mouse_scroll_loc

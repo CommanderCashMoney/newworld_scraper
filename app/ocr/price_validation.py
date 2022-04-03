@@ -11,7 +11,7 @@ import requests
 from app.settings import SETTINGS
 
 
-class PriceValidator:
+class ListingValidator:
     def __init__(self, price_list: List) -> None:
         self.price_list = price_list
         self.bad_indexes = set()
@@ -172,7 +172,9 @@ class PriceValidator:
             qty_invalid = not self.validate_quantity()
             filename = current_price["filename"].name
             self.image_accuracy[filename]["processed"] += 1
-            if name_invalid or price_invalid or qty_invalid:
+            invalid = name_invalid or price_invalid or qty_invalid
+            current_price["valid"] = not invalid
+            if invalid:
                 logging.debug(f"Could not validate {json.dumps(current_price, indent=2, default=str)}")
                 self.bad_indexes.add(self.current_index)
                 self.image_accuracy[filename]["bad_rows"] += 1
