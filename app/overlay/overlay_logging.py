@@ -28,18 +28,25 @@ class OverlayLoggingHandler(logging.Handler):
 
     @classmethod
     def setup_overlay_logging(cls):
-        logging.basicConfig(
-            level=logging.INFO,
-            format="[%(levelname)s] %(message)s",
-            handlers=[
-                logging.StreamHandler(),
-                cls()
-            ]
-        )
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.INFO)
+
         target_dir = SETTINGS.app_data_sub_path("logging")
         target_file = target_dir / datetime.now().strftime("%Y%m%d_%H%M%S.log.txt")
+        file_handler = logging.FileHandler(target_file, mode="w")
+        file_handler.setLevel(logging.DEBUG)
 
-        handler = logging.FileHandler(target_file, mode="w")
-        handler.setLevel(logging.DEBUG)
-        logging.root.addHandler(handler)
+        overlay_handler = cls()
+        overlay_handler.setLevel(logging.INFO)
+
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="[%(levelname)s] %(message)s",
+            handlers=[
+                stream_handler,
+                overlay_handler,
+                file_handler
+            ]
+        )
+
         logging.info(f"Logging file created at `{target_file}`")

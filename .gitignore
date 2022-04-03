@@ -146,3 +146,4 @@ temp/*
 /test_img_cap.py
 temp/*
 test.py
+app/images/test_images/

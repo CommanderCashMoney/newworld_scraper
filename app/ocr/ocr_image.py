@@ -45,8 +45,8 @@ class OCRImage:
             }
         }
         results = []
-        cv2_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2BGR)
-        img_arr = pre_process_image(cv2_img)
+        # cv2_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2BGR)
+        img_arr = pre_process_image(self.original_image)
         img = Image.fromarray(img_arr)
         results.append([])
         broken_up_images = []

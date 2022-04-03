@@ -1,16 +1,10 @@
-import difflib
-import time
-from typing import List
-
 import cv2
 import mss
 import numpy as np
+from PIL import Image
 from pytesseract import pytesseract
 
-from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils import resource_path
-from app.utils.mouse import click, mouse
-from app.utils.window import bring_new_world_to_foreground
 
 pytesseract.tesseract_cmd = resource_path('tesseract\\tesseract.exe')
 EVERYTHING_CONFIG = """--psm 6 -c tessedit_char_whitelist="0123456789,.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:- \\"\\'" """

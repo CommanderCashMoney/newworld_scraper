@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
-from pydantic import BaseSettings, ValidationError, root_validator
+from pydantic import BaseSettings, root_validator
 
 
 APP_DATA_FOLDER = Path(os.getenv("APPDATA")) / "Cash Money Development" / "Trading Post Scraper"

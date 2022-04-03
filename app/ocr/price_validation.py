@@ -3,7 +3,7 @@ import json
 import logging
 from collections import defaultdict
 from decimal import Decimal
-from typing import Dict, List
+from typing import List
 from urllib.parse import urljoin
 
 import requests
@@ -162,7 +162,7 @@ class PriceValidator:
             filename = current_price["filename"].name
             self.image_accuracy[filename]["processed"] += 1
             if name_invalid or price_invalid or qty_invalid:
-                logging.debug(f"Could not validate {current_price}")
+                logging.debug(f"Could not validate {json.dumps(current_price, indent=2, default=str)}")
                 self.bad_indexes.add(self.current_index)
                 self.image_accuracy[filename]["bad_rows"] += 1
             processed = self.image_accuracy[filename]["processed"]
