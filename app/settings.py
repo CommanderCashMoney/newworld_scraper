@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
+    console_logging_level: str = "INFO"
 
     nwmp_dev_api_host: str = "http://localhost:8080/"
     nwmp_prod_api_host: str = "https://nwmarketprices.com/"

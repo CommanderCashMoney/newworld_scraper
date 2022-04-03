@@ -29,7 +29,7 @@ class OverlayLoggingHandler(logging.Handler):
     @classmethod
     def setup_overlay_logging(cls):
         stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.INFO)
+        stream_handler.setLevel(SETTINGS.console_logging_level)
 
         target_dir = SETTINGS.app_data_sub_path("logging")
         target_file = target_dir / datetime.now().strftime("%Y%m%d_%H%M%S.log.txt")

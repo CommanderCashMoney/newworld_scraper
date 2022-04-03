@@ -2,6 +2,7 @@ import logging
 import time
 from copy import deepcopy
 from threading import Thread
+from typing import Optional
 
 import numpy as np
 import pynput
@@ -92,15 +93,17 @@ class Crawler:
         for section_crawler in self.section_crawlers:
             if "Reset" in section_crawler.section:
                 self.check_move()  # safe because we are about to reset
-            if self._cancelled:
+            if self.stopped:
                 break
             self.current_section += 1
             section_crawler.crawl(pages_to_parse)
-        logging.info("Crawl complete.")
-        if self._cancelled:
+        if self.stopped:
+            logging.info(f"Stopped crawling because {self.stop_reason}.")
             self.ocr_queue.stop()
-            logging.info("Not parsing due to cancellation.")
             return
+        else:
+            logging.info("Crawl complete.")
+
         self.wait_for_parse()
         logging.info("Parsing complete.")
         should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
@@ -145,7 +148,6 @@ class Crawler:
 
     def start(self) -> None:
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", False)
-        self._cancelled = False
         self.started = time.perf_counter()
         if not self.crawler_thread.is_alive():
             self.crawler_thread.start()
@@ -173,11 +175,20 @@ class Crawler:
         # todo: need to check this actually works
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
 
-
     @property
     def stopped(self) -> bool:
-        return self._cancelled
+        return not self.running
+
+    @property
+    def stop_reason(self) -> Optional[str]:
+        if self._cancelled:
+            return "user requested cancellation"
+        elif not self.crawler_thread.is_alive():
+            return "there was an error in the crawl thread"
+        elif not self.ocr_queue.thread_is_alive:
+            return "there was an error in the OCR thread"
+        return "unknown"
 
     @property
     def running(self) -> bool:
-        return not self._cancelled and self.crawler_thread.is_alive()
+        return not self._cancelled and self.crawler_thread.is_alive() and self.ocr_queue.thread_is_alive

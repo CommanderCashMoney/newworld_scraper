@@ -2,7 +2,6 @@ import PySimpleGUI as sg
 
 from app import events
 
-
 def scan_info_layout():
     from app.session_data import SESSION_DATA
     return [
@@ -75,3 +74,4 @@ def scan_info_layout():
             sg.pin(sg.Button('Change key binds', key=events.CHANGE_KEY_BINDS))
         ]
     ]
+

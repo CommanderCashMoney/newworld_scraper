@@ -3,7 +3,7 @@ import json
 import logging
 from collections import defaultdict
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 from urllib.parse import urljoin
 
 import requests
@@ -22,6 +22,7 @@ class PriceValidator:
         self.bad_names = defaultdict(int)
         self.word_cleanup = None
         self.image_accuracy = defaultdict(lambda: defaultdict(int))  # dict of image file name: image accuracy
+        self.last_good_price: Optional[Decimal] = None
 
     def set_api_info(self) -> None:
         if self.api_fetched:
@@ -46,8 +47,7 @@ class PriceValidator:
             return {}
         return self.price_list[next_index]
 
-    @staticmethod
-    def check_is_price(price_test) -> bool:
+    def check_is_price(self, price_test) -> bool:
         # note, we already know that it is either None or Numeric because of the OCR rules
         if price_test is None or price_test.replace(".", "").lstrip("0") == "":
             return False
@@ -57,65 +57,76 @@ class PriceValidator:
             num = round(Decimal(price_test), 2)
         except:  # noqa
             return False
-        return num >= Decimal("0.01")
+        return num >= (self.last_good_price or Decimal("0.01"))
 
     def validate_price(self) -> bool:
-        price = self.price_list[self.current_index].get("price")
-        if self.check_is_price(price):
-            return price
+        original_price_str = self.price_list[self.current_index].get("price")
+        if self.check_is_price(original_price_str):
+            self.last_good_price = Decimal(original_price_str)
+            return True
+        logging.debug(f"{original_price_str} wasn't a valid price, trying stuff - last good price is {self.last_good_price}...")  # noqa: E501
         prev_price = self.prev_item().get("price")
         next_price = self.next_item().get("price")
-        if not price and (prev_price is None or next_price is None):
+        if not original_price_str and (prev_price is None or next_price is None):
             return False  # not enough to compare to
 
         # check that the prev and next price are close enough that we can determine the price of this
-        if not price:
+        if not original_price_str:
             try:
                 prev_price_dec = Decimal(prev_price)
                 next_price_dec = Decimal(next_price)
                 if abs(prev_price_dec - next_price_dec) <= Decimal("0.02"):
                     middle = round(prev_price_dec + (prev_price_dec - next_price_dec) / 2, 2)
                     self.price_list[self.current_index]["price"] = str(middle)
+                    logging.debug(f"{original_price_str} was close enough to {prev_price_dec} and {next_price_dec} to guess value.")  # noqa: E501
                     return True
             except (ValueError, decimal.InvalidOperation):
                 pass
             return False
 
-        if len(price) < 3:
+        if len(original_price_str) < 3:
             return False
 
         # try inserting a decimal place and see if we have a match to before/after
-        price_test = f"{price[:-2]}.{price[-2:]}"
+        price_test = f"{original_price_str[:-2]}.{original_price_str[-2:]}".replace("..", ".")
         prev_price_is_valid = self.current_index - 1 not in self.bad_indexes
+        # lazy load
         matches_next = lambda: next_price is not None and price_test == next_price  # noqa
         matches_prev = lambda: price_test == prev_price and prev_price_is_valid  # noqa
-        # lazy load
-        if matches_next() or matches_prev():
+        if (matches_next() or matches_prev()) and Decimal(price_test) >= self.last_good_price:
+            logging.debug(f"{original_price_str} matches a neighbour - one of: {next_price}, {prev_price}.")
             self.price_list[self.current_index]["price"] = price_test
+            self.last_good_price = Decimal(price_test)
             return True
         # check if the test falls between the two values
         try:
-            price_test_float = float(price_test)
-            if float(next_price or price_test) >= price_test_float >= float(prev_price or price_test):
+            price_test_dec = Decimal(price_test)
+            if Decimal(next_price or price_test) >= price_test_dec >= Decimal(prev_price or price_test):
                 self.price_list[self.current_index]["price"] = price_test
-                return True
-        except ValueError:
+                price = Decimal(price_test)
+                if price >= self.last_good_price:
+                    logging.debug(f"{original_price_str} was manipulated to {price_test} and it seems valid.")
+                    self.last_good_price = price
+                    return True
+        except (ValueError, decimal.InvalidOperation):
             return False
         # check that the test is sufficiently close to its valid neighbour
-        if prev_price_is_valid:
-            last_price_float = float(prev_price)
-            cur_price_float = price_test_float
+        if self.last_good_price is not None:
+            cur_price_dec = price_test_dec
             try:
-                percent_diff = (cur_price_float / last_price_float) - 1
+                percent_diff = (cur_price_dec / self.last_good_price) - 1
             except ZeroDivisionError:
                 last_price_json = json.dumps(self.price_list[self.current_index-1], indent=2)
                 logging.error(f"Encountered zero division error on prev price: {last_price_json}")
                 return False
             # eg: 0.02 vs 0.1 is ok, 500% diff is not
-            return (
-                cur_price_float > last_price_float
-                and (cur_price_float - last_price_float < 0.09 or percent_diff < 5)  # 20% diff max
+            is_ok = (
+                cur_price_dec > self.last_good_price
+                and (cur_price_dec - self.last_good_price < 0.09 or percent_diff < 5)  # 20% diff max
             )
+            if is_ok:
+                self.last_good_price = cur_price_dec
+            return is_ok
 
         return False
 

@@ -53,6 +53,7 @@ class Resolution(BaseModel):
     cancel_button: ImageReference
     refresh_button: ImageReference
     next_page_coords: Tuple[int, int]
+    mouse_scroll_loc: Tuple[int, int]
     pages_bbox: Tuple[int, int, int, int]
     items_bbox: Tuple[int, int, int, int]
     items_bbox_last: Tuple[int, int, int, int]
@@ -93,6 +94,7 @@ res_1440p = Resolution(
     tp_rarity_col_x_coords=(957, 1079),
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(842, 444, 200, 70),
+    mouse_scroll_loc=(2435, 438),
     sections={
            'Resources Reset 0': (170, 796),
            'Raw Resources': (368, 488),

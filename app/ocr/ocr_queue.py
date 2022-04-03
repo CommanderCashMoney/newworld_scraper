@@ -19,13 +19,19 @@ class OCRQueue:
         self.ocr_processed_items = []
         self.validator = PriceValidator(self.ocr_processed_items)
         self.crawler = None  # type: Crawler
+        self.last_received_section = None
 
     def update_overlay(self, key, value) -> None:
         if not self.overlay_update_handler:
             return
         self.overlay_update_handler.update(key, value)
 
-    def add_to_queue(self, img_path: Path):
+    def add_to_queue(self, img_path: Path, section: str = None):
+        reset_price = self.last_received_section != section
+        if reset_price:
+            self.last_received_section = section
+            self.queue.put("RESET")
+
         self.total_images += 1
         self.update_overlay("key_count", self.total_images)
         ocr_image = OCRImage(img_path)
@@ -37,6 +43,10 @@ class OCRQueue:
             next_item: OCRImage = self.queue.get()
             if not self.continue_processing or next_item is None:  # a none object was put in to unstick the queue
                 break
+
+            if next_item == "RESET":
+                self.validator.last_good_price = None
+                continue
 
             self.ocr_processed_items.extend(next_item.parse_prices())
             self.validator.validate_next_batch()
@@ -56,6 +66,10 @@ class OCRQueue:
             self._processing_thread.start()
         else:
             logging.warning("start() called on OCRQueue, but it is already running!")
+
+    @property
+    def thread_is_alive(self) -> bool:
+        return self._processing_thread.is_alive()
 
     @property
     def continue_processing(self) -> None:

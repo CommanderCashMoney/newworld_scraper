@@ -86,7 +86,7 @@ class SectionCrawler:
             fn = f"{self.section}-{self.current_page}-{self.scroll_state.value}.png"
             file_name = app_data_temp / fn
             cv2.imwrite(str(file_name), image)
-            self.parent.ocr_queue.add_to_queue(file_name)
+            self.parent.ocr_queue.add_to_queue(file_name, self.section)
             self.scroll()
         OverlayUpdateHandler.update("pages_left", self.pages - self.current_page)
         return True
@@ -181,9 +181,8 @@ class SectionCrawler:
         self.current_page += 1
         self.reset_mouse_position()
 
-    @staticmethod
-    def reset_mouse_position() -> None:
-        mouse.position = (1300, 480)  # for scroll - put in config
+    def reset_mouse_position(self) -> None:
+        mouse.position = self.resolution.mouse_scroll_loc
 
     def check_scrollbar(self) -> bool:
         self.press_cancel_or_refresh()
