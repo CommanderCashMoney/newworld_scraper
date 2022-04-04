@@ -24,6 +24,8 @@ def start_run(values) -> None:
     for key in ["key_count", "ocr_count", "listings_count", "validate_fails"]:
         OverlayUpdateHandler.update(key, "0")
     OverlayUpdateHandler.update("accuracy", "-")
+    OverlayUpdateHandler.update("log_output", "")
+    OverlayUpdateHandler.update("error_output", "")
     OverlayUpdateHandler.disable(RUN_BUTTON)
     OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=False)
     OverlayUpdateHandler.visible("advanced", visible=False)
