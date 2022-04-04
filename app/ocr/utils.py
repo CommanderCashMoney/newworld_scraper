@@ -1,9 +1,9 @@
-from time import perf_counter
-from typing import Any
+import logging
+import re
+from typing import Any, Tuple, Union
 
 import cv2
 import mss
-import numpy
 import numpy as np
 from PIL import Image
 from pytesseract import pytesseract
@@ -20,6 +20,44 @@ def get_txt_from_im(name: str, config: str, cropped: np.array) -> str:
     data = pytesseract.image_to_data(cropped, output_type=pytesseract.Output.DICT, config=config)
     data["column_name"] = name
     return data
+
+
+def parse_page_count(txt: str) -> Tuple[int, bool]:
+    """Return value: tuple of (pages, validation_success)"""
+    pages_str = txt['text'][-1]
+    logging.debug(f"Number of pages looks like: {pages_str}")
+    if not pages_str:
+        logging.error("Could not find ANY page count information. Assuming 1.")
+        return 1, False
+
+    pages_str = pages_str.strip()
+
+    if pages_str.isnumeric():
+        if int(pages_str) > 500:
+            # try see if the o was mistaken for a 0
+            try:
+                last_zero = pages_str[:-1].rindex("0")
+            except ValueError:
+                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                return 1, False
+            pages_str = pages_str[last_zero + 1:]
+            if not pages_str.isnumeric() or int(pages_str) > 500:
+                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                return 1, False
+        return int(pages_str), True
+
+    groups = re.search(r"\s?o?f?\s?(\d*)", pages_str).groups()
+    last = groups[-1]
+    if not last.isnumeric():
+        logging.error(f"Captured page count info is not numeric. Original capture: {pages_str}")
+        return 1, False
+
+    pages = int(last)
+    if pages > 500:
+        logging.error('Page count greater than 500 - assuming 1 page.')
+        return 1, False
+
+    return pages, True
 
 
 def pre_process_image(img, scale=2.5):
@@ -43,6 +81,23 @@ def pre_process_image(img, scale=2.5):
     return res
 
 
+def pre_process_page_count_image(img_arr):
+    img = cv2.cvtColor(img_arr, cv2.COLOR_BGRA2RGB)
+    width = int(img.shape[1] * 2.5)
+    height = int(img.shape[0] * 2.5)
+    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_BITS)
+
+    lower_color = np.array([50, 55, 55])
+    upper_color = np.array([150, 150, 125])
+
+    mask = cv2.inRange(img, lower_color, upper_color)
+    res = cv2.bitwise_and(img, img, mask=mask)
+    img_gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
+    res = cv2.bilateralFilter(img_gray, 5, 50, 100)
+    binary_img = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    return np.invert(binary_img)
+
+
 def grab_screen(region=None):
     left, top, width, height = region
     mon = {"top": top, "left": left, "width": width, "height": height}
@@ -59,21 +114,20 @@ class Screenshot:
         self.img_array = np_arr
         self.file_path = None
 
-    # @property
-    # def image(self) -> Any:
-    #     return cv2.im
+    def get_image(self, pil_high_quality: bool = False) -> Union[Image.Image, Any]:
+        if pil_high_quality:
+            return Image.fromarray(self.img_array, "RGB")
+        return cv2.cvtColor(self.img_array, cv2.COLOR_BGRA2RGB)
 
-    # def parse_arr_to_img(self) -> Image.Image:
-    #     if self.image:
-    #         return self.image
-    #     self.image = Image.fromarray(self.img_array, "RGB")
-    #     return self.image
-
-    def save_image(self, file_path: str) -> None:
+    def save_image(self, file_path: str, pil_high_quality: bool = False) -> None:
         if self.file_path:
             return
         self.file_path = file_path
-        cv2.imwrite(file_path, self.img_array)
+        if pil_high_quality:
+            image = self.get_image(pil_high_quality)
+            image.save(self.file_path)
+        else:
+            cv2.imwrite(file_path, self.img_array)
 
 
 def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None) -> Screenshot:
@@ -86,8 +140,8 @@ def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str =
             "height": height
         })
 
-        # img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
-        ss = Screenshot(np.asarray(sct_img))
+        img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
+        ss = Screenshot(img_arr)
 
     if save_to:
         ss.save_image(save_to)
@@ -100,8 +154,8 @@ def capture_screen(save_to: str = None) -> Screenshot:
         monitor = sct.monitors[1]
 
         sct_img = sct.grab(monitor)
-        # img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
-        ss = Screenshot(sct_img)
+        img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
+        ss = Screenshot(img_arr)
 
     if save_to:
         ss.save_image(save_to)

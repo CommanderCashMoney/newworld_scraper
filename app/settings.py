@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # user/pass can be set for development purposes in .env to avoid having to type each time
     api_username: str = ""
     api_password: str = ""
-    resolution: str = "1440p"
+    resolution: str = "1440p"  # todo: actual resolution obj
 
     log_file: str = "logging.txt"
 
