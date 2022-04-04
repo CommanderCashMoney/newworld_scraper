@@ -128,13 +128,16 @@ class Crawler:
             OverlayUpdateHandler.update("status_bar", msg)
             while self.ocr_queue.queue.qsize() > 0:
                 time.sleep(1)
-        raw_f = SETTINGS.app_data_sub_path("raw_data.json", is_dir=False)
-        with raw_f.open("w") as f:
-            json.dump(self.ocr_queue.validator.price_list, f, default=str, indent=2)
 
         self.final_results = [
-            prices
-            for idx, prices in enumerate(self.ocr_queue.validator.price_list)
+            {
+                "name": listing["name"],
+                "avail": listing["avail"],
+                "price": listing["validated_price"],
+                "timestamp": listing["timestamp"],
+                "name_id": listing["name_id"],
+            }
+            for idx, listing in enumerate(self.ocr_queue.validator.price_list)
             if idx not in self.ocr_queue.validator.bad_indexes
         ]
         self.ocr_queue.stop()
@@ -145,7 +148,7 @@ class Crawler:
                 logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
             else:
                 p = SETTINGS.temp_app_data / self.run_id / filename
-                # p.unlink()
+                p.unlink(missing_ok=True)
 
     def send_pending_submissions(self) -> None:
         submission_data = SESSION_DATA.pending_submission_data

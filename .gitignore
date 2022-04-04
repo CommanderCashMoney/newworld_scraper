@@ -147,3 +147,4 @@ temp/*
 temp/*
 app/tests/test.py
 app/images/test_images/
+test.py

@@ -46,7 +46,7 @@ class PriceSectionValidator:
             num = round(Decimal(price_test), 2)
         except:  # noqa
             return False
-        return num > Decimal("0.01")
+        return num >= Decimal("0.01")
 
     def test_vs_last_good_price(self, value: Decimal) -> bool:
         return value >= (self.last_good_price or Decimal("0.01"))
@@ -65,13 +65,13 @@ class PriceSectionValidator:
                 return Decimal(price_test)
         return None
 
-    def first_pass(self) -> None:
+    def perform_simple_validation(self) -> None:
         """for each listing, simply check if we can assign it a validated value without looking at any other prices"""
         for listing in self.listings:
             price = self.try_simple_validation(listing)
             listing["validated_price"] = price
 
-    def second_pass(self) -> None:
+    def clean_prices_by_confidence_level(self) -> None:
         """
             for each listing, check that it is greater or equal in value than the previous valid listing.
             if not, check that the next price is greater than or equal to the previous price.
@@ -97,17 +97,21 @@ class PriceSectionValidator:
 
             if more_confident_than_prev:
                 prev_index = idx - 1
-                while prev_index >= 0 and self.listings[prev_index].get("price_confidence", 0) < 95:
-                    if self.listings[prev_index].get("validated_price", self.impossible_tp_value) > cur_validated_price:  # noqa: E501
+                comparison_listing = self.listings[prev_index]
+                while prev_index >= 0 and comparison_listing.get("price_confidence", 0) < 95:
+                    comparison_listing = self.listings[prev_index]
+                    listing_validated_price = comparison_listing.get("validated_price") or self.impossible_tp_value
+                    if listing_validated_price > cur_validated_price:  # noqa: E501
                         self.listings[prev_index]["validated_price"] = None
                         logging.debug(f"Deleted price on {self.listings[prev_index]['listing_id']}")
                     else:
                         break
                     prev_index -= 1
             else:
+                logging.debug(f"NOT more confident than previous price - deleting this one. Listing {prev_listing['listing_id']} vs {listing['listing_id']}")
                 listing["validated_price"] = None
 
-    def third_pass(self) -> None:
+    def try_find_close_matches(self) -> None:
         """Now, see if we can fill any None values by comparing neighbours."""
         for idx, listing in enumerate(self.listings):
             cur_validated_price = listing["validated_price"]
@@ -131,7 +135,6 @@ class PriceSectionValidator:
 
     def check_if_ordered(self) -> None:
         last_price = Decimal("0.01")
-        prev_listing = None
         for listing in self.listings:
             # logging.debug(json.dumps(listing, indent=2, default=str))
             price = listing["validated_price"]
@@ -141,19 +144,16 @@ class PriceSectionValidator:
                 logging.debug(f"Still not ordered because of {listing['listing_id']}")
                 return False
             last_price = price
-            prev_listing = listing
         return True
 
     def validate_all(self) -> Dict[str, str]:
-        self.first_pass()
+        self.perform_simple_validation()
         while not self.check_if_ordered():
-            self.second_pass()
-        self.third_pass()
-        self.check_if_ordered()
+            self.clean_prices_by_confidence_level()
+        self.try_find_close_matches()
         validated = sum([1 for listing in self.listings if listing["validated_price"] is not None])
-        validated_percent = validated / len(self.listings)
-        logging.debug(f"percentage of validated listings in section {self.listings[0]['section']} {validated_percent}")
-
+        validated_percent = round(validated / max(1, len(self.listings)) * 100, 1)
+        logging.debug(f"Price validation in section: {self.listings[0]['section']} = {validated_percent}%")
         return self.listings
 
 

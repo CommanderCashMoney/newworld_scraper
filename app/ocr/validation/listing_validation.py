@@ -107,7 +107,7 @@ class ListingValidator:
             invalid = name_invalid or price_invalid
             current_price["valid"] = not invalid
             if invalid:
-                logging.debug(f"Could not validate {json.dumps(current_price, indent=2, default=str)}")
+                # logging.debug(f"Could not validate {json.dumps(current_price, indent=2, default=str)}")
                 self.bad_indexes.add(self.current_index)
                 self.image_accuracy[filename]["bad_rows"] += 1
 
