@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
-from pydantic import BaseSettings, ValidationError, root_validator
+from pydantic import BaseSettings, root_validator
 
 
 APP_DATA_FOLDER = Path(os.getenv("APPDATA")) / "Cash Money Development" / "Trading Post Scraper"
@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
+    console_logging_level: str = "INFO"
 
     nwmp_dev_api_host: str = "http://localhost:8080/"
     nwmp_prod_api_host: str = "https://nwmarketprices.com/"

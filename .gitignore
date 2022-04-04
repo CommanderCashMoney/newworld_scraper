@@ -145,4 +145,6 @@ dist/
 temp/*
 /test_img_cap.py
 temp/*
+app/tests/test.py
+app/images/test_images/
 test.py

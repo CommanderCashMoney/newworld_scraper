@@ -2,7 +2,6 @@ import PySimpleGUI as sg
 
 from app import events
 
-
 def scan_info_layout():
     from app.session_data import SESSION_DATA
     return [
@@ -41,9 +40,9 @@ def scan_info_layout():
         ],
         [
             sg.Text('Accuracy: '),
-            sg.Text('0%', key='accuracy', auto_size_text=True),
+            sg.Text('-', key='accuracy', auto_size_text=True),
             sg.Text('Listings processed: '),
-            sg.Text('0', key='listings_count', auto_size_text=True)
+            sg.Text('-', key='listings_count', auto_size_text=True)
         ],
         [
             sg.Text('Validation Fails: '),
@@ -75,3 +74,4 @@ def scan_info_layout():
             sg.pin(sg.Button('Settings', key=events.CHANGE_KEY_BINDS))
         ]
     ]
+

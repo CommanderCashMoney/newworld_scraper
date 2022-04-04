@@ -1,7 +1,9 @@
+import json
 import logging
 import time
 from copy import deepcopy
 from threading import Thread
+from typing import Optional
 
 import numpy as np
 import pynput
@@ -33,6 +35,7 @@ class Crawler:
         self.timer_thread = Thread(target=self.update_timer, name="Crawl Timer", daemon=True)
         self.last_moved = 0
         self.final_results = []
+        self._stop_reason = None
 
         listener = pynput.keyboard.Listener(on_press=self.on_press)
         listener.start()
@@ -92,15 +95,17 @@ class Crawler:
         for section_crawler in self.section_crawlers:
             if "Reset" in section_crawler.section:
                 self.check_move()  # safe because we are about to reset
-            if self._cancelled:
+            if self.stopped:
                 break
             self.current_section += 1
             section_crawler.crawl(pages_to_parse)
-        logging.info("Crawl complete.")
-        if self._cancelled:
+        if self.stopped:
+            logging.info(f"Stopped crawling because {self.stop_reason}.")
             self.ocr_queue.stop()
-            logging.info("Not parsing due to cancellation.")
             return
+        else:
+            logging.info("Crawl complete.")
+
         self.wait_for_parse()
         logging.info("Parsing complete.")
         should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
@@ -117,15 +122,22 @@ class Crawler:
         self.stop(reason="run completed.", wait_for_death=False)
 
     def wait_for_parse(self) -> None:
-        if self.ocr_queue.queue.qsize() > 0:
+        if self.ocr_queue.thread_is_alive:
             msg = "Waiting for image parsing."
             logging.info(msg)
             OverlayUpdateHandler.update("status_bar", msg)
             while self.ocr_queue.queue.qsize() > 0:
                 time.sleep(1)
+
         self.final_results = [
-            prices
-            for idx, prices in enumerate(self.ocr_queue.ocr_processed_items)
+            {
+                "name": listing["name"],
+                "avail": listing["avail"],
+                "price": listing["validated_price"],
+                "timestamp": listing["timestamp"],
+                "name_id": listing["name_id"],
+            }
+            for idx, listing in enumerate(self.ocr_queue.validator.price_list)
             if idx not in self.ocr_queue.validator.bad_indexes
         ]
         self.ocr_queue.stop()
@@ -136,7 +148,7 @@ class Crawler:
                 logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
             else:
                 p = SETTINGS.temp_app_data / self.run_id / filename
-                p.unlink()
+                p.unlink(missing_ok=True)
 
     def send_pending_submissions(self) -> None:
         submission_data = SESSION_DATA.pending_submission_data
@@ -145,14 +157,13 @@ class Crawler:
 
     def start(self) -> None:
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", False)
-        self._cancelled = False
         self.started = time.perf_counter()
         if not self.crawler_thread.is_alive():
             self.crawler_thread.start()
 
     def stop(self, reason: str, is_interrupt=False, is_error=False, wait_for_death=True) -> None:
+        self._stop_reason = reason
         self._cancelled = True
-        logging.warning(f"Stopped crawling because {reason}")
         while wait_for_death and self.crawler_thread.is_alive():
             logging.info("Stopping crawler - waiting to die.")
             time.sleep(1)
@@ -172,11 +183,22 @@ class Crawler:
         # todo: need to check this actually works
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
 
-
     @property
     def stopped(self) -> bool:
-        return self._cancelled
+        return not self.running
+
+    @property
+    def stop_reason(self) -> Optional[str]:
+        if self._stop_reason:
+            return self._stop_reason
+        elif self._cancelled:
+            return "user requested cancellation"
+        elif not self.crawler_thread.is_alive():
+            return "there was an error in the crawl thread"
+        elif not self.ocr_queue.thread_is_alive:
+            return "there was an error in the OCR thread"
+        return "unknown"
 
     @property
     def running(self) -> bool:
-        return not self._cancelled and self.crawler_thread.is_alive()
+        return not self._cancelled and self.crawler_thread.is_alive() and self.ocr_queue.thread_is_alive

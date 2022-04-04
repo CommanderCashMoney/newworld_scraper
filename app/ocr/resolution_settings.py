@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.ocr.utils import grab_screen
 from app.settings import SETTINGS
+from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
 
 
@@ -16,6 +17,7 @@ class ImageReference(BaseModel):
     def compare_image_reference(self) -> bool:
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
         reference_grab = grab_screen(region=self.screen_bbox)
+        reference_grab = cv2.cvtColor(reference_grab, cv2.COLOR_BGRA2RGB)
         reference_image_file = resource_path(f"app/images/new_world/{SETTINGS.resolution}/{self.file_name}")
         reference_img = cv2.imread(reference_image_file)
         img_gray = cv2.cvtColor(reference_img, cv2.COLOR_BGR2GRAY)
@@ -56,6 +58,7 @@ class Resolution(BaseModel):
     cancel_button: ImageReference
     refresh_button: ImageReference
     next_page_coords: Tuple[int, int]
+    mouse_scroll_loc: Tuple[int, int]
     pages_bbox: Tuple[int, int, int, int]
     items_bbox: Tuple[int, int, int, int]
     items_bbox_last: Tuple[int, int, int, int]
@@ -96,6 +99,7 @@ res_1440p = Resolution(
     tp_rarity_col_x_coords=(957, 1079),
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(842, 444, 200, 70),
+    mouse_scroll_loc=(2435, 438),
     sections={
            'Resources Reset 0': (170, 796),
            'Raw Resources': (368, 488),

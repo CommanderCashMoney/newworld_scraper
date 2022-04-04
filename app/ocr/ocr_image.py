@@ -1,3 +1,4 @@
+import uuid
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -17,8 +18,9 @@ from app.ocr.utils import (
 
 
 class OCRImage:
-    def __init__(self, img_src: Path) -> None:
+    def __init__(self, img_src: Path, section: str) -> None:
         self.original_path = img_src
+        self.section = section
         path = Path(img_src)
         self.original_path_obj = path
         self.captured = datetime.fromtimestamp(path.stat().st_mtime)
@@ -45,8 +47,8 @@ class OCRImage:
             }
         }
         results = []
-        cv2_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2BGR)
-        img_arr = pre_process_image(cv2_img)
+        # cv2_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2BGR)
+        img_arr = pre_process_image(self.original_image)
         img = Image.fromarray(img_arr)
         results.append([])
         broken_up_images = []
@@ -73,14 +75,18 @@ class OCRImage:
                         continue
                     if column_name == "price":
                         text = text.replace(",", "").strip()
+                        row_data[current_row][f"price_confidence"] = float(conf)
                     # if data already exists for this column name, add a space.
                     append = " " if row_data[current_row][column_name] else ""
                     row_data[current_row][column_name] += f"{append}{text}"
 
             # should do a check here that all the important keys exist
             final_data.extend([{**values, **{
+                "listing_id": uuid.uuid1(),
                 "timestamp": self.captured,
                 "filename": self.original_path_obj,
+                "valid": None,
+                "section": self.section
             }} for values in row_data.values()])
 
         return final_data
