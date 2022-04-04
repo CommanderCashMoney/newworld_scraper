@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 import cv2
 from pydantic import BaseModel
 
-from app.ocr.utils import grab_screen
+from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
 
 
@@ -14,7 +14,8 @@ class ImageReference(BaseModel):
 
     def compare_image_reference(self) -> bool:
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
-        reference_grab = grab_screen(region=self.screen_bbox)
+        reference_grab = screenshot_bbox(*self.screen_bbox).img_array
+        reference_grab = cv2.cvtColor(reference_grab, cv2.COLOR_BGRA2RGB)
         reference_image_file = resource_path(f"app/images/new_world/{self.file_name}")
         reference_img = cv2.imread(reference_image_file)
         res = cv2.matchTemplate(reference_grab, reference_img, cv2.TM_CCOEFF_NORMED)

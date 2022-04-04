@@ -9,7 +9,7 @@ import numpy as np
 from pytesseract import pytesseract
 
 from app.ocr.resolution_settings import Resolution, res_1440p
-from app.ocr.utils import grab_screen, pre_process_image
+from app.ocr.utils import screenshot_bbox, pre_process_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
@@ -31,6 +31,7 @@ class SectionCrawler:
         self.pages = None
         self.current_page = 1
         self.scroll_state = ScrollState.top
+        self.section_images_count = 0
 
     def __str__(self) -> str:
         return f"{self.section}: Page {self.current_page} / {self.pages}"
@@ -86,19 +87,20 @@ class SectionCrawler:
             if self.stopped or not self.check_scrollbar():
                 return False
             self.reset_mouse_position()
-            image = self.snap_items()
-            fn = f"{self.section}-{self.current_page}-{self.scroll_state.value}.png"
-            file_name = app_data_temp / fn
-            cv2.imwrite(str(file_name), image)
-            self.parent.ocr_queue.add_to_queue(file_name, self.section)
+            screenshot = self.snap_items()
+            self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
             self.scroll()
         OverlayUpdateHandler.update("pages_left", self.pages - self.current_page)
         return True
 
     def snap_items(self) -> Any:
+        self.section_images_count += 1
+        prefix = str(self.section_images_count).zfill(3)
+        fn = f"{self.section}-{prefix}-{self.scroll_state.value}.png"
+        full_path = SETTINGS.temp_app_data / self.parent.run_id / fn
         if self.scroll_state == ScrollState.btm:
-            return grab_screen(self.resolution.items_bbox_last)
-        return grab_screen(self.resolution.items_bbox)
+            return screenshot_bbox(*self.resolution.items_bbox_last, str(full_path))
+        return screenshot_bbox(*self.resolution.items_bbox, str(full_path))
 
     def scroll(self) -> None:
         scroll_distance = -11 if self.scroll_state != ScrollState.btm else -2
@@ -110,10 +112,10 @@ class SectionCrawler:
 
     def get_current_screen_page_count(self) -> int:
         pages_bbox = self.resolution.pages_bbox
-        img = grab_screen(pages_bbox)
-        img = pre_process_image(img)
+        img_arr = screenshot_bbox(*pages_bbox).img_array
+        img_arr = pre_process_image(img_arr)
         custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
-        txt = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT, config=custom_config)
+        txt = pytesseract.image_to_data(img_arr, output_type=pytesseract.Output.DICT, config=custom_config)
         pages_str = txt['text'][-1]
         logging.debug(f"Number of pages looks like: {pages_str}")
         if not pages_str:
@@ -214,10 +216,10 @@ class SectionCrawler:
             self.check_scrollbar()
         else:
             first_listing = self.resolution.first_item_listing_bbox
-            img = grab_screen(first_listing)
+            img = screenshot_bbox(*first_listing).img_array
             ref_grab = pre_process_image(img)
             pure_black = 112500
             while np.count_nonzero(ref_grab) == pure_black:
-                img = grab_screen(first_listing)
+                img = screenshot_bbox(*first_listing).img_array
                 ref_grab = pre_process_image(img)
             logging.info('Page finished loading')

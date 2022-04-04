@@ -8,6 +8,7 @@ class PriceSectionValidator:
         self.listings = listings
         self.last_good_price = Decimal("0.01")
         self.last_good_index = None
+        self.impossible_tp_value = Decimal("500000.0")
 
     def item_at_index(self, at_index: int) -> dict:
         prev_index = at_index - 1
@@ -15,7 +16,7 @@ class PriceSectionValidator:
             return {}
         return self.listings[at_index]
 
-    def find_previous_valid_price(self, cur_index: int) -> Tuple[int, Optional[Decimal]]:
+    def find_previous_price(self, cur_index: int) -> Tuple[int, Optional[Decimal]]:
         index = cur_index - 1
         while index >= 0:
             listing = self.item_at_index(index)
@@ -25,7 +26,7 @@ class PriceSectionValidator:
             index -= 1
         return None, None
 
-    def find_next_valid_price(self, cur_index: int) -> Tuple[dict, Optional[Decimal]]:
+    def find_next_price(self, cur_index: int) -> Tuple[dict, Optional[Decimal]]:
         index = cur_index + 1
         while index < len(self.listings):
             listing = self.item_at_index(index)
@@ -79,33 +80,32 @@ class PriceSectionValidator:
         """
         rows_with_significant_diff = 0
         for idx, listing in enumerate(self.listings):
-            if listing["listing_id"] == '27a9e9b3-b334-11ec-82dc-e0d4e8754873':
-                pass
             cur_validated_price = listing["validated_price"]
             if cur_validated_price is None:
                 continue
 
-            prev_listing, prev_price = self.find_previous_valid_price(idx)
-            next_listing, next_price = self.find_next_valid_price(idx)
+            confidence = listing["price_confidence"]
+            prev_listing, prev_price = self.find_previous_price(idx)
 
             if prev_price is None:  # this must be the first item in the list with a valid price.
                 continue
 
-            big_jump = max(prev_price, cur_validated_price) / min(prev_price, cur_validated_price) > 2
+            more_confident_than_prev = confidence >= prev_listing["price_confidence"]
+            is_greater_than_prev = prev_price <= cur_validated_price
+            if is_greater_than_prev:
+                continue  # looks good
 
-            if prev_price <= cur_validated_price and not big_jump:  # everything looks good!
-                continue
-
-            went_down = prev_price > cur_validated_price
-
-            if went_down:
-                listing["validated_price"] = None
-            elif next_price is None or prev_price <= next_price:
-                # if next price doesn't exist, or next price is greater than the previous one - looks like i'm invalid.
-                listing["validated_price"] = None
+            if more_confident_than_prev:
+                prev_index = idx - 1
+                while prev_index >= 0 and self.listings[prev_index].get("price_confidence", 0) < 95:
+                    if self.listings[prev_index].get("validated_price", self.impossible_tp_value) > cur_validated_price:  # noqa: E501
+                        self.listings[prev_index]["validated_price"] = None
+                        logging.debug(f"Deleted price on {self.listings[prev_index]['listing_id']}")
+                    else:
+                        break
+                    prev_index -= 1
             else:
-                # otherwise.. looks like the previous price is invalid.
-                prev_listing["validated_price"] = None
+                listing["validated_price"] = None
 
     def third_pass(self) -> None:
         """Now, see if we can fill any None values by comparing neighbours."""
@@ -114,8 +114,8 @@ class PriceSectionValidator:
             if cur_validated_price is not None:
                 continue  # there's just no way to know
 
-            prev_listing, prev_price = self.find_previous_valid_price(idx)
-            next_listing, next_price = self.find_next_valid_price(idx)
+            prev_listing, prev_price = self.find_previous_price(idx)
+            next_listing, next_price = self.find_next_price(idx)
 
             if next_price == Decimal("0.01"):
                 listing["validated_price"] = Decimal("0.01")
@@ -138,6 +138,7 @@ class PriceSectionValidator:
             if price is None:
                 continue
             if price < last_price:
+                logging.debug(f"Still not ordered because of {listing['listing_id']}")
                 return False
             last_price = price
             prev_listing = listing
@@ -151,7 +152,7 @@ class PriceSectionValidator:
         self.check_if_ordered()
         validated = sum([1 for listing in self.listings if listing["validated_price"] is not None])
         validated_percent = validated / len(self.listings)
-        print(f"percentage of validated listings in section {self.listings[0]['section']} {validated_percent}")
+        logging.debug(f"percentage of validated listings in section {self.listings[0]['section']} {validated_percent}")
 
         return self.listings
 

@@ -137,7 +137,6 @@ class Crawler:
             for idx, prices in enumerate(self.ocr_queue.validator.price_list)
             if idx not in self.ocr_queue.validator.bad_indexes
         ]
-        print(len(self.ocr_queue.validator.price_list), len(self.ocr_queue.validator.bad_indexes))
         self.ocr_queue.stop()
         dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
         for filename, info in dict_copy.items():
@@ -146,7 +145,7 @@ class Crawler:
                 logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
             else:
                 p = SETTINGS.temp_app_data / self.run_id / filename
-                p.unlink()
+                # p.unlink()
 
     def send_pending_submissions(self) -> None:
         submission_data = SESSION_DATA.pending_submission_data

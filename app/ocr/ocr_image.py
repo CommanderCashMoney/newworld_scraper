@@ -76,6 +76,7 @@ class OCRImage:
                         continue
                     if column_name == "price":
                         text = text.replace(",", "").strip()
+                        row_data[current_row][f"price_confidence"] = float(conf)
                     # if data already exists for this column name, add a space.
                     append = " " if row_data[current_row][column_name] else ""
                     row_data[current_row][column_name] += f"{append}{text}"

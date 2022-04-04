@@ -32,8 +32,6 @@ class Timer:
         if self.name:
             self.timers[self.name] += elapsed_time
 
-        # print(self.text.format(elapsed_time))
-
     def restart(self):
         if self._start_time is None:
             raise TimerError(f"Timer is not running. Use .start() to start it")
