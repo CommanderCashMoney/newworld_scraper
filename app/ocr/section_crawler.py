@@ -192,14 +192,4 @@ class SectionCrawler:
         return False
 
     def wait_for_load(self):
-        if self.pages != self.current_page:
-            self.check_scrollbar()
-        else:
-            first_listing = self.resolution.first_item_listing_bbox
-            img = screenshot_bbox(*first_listing).img_array
-            ref_grab = pre_process_listings_image(img)
-            pure_black = 112500
-            while np.count_nonzero(ref_grab) == pure_black:
-                img = screenshot_bbox(*first_listing).img_array
-                ref_grab = pre_process_listings_image(img)
-            logging.info('Page finished loading')
+        self.check_scrollbar()

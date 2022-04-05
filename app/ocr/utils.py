@@ -17,12 +17,6 @@ NUMBERS_PERIODS_COMMAS_CONFIG = """--psm 6 -c tessedit_char_whitelist="012345678
 INTEGERS_ONLY_CONFIG = """--psm 6 -c tessedit_char_whitelist="0123456789\""""
 
 
-def get_txt_from_im(name: str, config: str, cropped: np.array) -> str:
-    data = pytesseract.image_to_data(cropped, output_type=pytesseract.Output.DICT, config=config)
-    data["column_name"] = name
-    return data
-
-
 def parse_page_count(txt: str) -> Tuple[int, bool]:
     """Return value: tuple of (pages, validation_success)"""
     pages_str = txt['text'][-1]
@@ -61,20 +55,23 @@ def parse_page_count(txt: str) -> Tuple[int, bool]:
     return pages, True
 
 
-def pre_process_listings_image(img, scale=2.5):
-    img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
-    width = int(img.shape[1] * scale)
-    height = int(img.shape[0] * scale)
-    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_BITS)
+def pre_process_listings_image(img, masks_raw, save_as_name: str = None):
+    width = int(img.shape[1] * 5)
+    height = int(img.shape[0] * 5)
+    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_LANCZOS4)
+    # Image.fromarray(img).save(f"{save_as_name}.png")
+    finished_img = None
+    for lower_mask, upper_mask in masks_raw:
+        lower_color = np.array(lower_mask)
+        upper_color = np.array(upper_mask)
+        mask = cv2.inRange(img, lower_color, upper_color)
+        masked = cv2.bitwise_and(img, img, mask=mask)
+        if finished_img is None:
+            finished_img = masked
+        else:
+            finished_img = cv2.bitwise_or(finished_img, masked)
 
-    lower_color = np.array([75, 40, 40])
-    upper_color = np.array([255, 255, 255])
-
-    mask = cv2.inRange(img, lower_color, upper_color)
-    res = cv2.bitwise_and(img, img, mask=mask)
-
-    res = cv2.cvtColor(res, cv2.COLOR_RGB2GRAY)
-
+    res = cv2.cvtColor(finished_img, cv2.COLOR_RGB2GRAY)
     res = cv2.bilateralFilter(res, 5, 50, 100)
     res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     res = np.invert(res)
@@ -159,3 +156,11 @@ def capture_screen(save_to: str = None) -> Screenshot:
         ss.save_image(save_to)
 
     return ss
+
+
+def get_txt_from_im(name: str, config: str, cropped: np.array, masks) -> str:
+    res = pre_process_listings_image(cropped, masks, name)
+    # Image.fromarray(res).show()
+    data = pytesseract.image_to_data(res, output_type=pytesseract.Output.DICT, config=config)
+    data["column_name"] = name
+    return data

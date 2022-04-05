@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 import cv2
+import numpy as np
 from PIL import Image
 
 from app.ocr.resolution_settings import get_resolution_obj
@@ -28,7 +29,8 @@ class OCRImage:
 
     @property
     def original_image(self):
-        return cv2.imread(str(self.original_path))
+        im = cv2.imread(str(self.original_path))
+        return cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
     def parse_prices(self) -> defaultdict:
         """Parse prices from images, do no validation yet."""
@@ -36,27 +38,36 @@ class OCRImage:
             "name": {
                 "config": EVERYTHING_CONFIG,
                 "coords": self.resolution.tp_name_col_x_coords,
+                "masks": [
+                    [[110, 110, 110], [255, 255, 255]],
+                ]
             },
             "price": {
                 "config": NUMBERS_PERIODS_COMMAS_CONFIG,
                 "coords": self.resolution.tp_price_col_x_coords,
+                "masks": [
+                    [[90, 45, 45], [255, 150, 150]],  # red
+                ]
             },
             "avail": {
                 "config": INTEGERS_ONLY_CONFIG,
                 "coords": self.resolution.tp_avail_col_x_coords,
+                "masks": [
+                    [[25, 25, 30], [150, 150, 150]],
+                ]
             }
         }
         results = []
-        img_arr = pre_process_listings_image(self.original_image)
-        img = Image.fromarray(img_arr)
+        img = Image.fromarray(self.original_image)
         results.append([])
         broken_up_images = []
         # break the image up into columns for processing
         for name, values in columns.items():
             x_start, x_end = values["coords"]
             config = values["config"]
-            img_cropped = img.crop((x_start * 2.5, 0, x_end * 2.5, img.height * 2.5))
-            broken_up_images.append((name, config, img_cropped))
+            masks = values["masks"]
+            img_cropped = img.crop((x_start, 0, x_end, img.height))
+            broken_up_images.append((name, config, np.array(img_cropped), masks))
         # concurrently execute pytesseract
         with ThreadPoolExecutor(max_workers=len(columns)) as executor:
             futures = executor.map(lambda arr: get_txt_from_im(*arr), broken_up_images)
