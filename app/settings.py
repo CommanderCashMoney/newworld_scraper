@@ -54,6 +54,10 @@ class Settings(BaseSettings):
         return self.environment == Environment.dev
 
     @property
+    def afk_timer(self) -> int:
+        return 10 * 60
+
+    @property
     def base_web_url(self) -> str:
         return self.nwmp_dev_api_host if self.is_dev else self.nwmp_prod_api_host
 
