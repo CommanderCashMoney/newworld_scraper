@@ -30,7 +30,3 @@ def start_run(values) -> None:
     OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=False)
     OverlayUpdateHandler.visible("advanced", visible=False)
     OverlayUpdateHandler.visible(events.CHANGE_KEY_BINDS, visible=False)
-
-
-def end_run(values) -> None:
-    
