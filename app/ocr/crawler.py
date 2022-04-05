@@ -135,7 +135,7 @@ class Crawler:
 
         self.final_results = [
             {
-                "name": listing["name"],
+                "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
                 "avail": listing["avail"],
                 "price": listing["validated_price"],
                 "timestamp": listing["timestamp"],
