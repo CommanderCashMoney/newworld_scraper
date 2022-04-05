@@ -56,7 +56,7 @@ class Crawler:
             time.sleep(1)
 
     def check_move(self) -> None:
-        if self.last_moved == 0 or time.perf_counter() - self.last_moved > 60 * 5:  # 5 min
+        if self.last_moved == 0 or time.perf_counter() - self.last_moved > SETTINGS.afk_timer:  # 5 min
             logging.info("Moving character...")
             time.sleep(2)
             self.move()
