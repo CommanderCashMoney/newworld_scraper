@@ -117,8 +117,8 @@ class Screenshot:
 
     def get_image(self, pil_high_quality: bool = False) -> Union[Image.Image, Any]:
         if pil_high_quality:
-            return Image.fromarray(self.img_array, "RGB")
-        return cv2.cvtColor(self.img_array, cv2.COLOR_BGRA2RGB)
+            return Image.fromarray(self.img_array)
+        return self.img_array
 
     def save_image(self, file_path: str, pil_high_quality: bool = False) -> None:
         if self.file_path:
@@ -141,8 +141,7 @@ def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str =
             "height": height
         })
 
-        img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
-        ss = Screenshot(img_arr)
+        ss = Screenshot(np.asarray(sct_img))
 
     if save_to:
         ss.save_image(save_to)
@@ -155,8 +154,7 @@ def capture_screen(save_to: str = None) -> Screenshot:
         monitor = sct.monitors[1]
 
         sct_img = sct.grab(monitor)
-        img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
-        ss = Screenshot(img_arr)
+        ss = Screenshot(np.asarray(sct_img))
 
     if save_to:
         ss.save_image(save_to)
