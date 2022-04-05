@@ -11,8 +11,7 @@ class PriceSectionValidator:
         self.impossible_tp_value = Decimal("500000.0")
 
     def item_at_index(self, at_index: int) -> dict:
-        prev_index = at_index - 1
-        if prev_index < 0:
+        if at_index < 0:
             return {}
         return self.listings[at_index]
 
@@ -91,7 +90,7 @@ class PriceSectionValidator:
                 continue
 
             more_confident_than_prev = confidence >= prev_listing["price_confidence"]
-            is_greater_than_prev = prev_price <= cur_validated_price
+            is_greater_than_prev = cur_validated_price >= prev_price
             if is_greater_than_prev:
                 continue  # looks good
 

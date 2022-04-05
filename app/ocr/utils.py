@@ -61,8 +61,7 @@ def parse_page_count(txt: str) -> Tuple[int, bool]:
     return pages, True
 
 
-def pre_process_image(img, scale=2.5):
-    # for now
+def pre_process_listings_image(img, scale=2.5):
     img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
     width = int(img.shape[1] * scale)
     height = int(img.shape[0] * scale)

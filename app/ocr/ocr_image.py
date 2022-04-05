@@ -13,7 +13,7 @@ from app.ocr.utils import (
     INTEGERS_ONLY_CONFIG,
     NUMBERS_PERIODS_COMMAS_CONFIG,
     get_txt_from_im,
-    pre_process_image
+    pre_process_listings_image
 )
 
 
@@ -47,8 +47,7 @@ class OCRImage:
             }
         }
         results = []
-        # cv2_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2BGR)
-        img_arr = pre_process_image(self.original_image)
+        img_arr = pre_process_listings_image(self.original_image)
         img = Image.fromarray(img_arr)
         results.append([])
         broken_up_images = []
@@ -82,11 +81,11 @@ class OCRImage:
 
             # should do a check here that all the important keys exist
             final_data.extend([{**values, **{
-                "listing_id": uuid.uuid1(),
+                "listing_id": f"{self.original_path_obj.name} (idx: {index})",
                 "timestamp": self.captured,
                 "filename": self.original_path_obj,
                 "valid": None,
                 "section": self.section
-            }} for values in row_data.values()])
+            }} for index, values in enumerate(row_data.values())])
 
         return final_data

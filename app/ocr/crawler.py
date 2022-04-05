@@ -146,7 +146,7 @@ class Crawler:
             file_accuracy = 100 - info["bad_percent"]
             if file_accuracy < 50:
                 logging.warning(f"Very bad accuracy on file {filename} ({round(file_accuracy, 1)}%)")
-            else:
+            elif not SETTINGS.is_dev:
                 p = SETTINGS.temp_app_data / self.run_id / filename
                 p.unlink(missing_ok=True)
 
