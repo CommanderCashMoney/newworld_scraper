@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Tuple, Union
+from typing import Tuple
 
 import cv2
 import mss
@@ -22,8 +22,45 @@ def get_txt_from_im(name: str, config: str, cropped: np.array) -> str:
     return data
 
 
-def pre_process_image(img, scale=2.5):
-    # for now
+def parse_page_count(txt: str) -> Tuple[int, bool]:
+    """Return value: tuple of (pages, validation_success)"""
+    pages_str = txt['text'][-1]
+    logging.debug(f"Number of pages looks like: {pages_str}")
+    if not pages_str:
+        logging.error("Could not find ANY page count information. Assuming 1.")
+        return 1, False
+
+    pages_str = pages_str.strip()
+
+    if pages_str.isnumeric():
+        if int(pages_str) > 500:
+            # try see if the o was mistaken for a 0
+            try:
+                last_zero = pages_str[:-1].rindex("0")
+            except ValueError:
+                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                return 1, False
+            pages_str = pages_str[last_zero + 1:]
+            if not pages_str.isnumeric() or int(pages_str) > 500:
+                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                return 1, False
+        return int(pages_str), True
+
+    groups = re.search(r"\s?o?f?\s?(\d*)", pages_str).groups()
+    last = groups[-1]
+    if not last.isnumeric():
+        logging.error(f"Captured page count info is not numeric. Original capture: {pages_str}")
+        return 1, False
+
+    pages = int(last)
+    if pages > 500:
+        logging.error('Page count greater than 500 - assuming 1 page.')
+        return 1, False
+
+    return pages, True
+
+
+def pre_process_listings_image(img, scale=2.5):
     img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
     width = int(img.shape[1] * scale)
     height = int(img.shape[0] * scale)

@@ -4,12 +4,12 @@ import time
 from enum import Enum
 from typing import Any
 
-import cv2
 import numpy as np
 from pytesseract import pytesseract
 
-from app.ocr.resolution_settings import Resolution, res_1440p
-from app.ocr.utils import screenshot_bbox, pre_process_image
+
+from app.ocr.resolution_settings import Resolution,res_1440p
+from app.ocr.utils import screenshot_bbox, pre_process_listings_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
@@ -217,9 +217,9 @@ class SectionCrawler:
         else:
             first_listing = self.resolution.first_item_listing_bbox
             img = screenshot_bbox(*first_listing).img_array
-            ref_grab = pre_process_image(img)
+            ref_grab = pre_process_listings_image(img)
             pure_black = 112500
             while np.count_nonzero(ref_grab) == pure_black:
                 img = screenshot_bbox(*first_listing).img_array
-                ref_grab = pre_process_image(img)
+                ref_grab = pre_process_listings_image(img)
             logging.info('Page finished loading')
