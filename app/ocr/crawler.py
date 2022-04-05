@@ -118,6 +118,10 @@ class Crawler:
             SESSION_DATA.pending_submission_data = pending_submissions
             SESSION_DATA.last_scan_data = pending_submissions
             self.send_pending_submissions()
+            if pending_submissions.submit_success:
+                OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
+            else:
+                OverlayUpdateHandler.update('status_bar', 'API Submit Failed.')
         logging.info("Parsing results complete.")
         self.stop(reason="run completed.", wait_for_death=False)
 
@@ -172,8 +176,6 @@ class Crawler:
             OverlayUpdateHandler.update('status_bar', 'Error while crawling TP')
         elif is_interrupt:
             OverlayUpdateHandler.update('status_bar', 'Manually stopped crawl.')
-        else:
-            OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.reset_ui_state()
 
     def reset_ui_state(self) -> None:

@@ -7,6 +7,7 @@ import requests
 from tzlocal import get_localzone
 
 from app.events import VERSION_FETCHED_EVENT
+from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.settings import SETTINGS
 
 
@@ -42,11 +43,15 @@ def submit_price_data(price_data) -> bool:
             'Authorization': f'Bearer {SESSION_DATA.access_token}',
             'Content-Type': "application/json"
         })
-        logging.info(r.json())
     except requests.exceptions.ConnectionError:
         r = None
 
     success = r is not None and r.status_code == 201
+    if success:
+        logging.debug("Prices submitted.")
+    else:
+        logging.error("Price submission failed")
+        OverlayUpdateHandler.update("status_bar", "Price submissions failed!")
     return success
 
 
@@ -63,13 +68,14 @@ def submit_bad_names(bad_names: DefaultDict[str, int]) -> None:
             } for name, seen_no in bad_names.items()],
             headers={'Authorization': f'Bearer {SESSION_DATA.access_token}'}
         )
-        logging.info(r.json())
     except requests.exceptions.ConnectionError:
         r = None
 
     success = r is not None and r.status_code == 201
     if not success:
         logging.warning(f"Bad name submissions failed")
+    else:
+        logging.debug("Bad names were submitted.")
     return success
 
 

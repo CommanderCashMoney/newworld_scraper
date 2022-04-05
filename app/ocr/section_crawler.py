@@ -113,7 +113,7 @@ class SectionCrawler:
     def get_current_screen_page_count(self) -> int:
         pages_bbox = self.resolution.pages_bbox
         img_arr = screenshot_bbox(*pages_bbox).img_array
-        img_arr = pre_process_image(img_arr)
+        img_arr = pre_process_listings_image(img_arr)
         custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
         txt = pytesseract.image_to_data(img_arr, output_type=pytesseract.Output.DICT, config=custom_config)
         pages_str = txt['text'][-1]

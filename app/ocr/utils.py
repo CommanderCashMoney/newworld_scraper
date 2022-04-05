@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Tuple
+from typing import Any, Tuple, Union
 
 import cv2
 import mss
