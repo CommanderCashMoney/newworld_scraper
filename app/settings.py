@@ -73,6 +73,7 @@ def load_settings() -> Settings:
         with SETTINGS_FILE_LOC.open() as f:
             settings_values = json.load(f)
             username = settings_values.pop("un", "")
+            resolution = settings_values.pop("resolution", "")  # future branch compatibility
             keybinds = KeyBindings(**settings_values)
             return Settings(api_username=username, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
