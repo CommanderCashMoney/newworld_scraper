@@ -1,11 +1,9 @@
 import logging
 import re
-from time import perf_counter
-from typing import Any, Tuple
+from typing import Any, Tuple, Union
 
 import cv2
 import mss
-import numpy
 import numpy as np
 from PIL import Image
 from pytesseract import pytesseract
@@ -116,21 +114,20 @@ class Screenshot:
         self.img_array = np_arr
         self.file_path = None
 
-    # @property
-    # def image(self) -> Any:
-    #     return cv2.im
+    def get_image(self, pil_high_quality: bool = False) -> Union[Image.Image, Any]:
+        if pil_high_quality:
+            return Image.fromarray(self.img_array)
+        return self.img_array
 
-    # def parse_arr_to_img(self) -> Image.Image:
-    #     if self.image:
-    #         return self.image
-    #     self.image = Image.fromarray(self.img_array, "RGB")
-    #     return self.image
-
-    def save_image(self, file_path: str) -> None:
+    def save_image(self, file_path: str, pil_high_quality: bool = False) -> None:
         if self.file_path:
             return
         self.file_path = file_path
-        cv2.imwrite(file_path, self.img_array)
+        if pil_high_quality:
+            image = self.get_image(pil_high_quality)
+            image.save(self.file_path)
+        else:
+            cv2.imwrite(file_path, self.img_array)
 
 
 def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None) -> Screenshot:
@@ -143,7 +140,6 @@ def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str =
             "height": height
         })
 
-        # img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
         ss = Screenshot(np.asarray(sct_img))
 
     if save_to:
@@ -157,8 +153,7 @@ def capture_screen(save_to: str = None) -> Screenshot:
         monitor = sct.monitors[1]
 
         sct_img = sct.grab(monitor)
-        # img_arr = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
-        ss = Screenshot(sct_img)
+        ss = Screenshot(np.asarray(sct_img))
 
     if save_to:
         ss.save_image(save_to)
