@@ -102,8 +102,8 @@ class PriceSectionValidator:
                     prev_listing["validated_price"] = None
                     continue
                 while prev_index >= 0 and (
-                        comparison_listing.get("validated_price") is None
-                        or comparison_listing.get("price_confidence", 0) < 95
+                    comparison_listing.get("validated_price") is not None
+                    and comparison_listing.get("price_confidence", 0) < 95
                 ):
                     comparison_listing = self.listings[prev_index]
                     prev_listing_price = comparison_listing.get("validated_price")
