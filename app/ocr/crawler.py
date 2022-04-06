@@ -130,7 +130,7 @@ class Crawler:
             msg = "Waiting for image parsing."
             logging.info(msg)
             OverlayUpdateHandler.update("status_bar", msg)
-            while self.ocr_queue.queue.qsize() > 0:
+            while self.ocr_queue.thread_is_alive:
                 time.sleep(1)
 
         self.final_results = [
