@@ -1,6 +1,3 @@
-import json
-from os import path
-
 import PySimpleGUI as sg
 
 from app import events
@@ -151,7 +148,7 @@ class Overlay:
         middle_x = int(x + width / 2 - window.size[0] / 2)
         middle_y = int(y + height / 2 - window.size[1] / 2)
         window.move(middle_x, middle_y)
-        self.window.set_alpha(0.4)
+        self.window.set_alpha(0.6)
 
         event, values = window.read()
         self.window.write_event_value(event, values)

@@ -45,13 +45,12 @@ class OCRQueue:
         logging.info(f"OCR Queue is ready to accept images.")
         while self.continue_processing:
             next_item: OCRImage = self.queue.get()
+            self.update_overlay("ocr_count", self.queue.qsize())
             if next_item in [self.PREMATURELY_STOP_EVENT, self.RUN_COMPLETE_EVENT]:
                 break
 
             if not self.continue_processing:
                 break
-
-            self.update_overlay("ocr_count", self.queue.qsize())
 
             if next_item != self.SECTION_COMPLETE_EVENT:
                 parsed_prices = next_item.parse_prices()

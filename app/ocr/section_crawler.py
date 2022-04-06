@@ -9,7 +9,7 @@ from pytesseract import pytesseract
 
 
 from app.ocr.resolution_settings import Resolution,res_1440p
-from app.ocr.utils import screenshot_bbox, pre_process_listings_image
+from app.ocr.utils import parse_page_count, pre_process_page_count_image, screenshot_bbox, pre_process_listings_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
@@ -112,43 +112,18 @@ class SectionCrawler:
 
     def get_current_screen_page_count(self) -> int:
         pages_bbox = self.resolution.pages_bbox
-        img_arr = screenshot_bbox(*pages_bbox).img_array
-        img_arr = pre_process_listings_image(img_arr)
+        screenshot = screenshot_bbox(*pages_bbox)
+        res = pre_process_page_count_image(screenshot.img_array)
         custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
-        txt = pytesseract.image_to_data(img_arr, output_type=pytesseract.Output.DICT, config=custom_config)
+        txt = pytesseract.image_to_data(res, output_type=pytesseract.Output.DICT, config=custom_config)
         pages_str = txt['text'][-1]
-        logging.debug(f"Number of pages looks like: {pages_str}")
-        if not pages_str:
-            logging.error("Could not find ANY page count information. Assuming 1.")
-            return 1
-
-        pages_str = pages_str.strip()
-
-        if pages_str.isnumeric():
-            if int(pages_str) > 500:
-                # try see if the o was mistaken for a 0
-                try:
-                    last_zero = pages_str[:-1].rindex("0")
-                except ValueError:
-                    logging.error(f"Captured page count is greater than 500. Reverting to 1.")
-                    return 1
-                pages_str = pages_str[last_zero+1:]
-                if not pages_str.isnumeric() or int(pages_str) > 500:
-                    logging.error(f"Captured page count is greater than 500. Reverting to 1.")
-                    return 1
-            return int(pages_str)
-
-        groups = re.search(r"(\d*)\s?o?f?\s?(\d*)", pages_str).groups()
-        last = groups[-1]
-        if not last.isnumeric():
-            logging.error(f"Captured page count info is not numeric. Original capture: {pages_str}")
-            return 1
-
-        pages = int(last)
-        if pages > 500:
-            logging.error('Page count greater than 500 - assuming 1 page.')
-            return 1
-
+        pages, validation_success = parse_page_count(txt)
+        if not validation_success:
+            bpc = SETTINGS.temp_app_data / self.parent.run_id / "bad-page-counts"
+            bpc.mkdir(exist_ok=True, parents=True)
+            bpc = bpc / f"{self.parent.run_id}-{self.section}-0.png"
+            screenshot.save_image(str(bpc), pil_high_quality=True)
+        logging.debug(f"{self.section} - Number of pages looks like: {pages_str} - got {pages}")
         return pages
 
     def press_cancel_or_refresh(self):
