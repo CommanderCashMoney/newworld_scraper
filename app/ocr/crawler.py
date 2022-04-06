@@ -99,11 +99,14 @@ class Crawler:
                 break
             self.current_section += 1
             section_crawler.crawl(pages_to_parse)
+
         if self.stopped:
             logging.info(f"Stopped crawling because {self.stop_reason}.")
             self.ocr_queue.stop()
             return
         else:
+            # tell the ocr thread to stop processing once it has completed all its current tasks
+            self.ocr_queue.complete_current_work_and_die()
             logging.info("Crawl complete.")
 
         self.wait_for_parse()
@@ -131,6 +134,7 @@ class Crawler:
             logging.info(msg)
             OverlayUpdateHandler.update("status_bar", msg)
             while self.ocr_queue.thread_is_alive:
+                logging.debug("Waiting for OCR Queue to finish...")
                 time.sleep(1)
 
         self.final_results = [
