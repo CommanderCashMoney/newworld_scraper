@@ -7,7 +7,6 @@ import requests
 from tzlocal import get_localzone
 
 from app.events import VERSION_FETCHED_EVENT
-from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.settings import SETTINGS
 
 
@@ -30,6 +29,7 @@ def check_latest_version() -> str:
 
 def submit_price_data(price_data) -> bool:
     from app.session_data import SESSION_DATA
+    from app.overlay.overlay_updates import OverlayUpdateHandler
     url = urljoin(SETTINGS.base_web_url, "/api/scanner_upload/")
     my_tz = get_localzone().zone
 

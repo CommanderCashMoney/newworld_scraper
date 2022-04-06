@@ -70,7 +70,7 @@ class PriceSectionValidator:
             price = self.try_simple_validation(listing)
             listing["validated_price"] = price
 
-    def clean_prices_by_confidence_level(self) -> None:
+    def clean_prices_by_confidence_level(self, aggressive=False) -> None:
         """
             for each listing, check that it is greater or equal in value than the previous valid listing.
             if not, check that the next price is greater than or equal to the previous price.
@@ -97,13 +97,21 @@ class PriceSectionValidator:
             if more_confident_than_prev:
                 prev_index = idx - 1
                 comparison_listing = self.listings[prev_index]
-                while prev_index >= 0 and comparison_listing.get("price_confidence", 0) < 95:
+                if aggressive:
+                    logging.debug(f"Aggressively cleaning {prev_listing['listing_id']}")
+                    prev_listing["validated_price"] = None
+                    continue
+                while prev_index >= 0 and (
+                        comparison_listing.get("validated_price") is None
+                        or comparison_listing.get("price_confidence", 0) < 95
+                ):
                     comparison_listing = self.listings[prev_index]
-                    listing_validated_price = comparison_listing.get("validated_price") or self.impossible_tp_value
-                    if listing_validated_price > cur_validated_price:  # noqa: E501
+                    prev_listing_price = comparison_listing.get("validated_price")
+                    if prev_listing_price > cur_validated_price:
                         self.listings[prev_index]["validated_price"] = None
                         logging.debug(f"Deleted price on {self.listings[prev_index]['listing_id']}")
                     else:
+                        listing["validated_price"] = None
                         break
                     prev_index -= 1
             else:
@@ -147,8 +155,10 @@ class PriceSectionValidator:
 
     def validate_all(self) -> Dict[str, str]:
         self.perform_simple_validation()
-        while not self.check_if_ordered():
-            self.clean_prices_by_confidence_level()
+        for idx in range(20):
+            if self.check_if_ordered():
+                break
+            self.clean_prices_by_confidence_level(aggressive=idx > 10)
         self.try_find_close_matches()
         validated = sum([1 for listing in self.listings if listing["validated_price"] is not None])
         validated_percent = round(validated / max(1, len(self.listings)) * 100, 1)
