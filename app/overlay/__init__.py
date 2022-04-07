@@ -21,7 +21,7 @@ class Overlay:
         version_update_layout = [
             [sg.Text('', key='download_update_text')],
             [
-                sg.Button('Update Now', key=events.BEGIN_DOWNLOAD_UPDATE),
+                sg.Button('Update Now', key=events.BEGIN_DOWNLOAD_UPDATE, enable_events=True),
                 sg.Image(size=(30, 30), key='-LOADING-IMAGE-2-', source=resource_path("app/images/spinner/0.png")),
             ],
         ]

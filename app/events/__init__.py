@@ -36,10 +36,11 @@ def handle_event(event_name: str, gui_values: dict) -> None:
         logging.debug(f"Unhandled event {event_name}")
         return
     sig = signature(func)
-    arg = gui_values.get(event_name)
+    arg = gui_values.get(event_name, "-NOTHING-")
+    print(event_name, gui_values)
     if len(sig.parameters) == 0:
         func()
-    elif arg is None:
+    elif arg == "-NOTHING-":
         func(gui_values)
     else:
         func(arg)
