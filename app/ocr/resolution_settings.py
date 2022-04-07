@@ -81,7 +81,7 @@ res_1440p = Resolution(
     cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", min_conf=0.95),
     refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", min_conf=0.95),
     next_page_coords=(2400, 300),
-    pages_bbox=(2233, 287, 140, 32),
+    pages_bbox=(2335, 293, 33, 17),
     items_bbox=(927, 430, 1510, 919),
     items_bbox_last=(927, 1198, 1510, 200),
     tp_row_height=256,
