@@ -142,5 +142,11 @@ cython_debug/
 # project specific
 build/
 dist/
+temp/*
 /test_img_cap.py
 temp/*
+app/tests/test.py
+app/tests/images/
+test.py
+saved_imgs/
+compare.py
