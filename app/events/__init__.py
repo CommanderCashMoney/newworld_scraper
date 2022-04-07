@@ -37,7 +37,6 @@ def handle_event(event_name: str, gui_values: dict) -> None:
         return
     sig = signature(func)
     arg = gui_values.get(event_name, "-NOTHING-")
-    print(event_name, gui_values)
     if len(sig.parameters) == 0:
         func()
     elif arg == "-NOTHING-":
