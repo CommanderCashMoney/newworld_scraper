@@ -148,3 +148,5 @@ temp/*
 app/tests/test.py
 app/tests/images/
 test.py
+saved_imgs/
+compare.py

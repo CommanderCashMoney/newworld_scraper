@@ -1,19 +1,15 @@
 import logging
-import re
 import time
 from enum import Enum
 from typing import Any
 
-import cv2
 import numpy as np
 from pytesseract import pytesseract
 
 
 from app.ocr.resolution_settings import get_resolution_obj
-
 from app.ocr.resolution_settings import Resolution
 from app.ocr.utils import parse_page_count, pre_process_page_count_image, screenshot_bbox, pre_process_listings_image
-
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
@@ -192,4 +188,14 @@ class SectionCrawler:
         return False
 
     def wait_for_load(self):
-        self.check_scrollbar()
+        if self.pages != self.current_page:
+            self.check_scrollbar()
+        else:
+            first_listing = self.resolution.first_item_listing_bbox
+            img = screenshot_bbox(*first_listing).img_array
+            ref_grab = pre_process_listings_image(img)
+            pure_black = 112500
+            while np.count_nonzero(ref_grab) == pure_black:
+                img = screenshot_bbox(*first_listing).img_array
+                ref_grab = pre_process_listings_image(img)
+            logging.info('Page finished loading')

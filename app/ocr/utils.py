@@ -1,7 +1,7 @@
 import logging
 import re
-from typing import Union
-from typing import Any, Tuple
+from typing import Tuple
+
 
 import cv2
 import mss

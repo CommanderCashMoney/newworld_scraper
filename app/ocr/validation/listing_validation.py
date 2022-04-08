@@ -95,7 +95,7 @@ class ListingValidator:
             swapped_name = copy.pop("name")
             copy[validated_name_key] = swapped_name
             logging.debug(f"Swapped name of {name} for {swapped_name}")
-            cur_obj.update(name_swap)
+            cur_obj.update(copy)
             return True
 
         if name in self.confirmed_names:

@@ -20,6 +20,8 @@ class OCRQueue:
         self.crawler = None  # type: Crawler
         self.to_validate = []
         self.SECTION_COMPLETE_EVENT = "RESET"
+        self.RUN_COMPLETE_EVENT = "FINISHED"
+        self.PREMATURELY_STOP_EVENT = "STOP"
         self.ocr_processed_listings = 0
 
     def update_overlay(self, key, value) -> None:
@@ -36,14 +38,19 @@ class OCRQueue:
     def notify_section_complete(self) -> None:
         self.queue.put(self.SECTION_COMPLETE_EVENT)
 
+    def complete_current_work_and_die(self) -> None:
+        self.queue.put(self.RUN_COMPLETE_EVENT)
+
     def process_queue(self) -> None:
         logging.info(f"OCR Queue is ready to accept images.")
         while self.continue_processing:
             next_item: OCRImage = self.queue.get()
-            if not self.continue_processing or next_item is None:  # a none object was put in to unstick the queue
+            self.update_overlay("ocr_count", self.queue.qsize())
+            if next_item in [self.PREMATURELY_STOP_EVENT, self.RUN_COMPLETE_EVENT]:
                 break
 
-            self.update_overlay("ocr_count", self.queue.qsize())
+            if not self.continue_processing:
+                break
 
             if next_item != self.SECTION_COMPLETE_EVENT:
                 parsed_prices = next_item.parse_prices()
@@ -88,7 +95,7 @@ class OCRQueue:
         self._continue_processing = False
         self.queue.empty()
         if self.queue.qsize() == 0:
-            self.queue.put(None)  # noqa - unstick the queue since it is waiting
+            self.queue.put(self.RUN_COMPLETE_EVENT)  # noqa - unstick the queue since it is waiting
 
     def clear(self) -> None:
         self.total_images = 0

@@ -59,6 +59,8 @@ class OCRImage:
         }
         results = []
         img = Image.fromarray(self.original_image)
+        # img_arr = pre_process_listings_image(self.original_image)
+        # img = Image.fromarray(img_arr)
         results.append([])
         broken_up_images = []
         # break the image up into columns for processing

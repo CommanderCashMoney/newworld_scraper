@@ -99,11 +99,14 @@ class Crawler:
                 break
             self.current_section += 1
             section_crawler.crawl(pages_to_parse)
+
         if self.stopped:
             logging.info(f"Stopped crawling because {self.stop_reason}.")
             self.ocr_queue.stop()
             return
         else:
+            # tell the ocr thread to stop processing once it has completed all its current tasks
+            self.ocr_queue.complete_current_work_and_die()
             logging.info("Crawl complete.")
 
         self.wait_for_parse()
@@ -118,6 +121,10 @@ class Crawler:
             SESSION_DATA.pending_submission_data = pending_submissions
             SESSION_DATA.last_scan_data = pending_submissions
             self.send_pending_submissions()
+            if pending_submissions.submit_success:
+                OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
+            else:
+                OverlayUpdateHandler.update('status_bar', 'API Submit Failed.')
         logging.info("Parsing results complete.")
         self.stop(reason="run completed.", wait_for_death=False)
 
@@ -126,12 +133,13 @@ class Crawler:
             msg = "Waiting for image parsing."
             logging.info(msg)
             OverlayUpdateHandler.update("status_bar", msg)
-            while self.ocr_queue.queue.qsize() > 0:
+            while self.ocr_queue.thread_is_alive:
+                logging.debug("Waiting for OCR Queue to finish...")
                 time.sleep(1)
 
         self.final_results = [
             {
-                "name": listing["validated_name"],
+                "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
                 "avail": listing["avail"],
                 "price": listing["validated_price"],
                 "timestamp": listing["timestamp"],
@@ -172,8 +180,6 @@ class Crawler:
             OverlayUpdateHandler.update('status_bar', 'Error while crawling TP')
         elif is_interrupt:
             OverlayUpdateHandler.update('status_bar', 'Manually stopped crawl.')
-        else:
-            OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.reset_ui_state()
 
     def reset_ui_state(self) -> None:
