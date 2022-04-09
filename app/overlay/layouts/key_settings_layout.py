@@ -11,6 +11,10 @@ def key_settings_layout():
             sg.InputText(key='action_key', size=(2, 1), default_text=SETTINGS.keybindings.action_key)
         ],
         [
+            sg.Text('Cancel Scan Key', auto_size_text=True),
+            sg.InputText(key='cancel_key', size=(2, 1), default_text=SETTINGS.keybindings.cancel_key)
+        ],
+        [
             sg.Text('Move Forward', auto_size_text=True),
             sg.InputText(key='forward_key', size=(2, 1), default_text=SETTINGS.keybindings.forward_key)
         ],

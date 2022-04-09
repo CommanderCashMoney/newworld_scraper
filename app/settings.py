@@ -20,6 +20,7 @@ class KeyBindings(BaseSettings):
     action_key: str = "e"
     forward_key: str = "w"
     backward_key: str = "s"
+    cancel_key: str = "/"
 
 
 class Settings(BaseSettings):
