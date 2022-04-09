@@ -46,7 +46,7 @@ class Crawler:
     def on_press(self, key):
         active_window_text = GetWindowText(GetForegroundWindow())
         if active_window_text in ['Trade Price Scraper', "New World"]:
-            if key == pynput.keyboard.KeyCode(char='/'):
+            if key == pynput.keyboard.KeyCode(char=SETTINGS.keybindings.cancel_key):
                 self.stop("Manually cancelled!", is_interrupt=True)
 
     def update_timer(self) -> None:
