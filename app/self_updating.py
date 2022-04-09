@@ -67,8 +67,8 @@ def version_fetched(response) -> None:
 
 def download_update() -> None:
     download_func = lambda: perform_update_download(overlay.download_link)  # noqa
-    overlay.window.perform_long_operation(download_func, events.DOWNLOAD_NEW_VERSION_EVENT)
-    overlay.window["download_update"].update(text="Downloading...", disabled=True)
+    overlay.window.perform_long_operation(download_func, events.NEW_VERSION_DOWNLOADED)
+    overlay.window[events.BEGIN_DOWNLOAD_UPDATE].update(text="Downloading...", disabled=True)
     overlay.set_spinner_visibility(True)
 
 
