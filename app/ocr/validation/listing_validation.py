@@ -99,12 +99,12 @@ class ListingValidator:
             validated_price = self.get_valid_price(psv, price_index_offset)
             price_invalid = validated_price is None
             name_invalid = not self.validate_name()
-            quantity_valid = self.validate_quantity()  # can never be non valid
+            quantity_invalid = not self.validate_quantity()  # can never be non valid
 
             current_price["validated_price"] = validated_price
             filename = current_price["filename"].name
 
-            invalid = name_invalid or price_invalid or quantity_valid
+            invalid = name_invalid or price_invalid or quantity_invalid
             current_price["valid"] = not invalid
             if invalid:
                 # logging.debug(f"Could not validate {json.dumps(current_price, indent=2, default=str)}")
