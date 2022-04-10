@@ -1,7 +1,6 @@
 import logging
 import re
-from typing import Tuple
-
+from typing import Any, Tuple, Union
 
 import cv2
 import mss
@@ -79,17 +78,6 @@ def pre_process_listings_image(img, scale=2.5):
     res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     res = np.invert(res)
     return res
-
-
-def grab_screen(region=None):
-    left, top, width, height = region
-    mon = {"top": top, "left": left, "width": width, "height": height}
-
-    sct = mss.mss()
-    g = sct.grab(mon)
-    img = np.asarray(g)
-    img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
-    return img
 
 
 def pre_process_page_count_image(img_arr):
