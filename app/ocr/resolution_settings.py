@@ -4,6 +4,8 @@ import cv2
 from pydantic import BaseModel
 
 from app.ocr.utils import grab_screen
+from app.settings import SETTINGS
+from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
 
 
@@ -48,7 +50,6 @@ class ImageReference(BaseModel):
 
 
 class Resolution(BaseModel):
-    name: str
     sections: Dict[str, Tuple[int, int]]
     trading_post: ImageReference
     top_scroll: ImageReference
@@ -75,12 +76,8 @@ class Resolution(BaseModel):
     tp_rarity_col_x_coords: Tuple[int, int]
     tp_location_col_x_coords: Tuple[int, int]
 
-    def __str__(self) -> str:
-        return f"<Resolution: {self.name}>"
-
 
 res_1440p = Resolution(
-    name="1440p",
     trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.92),
     top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -130,7 +127,6 @@ res_1440p = Resolution(
 
 
 res_1080p = Resolution(
-    name="1080p",
     trading_post=ImageReference(screen_bbox=(338, 32, 96, 24), file_name="trading_post_label.png", min_conf=0.92),
     top_scroll=ImageReference(screen_bbox=(1833, 314, 18, 19), file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -179,12 +175,9 @@ res_1080p = Resolution(
 )
 
 
-resolutions = {
-    "1080p": res_1080p,
-    "1440p": res_1440p
-}
-
-
 def get_resolution_obj():
-    from app.settings import SETTINGS  # circular
-    return resolutions[SETTINGS.resolution]
+    if SETTINGS.resolution == "1440p":
+        return res_1440p
+    elif SETTINGS.resolution == "1080p":
+        return res_1080p
+    return res_1440p  # don't think this will ever happen, but safer than assuming
