@@ -84,7 +84,7 @@ res_1440p = Resolution(
     trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.92),
     top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
-    bottom_scroll=ImageReference(screen_bbox=(2444, 1378, 25, 25), file_name="bottom_of_scroll_bottom.png", min_conf=0.95),
+    bottom_scroll=ImageReference(screen_bbox=(2443, 915, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.95),
     cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", min_conf=0.95),
     refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", min_conf=0.95),
     next_page_coords=(2400, 300),
