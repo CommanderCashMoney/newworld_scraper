@@ -80,17 +80,6 @@ def pre_process_listings_image(img, scale=2.5):
     return res
 
 
-def grab_screen(region=None):
-    left, top, width, height = region
-    mon = {"top": top, "left": left, "width": width, "height": height}
-
-    sct = mss.mss()
-    g = sct.grab(mon)
-    img = np.asarray(g)
-    img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
-    return img
-
-
 def pre_process_page_count_image(img_arr):
     img = cv2.cvtColor(img_arr, cv2.COLOR_BGRA2RGB)
     width = int(img.shape[1] * 2.5)
@@ -106,44 +95,6 @@ def pre_process_page_count_image(img_arr):
     res = cv2.bilateralFilter(img_gray, 5, 50, 100)
     binary_img = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     return np.invert(binary_img)
-
-
-def parse_page_count(txt: str) -> Tuple[int, bool]:
-    """Return value: tuple of (pages, validation_success)"""
-    pages_str = txt['text'][-1]
-    logging.debug(f"Number of pages looks like: {pages_str}")
-    if not pages_str:
-        logging.error("Could not find ANY page count information. Assuming 1.")
-        return 1, False
-
-    pages_str = pages_str.strip()
-
-    if pages_str.isnumeric():
-        if int(pages_str) > 500:
-            # try see if the o was mistaken for a 0
-            try:
-                last_zero = pages_str[:-1].rindex("0")
-            except ValueError:
-                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
-                return 1, False
-            pages_str = pages_str[last_zero + 1:]
-            if not pages_str.isnumeric() or int(pages_str) > 500:
-                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
-                return 1, False
-        return int(pages_str), True
-
-    groups = re.search(r"\s?o?f?\s?(\d*)", pages_str).groups()
-    last = groups[-1]
-    if not last.isnumeric():
-        logging.error(f"Captured page count info is not numeric. Original capture: {pages_str}")
-        return 1, False
-
-    pages = int(last)
-    if pages > 500:
-        logging.error('Page count greater than 500 - assuming 1 page.')
-        return 1, False
-
-    return pages, True
 
 
 class Screenshot:

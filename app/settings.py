@@ -4,8 +4,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
-from pydantic import BaseSettings, root_validator
+from pydantic import BaseSettings, Field, root_validator
 
+from app.utils.resolution import get_default_resolution_key
 
 APP_DATA_FOLDER = Path(os.getenv("APPDATA")) / "Cash Money Development" / "Trading Post Scraper"
 SETTINGS_FILE_LOC = APP_DATA_FOLDER / "keybind_settings.json"
@@ -35,6 +36,7 @@ class Settings(BaseSettings):
     # user/pass can be set for development purposes in .env to avoid having to type each time
     api_username: str = ""
     api_password: str = ""
+    resolution: str = Field(default_factory=get_default_resolution_key)
 
     log_file: str = "logging.txt"
 
@@ -56,6 +58,8 @@ class Settings(BaseSettings):
 
     @property
     def afk_timer(self) -> int:
+        if self.is_dev:
+            return None
         return 10 * 60
 
     @property
@@ -78,9 +82,9 @@ def load_settings() -> Settings:
         with SETTINGS_FILE_LOC.open() as f:
             settings_values = json.load(f)
             username = settings_values.pop("un", "")
-            resolution = settings_values.pop("resolution", "")  # future branch compatibility
+            resolution = settings_values.pop("resolution", get_default_resolution_key())
             keybinds = KeyBindings(**settings_values)
-            return Settings(api_username=username, keybindings=keybinds)
+            return Settings(api_username=username, resolution=resolution, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
     return Settings()
@@ -91,9 +95,11 @@ SETTINGS = load_settings()
 
 def save(values) -> None:
     from app.overlay import overlay
+    resolution = values.pop("resolution", SETTINGS.resolution)
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": SETTINGS.api_username,
+            "resolution": resolution,
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
@@ -105,5 +111,6 @@ def save_username(username) -> None:
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": username,
+            "resolution": SETTINGS.resolution,
             **SETTINGS.keybindings.dict()
         }, f)

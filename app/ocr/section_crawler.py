@@ -1,5 +1,4 @@
 import logging
-import re
 import time
 from enum import Enum
 from typing import Any
@@ -8,7 +7,8 @@ import numpy as np
 from pytesseract import pytesseract
 
 
-from app.ocr.resolution_settings import Resolution,res_1440p
+from app.ocr.resolution_settings import get_resolution_obj
+from app.ocr.resolution_settings import Resolution
 from app.ocr.utils import parse_page_count, pre_process_page_count_image, screenshot_bbox, pre_process_listings_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
@@ -45,7 +45,7 @@ class SectionCrawler:
 
     @property
     def resolution(self) -> Resolution:
-        return res_1440p
+        return get_resolution_obj()
 
     def crawl(self, pages_to_parse: int = 500) -> None:
         bring_new_world_to_foreground()
@@ -151,7 +151,8 @@ class SectionCrawler:
         return False
 
     def select_section(self) -> None:
-        logging.info(f"Selecting new section {self.section}")
+        if "RESET" not in self.section:
+            logging.info(f"Selecting new section {self.section}")
         section_loc = self.resolution.sections[self.section]
         click('left', section_loc)
         time.sleep(2)  # wait

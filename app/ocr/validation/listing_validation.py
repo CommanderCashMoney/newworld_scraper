@@ -26,6 +26,29 @@ class ListingValidator:
         self.last_good_price: Optional[Decimal] = None
         self.field_accuracy = defaultdict(int)
 
+    def percentage_or_none(self, numerator: float, denominator: float) -> Optional[float]:
+        try:
+            return numerator / denominator
+        except ZeroDivisionError:
+            pass
+        return None
+
+    @property
+    def name_accuracy(self) -> float:
+        return self.percentage_or_none(self.field_accuracy["name"], len(self.price_list))
+
+    @property
+    def price_accuracy(self) -> float:
+        return self.percentage_or_none(self.field_accuracy["price"], len(self.price_list))
+
+    @property
+    def quantity_accuracy(self) -> float:
+        return 1.0
+
+    @property
+    def overall_accuracy(self) -> float:
+        return self.percentage_or_none(len(self.bad_indexes), len(self.price_list))
+
     def set_api_info(self) -> None:
         if self.api_fetched:
             return

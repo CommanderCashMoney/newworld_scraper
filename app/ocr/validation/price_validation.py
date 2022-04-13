@@ -162,7 +162,7 @@ class PriceSectionValidator:
         self.try_find_close_matches()
         validated = sum([1 for listing in self.listings if listing["validated_price"] is not None])
         validated_percent = round(validated / max(1, len(self.listings)) * 100, 1)
-        logging.debug(f"Price validation in section: {self.listings[0]['section']} = {validated_percent}%")
+        logging.info(f"Price validation in section: {self.listings[0]['section']} = {validated_percent}%")
         return self.listings
 
 

@@ -12,7 +12,7 @@ from win32gui import GetForegroundWindow, GetWindowText
 from app import events
 from app.ocr.api_submission_data import APISubmission
 from app.ocr.ocr_queue import OCRQueue
-from app.ocr.resolution_settings import res_1440p
+from app.ocr.resolution_settings import get_resolution_obj
 from app.ocr.section_crawler import SectionCrawler
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.session_data import SESSION_DATA
@@ -27,7 +27,8 @@ class Crawler:
         self.run_id = run_id
         self.ocr_queue = ocr_queue
         self.ocr_queue.crawler = self
-        self.section_crawlers = [SectionCrawler(self, k) for k in res_1440p.sections.keys()]
+        self.resolution = get_resolution_obj()
+        self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys()]
         self.current_section = 0
         self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self._cancelled = False
@@ -56,6 +57,8 @@ class Crawler:
             time.sleep(1)
 
     def check_move(self) -> None:
+        if SETTINGS.afk_timer is None:
+            return
         if self.last_moved == 0 or time.perf_counter() - self.last_moved > SETTINGS.afk_timer:  # 5 min
             logging.info("Moving character...")
             time.sleep(2)
@@ -116,7 +119,10 @@ class Crawler:
             logging.info("Submitting data to API.")
             pending_submissions = APISubmission(
                 price_data=self.final_results,
-                bad_name_data=self.ocr_queue.validator.bad_names
+                bad_name_data=self.ocr_queue.validator.bad_names,
+                resolution=self.resolution.name,
+                price_accuracy=self.ocr_queue.validator.price_accuracy * 100 or 0,
+                name_accuracy=self.ocr_queue.validator.name_accuracy * 100 or 0
             )
             SESSION_DATA.pending_submission_data = pending_submissions
             SESSION_DATA.last_scan_data = pending_submissions

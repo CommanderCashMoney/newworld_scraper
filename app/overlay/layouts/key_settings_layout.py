@@ -4,7 +4,7 @@ from app import events
 from app.settings import SETTINGS
 
 
-def key_settings_layout():
+def settings_layout():
     return [
         [
             sg.Text('Action Key', auto_size_text=True),
@@ -21,6 +21,10 @@ def key_settings_layout():
         [
             sg.Text('Move Backward', auto_size_text=True),
             sg.InputText(key='backward_key', size=(2, 1), default_text=SETTINGS.keybindings.backward_key)
+        ],
+        [
+            sg.Text('Resolution', auto_size_text=True),
+            sg.Combo(["1080p", "1440p"], key='resolution', default_value=SETTINGS.resolution, readonly=True)
         ],
         [
             sg.Button('Save', enable_events=True, key=events.KEYBINDS_SAVED)

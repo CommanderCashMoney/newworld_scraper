@@ -71,7 +71,7 @@ class OCRQueue:
             accuracy_pc = round(accuracy * 100, 1)
             self.update_overlay("accuracy", f"{accuracy_pc}%")
             self.update_overlay("validate_fails", bad_indexes)
-            logging.info(f"Section validated: `{section}`")
+            # logging.info(f"Section validated: `{section}`")
 
         logging.info(f"OCRQueue stopped processing")
 

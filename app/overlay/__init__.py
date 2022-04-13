@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 
 from app import events
-from app.overlay.layouts.key_settings_layout import key_settings_layout
+from app.overlay.layouts.key_settings_layout import settings_layout
 from app.overlay.layouts.login_layout import LOGIN_LAYOUT
 from app.overlay.layouts.scan_info_layout import scan_info_layout
 from app.settings import SETTINGS
@@ -136,8 +136,8 @@ class Overlay:
         x, y = self.window.current_location(more_accurate=True)
         width, height = self.window.size
         window = sg.Window(
-            "Change key bindings",
-            key_settings_layout(),
+            "Settings",
+            settings_layout(),
             use_default_focus=False,
             finalize=True,
             modal=True,
