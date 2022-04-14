@@ -121,8 +121,8 @@ class Crawler:
                 price_data=self.final_results,
                 bad_name_data=self.ocr_queue.validator.bad_names,
                 resolution=self.resolution.name,
-                price_accuracy=self.ocr_queue.validator.price_accuracy * 100 or 0,
-                name_accuracy=self.ocr_queue.validator.name_accuracy * 100 or 0
+                price_accuracy=self.ocr_queue.validator.price_accuracy or 0 * 100,
+                name_accuracy=self.ocr_queue.validator.name_accuracy or 0 * 100
             )
             SESSION_DATA.pending_submission_data = pending_submissions
             SESSION_DATA.last_scan_data = pending_submissions
