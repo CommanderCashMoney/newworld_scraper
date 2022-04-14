@@ -103,6 +103,7 @@ def save(values) -> None:
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
+        SETTINGS.resolution = resolution
     overlay.window.set_alpha(1)
 
 
