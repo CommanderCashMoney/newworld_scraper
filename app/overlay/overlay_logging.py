@@ -46,7 +46,7 @@ class OverlayLoggingHandler(logging.Handler):
                 stream_handler,
                 overlay_handler,
                 file_handler
-            ]
+            ], force=True
         )
 
         logging.info(f"Logging file created at `{target_file}`")
