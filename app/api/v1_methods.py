@@ -66,5 +66,4 @@ def login_completed(response) -> None:
         SESSION_DATA.advanced_user = 'advanced' in access_groups
         if SESSION_DATA.advanced_user:
             OverlayUpdateHandler.visible("advanced")
-            overlay.show_advanced()
         save_username(json_response["username"])
