@@ -94,9 +94,6 @@ class Overlay:
             f"Your version is out of date.\n\nThe latest version is {self.server_version}, you have {my_version}"
         )
 
-    def show_advanced(self):
-        self.window['advanced'].update(visible=True)
-
     def add_names(self, element, vals, size=None):
         self.window[element].update(values=vals, set_to_index=1, size=(35, 6))
         if size:

@@ -25,7 +25,7 @@ class KeyBindings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.2.1"
+    VERSION = "1.2.2"
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     api_username: str = ""
     api_password: str = ""
     resolution: str = Field(default_factory=get_default_resolution_key)
+    disable_afk_timer = False
 
     log_file: str = "logging.txt"
 
@@ -58,7 +59,7 @@ class Settings(BaseSettings):
 
     @property
     def afk_timer(self) -> int:
-        if self.is_dev:
+        if self.disable_afk_timer:
             return None
         return 10 * 60
 
@@ -103,6 +104,7 @@ def save(values) -> None:
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
+        SETTINGS.resolution = resolution
     overlay.window.set_alpha(1)
 
 

@@ -18,6 +18,7 @@ class CurrentData(BaseModel):
     server_id: str = None
     test_run: bool = True
     auto_sections: bool = True  # doesn't do anything atm
+    advanced_user: bool = False
     access_token: str = ""
     refresh_token: str = ""
 

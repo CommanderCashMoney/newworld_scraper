@@ -139,7 +139,7 @@ res_1080p = Resolution(
     refresh_button=ImageReference(screen_bbox=(1163, 676, 120, 19), file_name="refresh_btn.png", min_conf=0.95),
     next_page_coords=(1802, 227),
     pages_bbox=(1748, 217, 30, 17),
-    items_bbox=(691, 316, 1129, 696),
+    items_bbox=(691, 320, 1129, 696),
     items_bbox_last=(691, 896, 1129, 153),
     tp_row_height=79*2.5,
     tp_name_col_x_coords=(0, 275),

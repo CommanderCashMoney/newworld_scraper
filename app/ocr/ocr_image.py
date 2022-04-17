@@ -56,7 +56,6 @@ class OCRImage:
             x_start, x_end = values["coords"]
             config = values["config"]
             img_cropped = img.crop((x_start * 2.5, 0, x_end * 2.5, img.height))
-            # img_cropped.show()
             broken_up_images.append((name, config, img_cropped))
         # concurrently execute pytesseract
         with ThreadPoolExecutor(max_workers=len(columns)) as executor:

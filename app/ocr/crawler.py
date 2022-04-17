@@ -121,8 +121,8 @@ class Crawler:
                 price_data=self.final_results,
                 bad_name_data=self.ocr_queue.validator.bad_names,
                 resolution=self.resolution.name,
-                price_accuracy=self.ocr_queue.validator.price_accuracy * 100 or 0,
-                name_accuracy=self.ocr_queue.validator.name_accuracy * 100 or 0
+                price_accuracy=(self.ocr_queue.validator.price_accuracy or 0) * 100,
+                name_accuracy=(self.ocr_queue.validator.name_accuracy or 0) * 100
             )
             SESSION_DATA.pending_submission_data = pending_submissions
             SESSION_DATA.last_scan_data = pending_submissions
@@ -189,10 +189,9 @@ class Crawler:
         self.reset_ui_state()
 
     def reset_ui_state(self) -> None:
-        OverlayUpdateHandler.visible("advanced", visible=True)
+        OverlayUpdateHandler.visible("advanced", visible=SESSION_DATA.advanced_user)
         OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
         OverlayUpdateHandler.enable(events.RUN_BUTTON)
-        # todo: need to check this actually works
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
 
     @property
