@@ -179,7 +179,7 @@ class Crawler:
         self._stop_reason = reason
         self._cancelled = True
         while wait_for_death and self.crawler_thread.is_alive():
-            logging.info("Stopping crawler - waiting to die.")
+            logging.info(f"Stopping crawler - {reason} - waiting to die.")
             time.sleep(1)
 
         if is_error:
