@@ -51,7 +51,8 @@ class SectionCrawler:
         bring_new_world_to_foreground()
         if not self.look_for_tp():
             logging.error("Couldn't find TP")
-            self.parent.stop(reason="trading post could not be found.")
+            self.parent.stop(reason="trading post could not be found.", wait_for_death=False)
+            return
         self.select_section()
         if "Reset" in self.section:
             return
@@ -61,7 +62,7 @@ class SectionCrawler:
             self.pages = min(self.pages, pages_to_parse)
         success = self.crawl_section()
         if not self.stopped and not success:
-            self.parent.stop(f"something is wrong - couldn't find any items at all in section {self.section}")
+            self.parent.stop(f"Couldn't find any items at all in section {self.section}", wait_for_death=False)
         else:
             logging.info(f"Crawl for section {self.section} complete.")
 
@@ -73,7 +74,7 @@ class SectionCrawler:
             if self.stopped:
                 return False
             if not self.next_page():
-                self.parent.stop("Couldn't find TP.")
+                self.parent.stop("Couldn't find TP.", wait_for_death=False)
                 return False
         OverlayUpdateHandler.update("pages_left", "-")
         self.parent.ocr_queue.notify_section_complete()
