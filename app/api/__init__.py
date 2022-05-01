@@ -56,7 +56,7 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
             requests.get(update_server_url, headers={
                 'Authorization': f'Bearer {SESSION_DATA.access_token}',
                 'Content-Type': "application/json"
-            }, timeout=0.001)  # small timeout - immediately detach from this request - we don't care
+            })
         except requests.exceptions.ReadTimeout:
             pass
         logging.debug("Prices submitted.")
