@@ -32,6 +32,7 @@ class SectionCrawler:
         self.current_page = 1
         self.scroll_state = ScrollState.top
         self.section_images_count = 0
+        self.load_fail_count = 0
 
     def __str__(self) -> str:
         return f"{self.section}: Page {self.current_page} / {self.pages}"
@@ -70,7 +71,9 @@ class SectionCrawler:
         for i in range(self.pages):
             if self.stopped:
                 break
-            self.crawl_page()
+            crawl_success = self.crawl_page()
+            if not crawl_success and self.load_fail_count > 4:
+                return True
             if self.stopped:
                 return False
             if not self.next_page():
@@ -182,10 +185,16 @@ class SectionCrawler:
 
         for attempt in range(30):
             if scroll_ref.compare_image_reference():
+                self.load_fail_count = 0
                 return True
             time.sleep(0.1)
         if self.current_page != self.pages:
             logging.error(f'Took too long waiting for page to load {self}, skipping page.')
+            self.load_fail_count += 1
+            if self.load_fail_count > 4:
+                logging.error(f'Too many page load fails, moving to next section. Failed at {self}')
+            print(f'load fail count: {self.load_fail_count}')
+
         return False
 
     def wait_for_load(self):
