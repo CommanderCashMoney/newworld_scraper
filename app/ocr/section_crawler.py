@@ -193,8 +193,6 @@ class SectionCrawler:
             self.load_fail_count += 1
             if self.load_fail_count > 4:
                 logging.error(f'Too many page load fails, moving to next section. Failed at {self}')
-            print(f'load fail count: {self.load_fail_count}')
-
         return False
 
     def wait_for_load(self):
