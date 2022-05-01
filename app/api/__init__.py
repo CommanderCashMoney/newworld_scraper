@@ -34,7 +34,7 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
     my_tz = get_localzone().zone
 
     try:
-        r = requests.post(url, timeout=200, data=json.dumps({
+        r = requests.post(url, data=json.dumps({
             "version": SETTINGS.VERSION,
             "price_data": price_data,
             "server_id": SESSION_DATA.server_id,
@@ -51,6 +51,14 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
 
     success = r is not None and r.status_code == 201
     if success:
+        update_server_url = urljoin(SETTINGS.base_web_url, f"api/update-server-prices/{SESSION_DATA.server_id}/")
+        try:
+            requests.get(update_server_url, headers={
+                'Authorization': f'Bearer {SESSION_DATA.access_token}',
+                'Content-Type': "application/json"
+            }, timeout=0.001)  # small timeout - immediately detach from this request - we don't care
+        except requests.exceptions.ReadTimeout:
+            pass
         logging.debug("Prices submitted.")
     else:
         logging.error("Price submission failed")

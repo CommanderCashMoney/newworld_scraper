@@ -25,7 +25,6 @@ class APISubmission:
             self.price_data.clear()
         if not self.submit_success:
             OverlayUpdateHandler.visible(events.RESEND_DATA, visible=True)
-            logging.info("Data sending success.")
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=True)
         OverlayUpdateHandler.visible(events.CHANGE_KEY_BINDS, visible=True)
 
