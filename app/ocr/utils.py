@@ -118,17 +118,11 @@ class Screenshot:
             cv2.imwrite(file_path, self.img_array)
 
 
-def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None, scaling_factor=1) -> Screenshot:
+def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None) -> Screenshot:
     """Return a bbox as an RGB array. save_to has a high performance cost."""
-    with mss.mss() as sct:
-        sct_img = sct.grab({
-            "top": int(top*scaling_factor),
-            "left": int(left*scaling_factor),
-            "width": int(width*scaling_factor),
-            "height": int(height*scaling_factor)
-        })
-
-        ss = Screenshot(np.asarray(sct_img))
+    sct_img = capture_screen().img_array
+    sct_img = sct_img[top:top+height, left:left+width]
+    ss = Screenshot(sct_img)
 
     if save_to:
         ss.save_image(save_to)
@@ -139,9 +133,13 @@ def capture_screen(save_to: str = None) -> Screenshot:
     """Return entire screen as an RGB array. save_to has a high performance cost."""
     with mss.mss() as sct:
         monitor = sct.monitors[1]
-
         sct_img = sct.grab(monitor)
-        ss = Screenshot(np.asarray(sct_img))
+        img = np.asarray(sct_img.raw)
+        if(img.shape[1] > 2560):
+            img = cv2.resize(img, (2560, 1440), cv2.INTER_AREA) # always to 2k
+        #print(f"img.shape {img.shape}")
+        ss = Screenshot(img)
+        #cimg = sct_img[top:top+height, left:left+width]
 
     if save_to:
         ss.save_image(save_to)

@@ -1,5 +1,5 @@
 from pprint import pprint
-from .utils import get_screenshot_bbox, get_capture_screen
+from .utils import get_grab
 
 from app.ocr.ocr_image import OCRImage
 from app.ocr import resolution_settings
@@ -10,7 +10,7 @@ from app.ocr.section_crawler import SectionCrawler
 def test_resolution_2k_crawler(monkeypatch):
     res = resolution_settings.resolutions["1440p"]
     with monkeypatch.context() as m:
-        m.setattr('app.ocr.section_crawler.screenshot_bbox', get_screenshot_bbox('trading_2k-all_items.jpg', True))
+        m.setattr('mss.base.MSSBase.grab', get_grab('trading_2k-all_items.jpg'))
 
         section = SectionCrawler(None, res.sections['Ammunition'])
         pages = section.get_current_screen_page_count()
@@ -19,8 +19,7 @@ def test_resolution_2k_crawler(monkeypatch):
 def test_resolution_2k_scrolls(monkeypatch):
     res = resolution_settings.resolutions["1440p"]
     with monkeypatch.context() as m:
-        m.setattr('app.ocr.resolution_settings.screenshot_bbox', get_screenshot_bbox('trading_2k-all_items.jpg'))
-        m.setattr('app.ocr.resolution_settings.capture_screen', get_capture_screen('trading_2k-all_items.jpg'))
+        m.setattr('mss.base.MSSBase.grab', get_grab('trading_2k-all_items.jpg'))
         scroll_ref = res.top_scroll
         assert scroll_ref.compare_image_reference(), "should know its at top scroll"
 
@@ -33,18 +32,15 @@ def test_resolution_2k_scrolls(monkeypatch):
     '''
 
     with monkeypatch.context() as m:
-        m.setattr('app.ocr.resolution_settings.screenshot_bbox', get_screenshot_bbox('trading_2k-low_scroll.jpg'))
-        m.setattr('app.ocr.resolution_settings.capture_screen', get_capture_screen('trading_2k-low_scroll.jpg'))
+        m.setattr('mss.base.MSSBase.grab', get_grab('trading_2k-low_scroll.jpg'))
         scroll_ref = res.bottom_scroll
         assert scroll_ref.compare_image_reference(), "should know its at bottom scroll"
 
 def test_resolution_2k_postfind(monkeypatch):
     res = resolution_settings.resolutions["1440p"]
     with monkeypatch.context() as m:
-        m.setattr('app.ocr.resolution_settings.screenshot_bbox', get_screenshot_bbox('trading_2k-all_items.jpg'))
-        m.setattr('app.ocr.resolution_settings.capture_screen', get_capture_screen('trading_2k-all_items.jpg'))
+        m.setattr('mss.base.MSSBase.grab', get_grab('trading_2k-all_items.jpg'))
         trading_post_ref = res.trading_post
         assert trading_post_ref.compare_image_reference(), "could not find trading post"
-
 
 
