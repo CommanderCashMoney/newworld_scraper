@@ -118,14 +118,14 @@ class Screenshot:
             cv2.imwrite(file_path, self.img_array)
 
 
-def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None) -> Screenshot:
+def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None, scaling_factor=1) -> Screenshot:
     """Return a bbox as an RGB array. save_to has a high performance cost."""
     with mss.mss() as sct:
         sct_img = sct.grab({
-            "top": top,
-            "left": left,
-            "width": width,
-            "height": height
+            "top": int(top*scaling_factor),
+            "left": int(left*scaling_factor),
+            "width": int(width*scaling_factor),
+            "height": int(height*scaling_factor)
         })
 
         ss = Screenshot(np.asarray(sct_img))

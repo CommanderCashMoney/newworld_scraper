@@ -1,11 +1,13 @@
 from typing import Dict, Tuple
 
 import cv2
-from pydantic import BaseModel
+import numpy as np
+from pydantic import BaseModel, create_model
 
-from app.ocr.utils import screenshot_bbox
+from app.ocr.utils import screenshot_bbox, capture_screen
 from app.utils import resource_path
 
+DEBUG=False
 
 class ImageReference(BaseModel):
     screen_bbox: Tuple[int, int, int, int]
@@ -13,15 +15,27 @@ class ImageReference(BaseModel):
     min_conf: float
 
     def compare_image_reference(self) -> bool:
-        from app.settings import SETTINGS
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
+        res = get_resolution_obj()
         reference_grab = screenshot_bbox(*self.screen_bbox).img_array
-        reference_image_file = resource_path(f"app/images/new_world/{SETTINGS.resolution}/{self.file_name}")
+        reference_image_file = resource_path(f"app/images/new_world/{res.name}/{self.file_name}")
         reference_img = cv2.imread(reference_image_file)
-        img_gray = cv2.cvtColor(reference_img, cv2.COLOR_BGR2GRAY)
-        img_grab_gray = cv2.cvtColor(reference_grab, cv2.COLOR_BGR2GRAY)
-        res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
+        img_gray = cv2.cvtColor(reference_img, cv2.COLOR_BGR2GRAY) # small ref
+        img_grab_gray = cv2.cvtColor(reference_grab, cv2.COLOR_BGR2GRAY) # screenshot
+
+        res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED, self.screen_bbox)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+        if DEBUG:
+            loc = np.where(res >= self.min_conf)
+            h, w = img_gray.shape
+            for pt in zip(*loc[::-1]):
+                left, top = pt
+                cv2.rectangle(img_grab_gray, (left, top), (left + w, top + h), (255, 255, 255), 2)
+                print(f"Found at {pt} -> {(left+w, top+h)}")
+            cv2.imshow('actual', img_grab_gray)
+            #cv2.imshow('expected', img_gray)
+            cv2.waitKey(0)
         return max_val > self.min_conf
 
     @property
@@ -178,10 +192,12 @@ res_1080p = Resolution(
     }
 )
 
+res_2160p = res_1440p.copy(update={'name': '2160p'}, deep=True)
 
 resolutions = {
     "1080p": res_1080p,
-    "1440p": res_1440p
+    "1440p": res_1440p,
+    "2160p": res_2160p
 }
 
 
