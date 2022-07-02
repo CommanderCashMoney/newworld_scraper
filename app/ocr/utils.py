@@ -134,7 +134,12 @@ def capture_screen(save_to: str = None) -> Screenshot:
     with mss.mss() as sct:
         monitor = sct.monitors[1]
         sct_img = sct.grab(monitor)
-        img = np.asarray(sct_img.raw)
+        print(sct_img)
+        print(type(sct_img.raw))
+        if(hasattr(sct_img, 'mock')):
+            img = np.asarray(sct_img.raw)
+        else:
+            img = np.asarray(sct_img)
         if(img.shape[1] > 2560):
             img = cv2.resize(img, (2560, 1440), cv2.INTER_AREA) # always to 2k
         #print(f"img.shape {img.shape}")

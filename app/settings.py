@@ -6,6 +6,7 @@ from typing import Dict
 
 from pydantic import BaseSettings, Field, root_validator
 
+from app import __VERSION__
 from app.utils.resolution import get_default_resolution_key
 
 APP_DATA_FOLDER = Path(os.getenv("APPDATA")) / "Cash Money Development" / "Trading Post Scraper"
@@ -25,7 +26,7 @@ class KeyBindings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.2.5"
+    VERSION = __VERSION__
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
