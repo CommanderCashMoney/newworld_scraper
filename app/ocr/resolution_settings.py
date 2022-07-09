@@ -78,6 +78,55 @@ class Resolution(BaseModel):
     def __str__(self) -> str:
         return f"<Resolution: {self.name}>"
 
+res_2160p = Resolution(
+    name="2160p",
+    trading_post=ImageReference(screen_bbox=(678, 55, 216, 63), file_name="trading_post_label.png", min_conf=0.92),
+    top_scroll=ImageReference(screen_bbox=(3652, 615, 62, 41), file_name="top_of_scroll.png", min_conf=0.95),
+    mid_scroll=ImageReference(screen_bbox=(3655, 965, 62, 42), file_name="mid_scroll_bottom.png", min_conf=0.95),
+    bottom_scroll=ImageReference(screen_bbox=(3653, 2066, 58, 37), file_name="bottom_of_scroll_bottom.png", min_conf=0.95),
+    cancel_button=ImageReference(screen_bbox=(1112, 1495, 788, 139), file_name="cancel_btn.png", min_conf=0.95),
+    refresh_button=ImageReference(screen_bbox=(2260, 1216, 452, 122), file_name="refresh_btn.png", min_conf=0.95),
+    next_page_coords=(3607, 456),
+    pages_bbox=(3502, 435, 54, 30),
+    items_bbox=(1239, 435, 2423, 30),
+    items_bbox_last=(1239, 435, 2423, 30),
+    tp_row_height=512,
+    tp_name_col_x_coords=(3502, 1929),
+    tp_price_col_x_coords=(3502, 2213),
+    tp_avail_col_x_coords=(3502, 3134),
+    tp_tier_col_x_coords=(3502, 2335),
+    tp_gs_col_x_coords=(3502, 2456),
+    tp_gem_col_x_coords=(3502, 2593),
+    tp_perk_col_x_coords=(3502, 2827),
+    tp_rarity_col_x_coords=(3502, 3007),
+    tp_location_col_x_coords=(3502, 3502),
+    first_item_listing_bbox=(1244, 637, 2395, 149),
+    mouse_scroll_loc=(3688, 1598),
+    sections={
+           'Resources Reset 0': (249, 1206),
+           'Raw Resources': (485, 726),
+           'Resources Reset 1': (249, 1206),
+           'Refined Resources': (472, 1283),
+           'Resources Reset 2': (249, 1206),
+           'Cooking Ingredients': (491, 1062),
+           'Resources Reset 3': (249, 1206),
+           'Craft Mods': (486, 1495),
+           'Resources Reset 4': (249, 1206),
+           'Components': (486, 1390),
+           'Resources Reset 5': (249, 1206),
+           'Potion Reagents': (469, 958),
+           'Resources Reset 6': (249, 1206),
+           'Dyes': (471, 1170),
+           'Resources Reset 7': (249, 1206),
+           'Azoth': (482, 1596),
+           'Resources Reset 8': (249, 1206),
+           'Arcana': (456, 848),
+           'Consumables': (252, 1343),
+           'Ammunition': (252, 1497),
+           'House Furnishings': (257, 1639)
+    }
+)
+
 
 res_1440p = Resolution(
     name="1440p",
@@ -181,7 +230,8 @@ res_1080p = Resolution(
 
 resolutions = {
     "1080p": res_1080p,
-    "1440p": res_1440p
+    "1440p": res_1440p,
+    "2160p": res_2160p,
 }
 
 

@@ -1,12 +1,15 @@
 from typing import Any, Callable, Tuple
 
 import pynput
+import time
 
 from app.ocr.utils import capture_screen, screenshot_bbox
 from app.utils.mouse import mouse
+from app.utils.resolution import get_resolution
 
 IS_WAITING_FOR_PRESS = False
 PRESSED = False
+RESOLUTION = None
 
 
 def key_pressed(key):
@@ -21,6 +24,7 @@ def key_pressed(key):
 
 listener = pynput.keyboard.Listener(on_press=key_pressed)
 listener.start()
+width, height = get_resolution()
 
 
 def wait_for_key_press() -> None:
@@ -46,7 +50,9 @@ def ask_for_area(for_area: str, capture=True) -> Tuple[Tuple[int, int, int, int]
     pos1 = ask_with_callback(get_mouse_pos, f"Please hover top left of {for_area} and press Numpad -")
     pos2 = ask_with_callback(get_mouse_pos, f"Please hover bottom right of {for_area} and press Numpad -")
     # left, top, width, height
+    print(f"one {pos1} two {pos2}")
     region = pos1[0], pos1[1], pos2[0] - pos1[0], pos2[1] - pos1[1]
+
     # top, left
     # (2233, 287, 140, 32)
     if capture:
@@ -58,19 +64,18 @@ def request_crop_of(file_name: str, descriptor: str = None, move_and_wait=False,
     if descriptor is None:
         descriptor = file_name
 
-    base = "app/images/new_world/1080p"
+    base = f"app/images/new_world/{RESOLUTION}"
 
     area, screenshot = ask_for_area(descriptor, capture=capture)
     if move_and_wait:
-        print("Please move your mouse away from the area so nothing is highlighted, then press -")
-        wait_for_key_press()
-        screenshot = capture_screen()
-        image = screenshot.get_image(pil_high_quality=True)
-        # convert area... left, upper, right, and lower pixel
-        pil_area = (area[0], area[1], area[0] + area[2], area[1] + area[3])
-        image = image.crop(pil_area)
-    else:
-        image = screenshot.get_image(pil_high_quality=True)
+        #print("Please move your mouse away from the area so nothing is highlighted, then press -")
+        old_pos = get_mouse_pos()
+        #wait_for_key_press()
+        mouse.position = (width-1, height-1)
+        time.sleep(0.1)
+        screenshot = screenshot_bbox(*area)
+        mouse.position = old_pos
+    image = screenshot.get_image(pil_high_quality=True)
 
     if capture:
         image.show()
@@ -88,9 +93,8 @@ def get_absolute_left_and_right_column_coords(descriptor: str, pg_bbox: Tuple[in
     point2 = ask_for_location(f"Please move your mouse to the right of the {descriptor} column")
     return max(point1[0], pg_bbox[0]), min(point2[0], pg_bbox[0])
 
-pages_bbox, _ = ask_for_area("The bounding box of the number of pages", capture=False)
-print(pages_bbox)
-exit()
+RESOLUTION = "2160p"# input("Enter resolution to be captured: ")
+
 
 trading_post = request_crop_of("trading_post_label.png", "Trading Post Label")
 top_scroll = request_crop_of("top_of_scroll.png", "Top of Scroll", move_and_wait=True)
@@ -140,7 +144,8 @@ house_furnishings = ask_for_location("house_furnishings")
 
 
 print(f"""
-res_1080p = Resolution(
+res_{RESOLUTION} = Resolution(
+    name="{RESOLUTION}",
     trading_post=ImageReference(screen_bbox={trading_post}, file_name="trading_post_label.png", min_conf=0.92),
     top_scroll=ImageReference(screen_bbox={top_scroll}, file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox={mid_scroll}, file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -163,7 +168,7 @@ res_1080p = Resolution(
     tp_location_col_x_coords={tp_location_col_x_coords},
     first_item_listing_bbox={first_item_listing_bbox},
     mouse_scroll_loc={mouse_scroll_loc},
-    sections=
+    sections={{
            'Resources Reset 0': {resources},
            'Raw Resources': {raw_resources},
            'Resources Reset 1': {resources},
@@ -185,6 +190,6 @@ res_1080p = Resolution(
            'Consumables': {consumables},
            'Ammunition': {ammo},
            'House Furnishings': {house_furnishings}
-       ,
+    }}
 )
 """)

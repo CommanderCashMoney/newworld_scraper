@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 
 from app import events
 from app.settings import SETTINGS
+from app.ocr import resolution_settings
 
 
 def settings_layout():
@@ -24,7 +25,7 @@ def settings_layout():
         ],
         [
             sg.Text('Resolution', auto_size_text=True),
-            sg.Combo(["1080p", "1440p"], key='resolution', default_value=SETTINGS.resolution, readonly=True)
+            sg.Combo(list(resolution_settings.resolutions.keys()), key='resolution', default_value=SETTINGS.resolution, readonly=True)
         ],
         [
             sg.Button('Save', enable_events=True, key=events.KEYBINDS_SAVED)

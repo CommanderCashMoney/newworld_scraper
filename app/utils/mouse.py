@@ -1,9 +1,10 @@
 import time
 
 import pynput
+from .resolution import get_resolution
 
 mouse = pynput.mouse.Controller()
-screen_center = (1200, 700)  # todo: dynamic
+screen_center = tuple(map(lambda x: x/2, get_resolution()))
 
 
 def click(btn, pos=screen_center, hold=0):

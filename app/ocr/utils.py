@@ -17,7 +17,11 @@ INTEGERS_ONLY_CONFIG = """--psm 6 -c tessedit_char_whitelist="0123456789\""""
 
 
 def get_txt_from_im(name: str, config: str, cropped: np.array) -> str:
-    data = pytesseract.image_to_data(cropped, output_type=pytesseract.Output.DICT, config=config)
+    try:
+        data = pytesseract.image_to_data(cropped, output_type=pytesseract.Output.DICT, config=config)
+    except Exception as e:
+        cv2.imshow('get_txt_from_im error', cropped)
+        raise e
     data["column_name"] = name
     return data
 
