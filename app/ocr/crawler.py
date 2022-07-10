@@ -124,6 +124,7 @@ class Crawler:
                 price_accuracy=(self.ocr_queue.validator.price_accuracy or 0) * 100,
                 name_accuracy=(self.ocr_queue.validator.name_accuracy or 0) * 100
             )
+            logging.debug(pending_submissions)
             SESSION_DATA.pending_submission_data = pending_submissions
             SESSION_DATA.last_scan_data = pending_submissions
             self.send_pending_submissions()

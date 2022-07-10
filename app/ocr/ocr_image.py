@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 import cv2
+import logging
 from PIL import Image
 
 from app.ocr.resolution_settings import get_resolution_obj
@@ -47,7 +48,8 @@ class OCRImage:
             }
         }
         results = []
-        img_arr = pre_process_listings_image(self.original_image)
+        scale = 2.5
+        img_arr = pre_process_listings_image(self.original_image, scale)
         img = Image.fromarray(img_arr)
         results.append([])
         broken_up_images = []
@@ -55,7 +57,9 @@ class OCRImage:
         for name, values in columns.items():
             x_start, x_end = values["coords"]
             config = values["config"]
-            img_cropped = img.crop((x_start * 2.5, 0, x_end * 2.5, img.height))
+            l, t, w, h = map(int, (x_start*scale, 0, x_end*scale, img.height))
+            w = l+w if l+w <= img.size[0] else img.size[0]
+            img_cropped = img.crop((l, t, w, h))
             broken_up_images.append((name, config, img_cropped))
         # concurrently execute pytesseract
         with ThreadPoolExecutor(max_workers=len(columns)) as executor:

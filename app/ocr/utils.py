@@ -20,7 +20,8 @@ def get_txt_from_im(name: str, config: str, cropped: np.array) -> str:
     try:
         data = pytesseract.image_to_data(cropped, output_type=pytesseract.Output.DICT, config=config)
     except Exception as e:
-        cv2.imshow('get_txt_from_im error', cropped)
+        logging.debug(f"Failed parsing {name}")
+        cropped.show()
         raise e
     data["column_name"] = name
     return data
