@@ -88,7 +88,7 @@ def draw_1440():
 
 
 def draw_2160():
-    s_path = get_resource('trading_4k.jpg')
+    s_path = get_resource('trading_4k-new.jpg')
     img = cv2.imread(s_path)
 
     img = draw_resolution(res_2160p, img)
@@ -98,6 +98,7 @@ def draw_2160():
 
 
 if __name__ == '__main__':
-    draw_1440()
+    print("This tool is for visually sanity checking your bounds")
+    #draw_1440()
     draw_2160()
     cv2.waitKey(0)

@@ -94,7 +94,7 @@ def get_absolute_left_and_right_column_coords(descriptor: str, pg_bbox: Tuple[in
     return max(point1[0], pg_bbox[0]), min(point2[0], pg_bbox[0])
 
 RESOLUTION = "2160p"# input("Enter resolution to be captured: ")
-print(f"warning - this does not get the items/cols correctly and i haven't fixed it")
+print(f"warning - this does not get the items/cols correctly and no one has fixed it")
 print('exiting')
 exit()
 

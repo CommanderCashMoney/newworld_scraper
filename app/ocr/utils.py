@@ -133,7 +133,13 @@ def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str =
             "height": height
         })
 
-        ss = Screenshot(np.asarray(sct_img))
+        # a hack due to np bug with __array_interface__
+        if hasattr(sct_img, 'mock'):
+            img = np.asarray(sct_img.raw)
+        else:
+            img = np.asarray(sct_img)
+
+        ss = Screenshot(img)
 
     if save_to:
         ss.save_image(save_to)
@@ -146,7 +152,13 @@ def capture_screen(save_to: str = None) -> Screenshot:
         monitor = sct.monitors[1]
 
         sct_img = sct.grab(monitor)
-        ss = Screenshot(np.asarray(sct_img))
+        # a hack due to np bug with __array_interface__
+        if hasattr(sct_img, 'mock'):
+            img = np.asarray(sct_img.raw)
+        else:
+            img = np.asarray(sct_img)
+
+        ss = Screenshot(img)
 
     if save_to:
         ss.save_image(save_to)

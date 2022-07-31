@@ -91,7 +91,7 @@ res_2160p = Resolution(
     pages_bbox=(3503, 437, 52, 28),
     items_bbox=(1390, 669, 2260, 1430),
     items_bbox_last=(1390, 1830, 2260, 260),
-    tp_row_height=150*2,
+    tp_row_height=256*1.5,  # 1080p x 1.5
 
     tp_name_col_x_coords=(0, 550-5),
     tp_price_col_x_coords=(550, 830-550-5),

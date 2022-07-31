@@ -1,5 +1,6 @@
 from pathlib import Path
 from PIL import Image
+from io import BytesIO
 import mss
 from mss.screenshot import ScreenShot as mssScreenShot
 
@@ -23,7 +24,12 @@ def get_grab(image_path):
     def grab(self, monitor):
         img = Image.open(image_path)
         w, h = img.size
-        monitor = dict(left=0, top=0, width=w, height=h)
+        # default to full size
+        if monitor['width'] > w:
+            monitor['width'] = w
+        if monitor['height'] > w:
+            monitor['height'] = w
+
         return MockScreenShot(img, monitor, size=mss.models.Size(w, h))
 
-    return
+    return grab
