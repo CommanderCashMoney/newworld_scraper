@@ -22,6 +22,12 @@ class ImageReference(BaseModel):
         img_grab_gray = cv2.cvtColor(reference_grab, cv2.COLOR_BGR2GRAY)
         res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        # if max_val < self.min_conf:
+        #     logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
+        #     bpc = SETTINGS.temp_app_data
+        #     cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
+
+
         return max_val > self.min_conf
 
     @property
@@ -131,7 +137,7 @@ res_1440p = Resolution(
 
 res_1080p = Resolution(
     name="1080p",
-    trading_post=ImageReference(screen_bbox=(338, 32, 96, 24), file_name="trading_post_label.png", min_conf=0.92),
+    trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.92),
     top_scroll=ImageReference(screen_bbox=(1833, 314, 18, 19), file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.95),
     bottom_scroll=ImageReference(screen_bbox=(1835, 1031, 13, 19), file_name="bottom_of_scroll_bottom.png", min_conf=0.95),
