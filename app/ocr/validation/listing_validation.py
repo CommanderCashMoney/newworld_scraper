@@ -70,6 +70,10 @@ class ListingValidator:
     def validate_quantity(self) -> bool:
         qty = self.price_list[self.current_index].get("avail", "1")
         self.price_list[self.current_index]["avail"] = qty
+        if qty.isnumeric():
+            if int(qty) > 10000:
+                return False
+
         return qty.isnumeric()
 
     def validate_name(self) -> bool:

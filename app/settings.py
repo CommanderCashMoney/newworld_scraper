@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     def afk_timer(self) -> int:
         if self.disable_afk_timer:
             return None
-        return 10 * 60
+        return 7 * 60
 
     @property
     def base_web_url(self) -> str:
