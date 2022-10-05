@@ -40,7 +40,7 @@ class Overlay:
             f'Trade Price Scraper - {SETTINGS.VERSION}',
             layout,
             keep_on_top=False,
-            location=(0, 0),
+            location=(150, 150),
             finalize=True,
             use_default_focus=False,
             background_color='red' if SETTINGS.use_dev_colors else None,
