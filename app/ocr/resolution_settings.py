@@ -123,6 +123,8 @@ res_1440p = Resolution(
            'Craft Mods': (368, 990),
            'Resources Reset 8': (170, 796),
            'Azoth': (368, 1068),
+           'Resources Reset 9': (170, 796),
+           'Runeglass Components': (368, 1140),
            'Consumables': (165, 900),
            'Ammunition': (165, 985),
            'House Furnishings': (165, 1091)
@@ -173,6 +175,8 @@ res_1080p = Resolution(
            'Craft Mods': (237, 746),
            'Resources Reset 8': (125, 602),
            'Azoth': (239, 803),
+           'Resources Reset 9': (125, 602),
+           'Runeglass Components': (239, 863),
            'Consumables': (131, 673),
            'Ammunition': (121, 740),
            'House Furnishings': (123, 816)
