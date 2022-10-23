@@ -35,7 +35,7 @@ class CurrentData(BaseModel):
         self.pending_submission_data.submit()
         if self.pending_submission_data.submit_success:
             self.pending_submission_data = None
-        OverlayUpdateHandler.visible(events.RESEND_DATA, visible=self.pending_submission_data is None)
+        # OverlayUpdateHandler.visible(events.RESEND_DATA, visible=self.pending_submission_data is None)
 
     def save_last_scan_data(self, store_in: Path) -> None:
         if self.last_scan_data is None:

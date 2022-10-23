@@ -59,7 +59,7 @@ def scan_info_layout():
                 ])
             )],
         [
-            sg.Button('Resend data', key=events.RESEND_DATA, visible=False),
+            # sg.Button('Resend data', key=events.RESEND_DATA, visible=False),
             sg.pin(
                 sg.Column(
                     key="-SCAN-DATA-COLUMN-",

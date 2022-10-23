@@ -29,6 +29,6 @@ EVENT_MAP = {
     events.CHANGE_KEY_BINDS: popup_keybinds,
     events.KEYBINDS_SAVED: save,
 
-    events.RESEND_DATA: session_data.SESSION_DATA.submit_pending_submission_data,
+    # events.RESEND_DATA: session_data.SESSION_DATA.submit_pending_submission_data,
     events.DOWNLOAD_SCAN_DATA: session_data.save_scan_data,
 }

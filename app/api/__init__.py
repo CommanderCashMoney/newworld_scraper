@@ -51,18 +51,19 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
 
     success = r is not None and r.status_code == 201
     if success:
-        update_server_url = urljoin(SETTINGS.base_web_url, f"api/update-server-prices/{SESSION_DATA.server_id}/")
-        try:
-            requests.get(update_server_url, headers={
-                'Authorization': f'Bearer {SESSION_DATA.access_token}',
-                'Content-Type': "application/json"
-            })
-        except requests.exceptions.ReadTimeout:
-            pass
+        # update_server_url = urljoin(SETTINGS.base_web_url, f"api/update-server-prices/{SESSION_DATA.server_id}/")
+        # try:
+        #     requests.get(update_server_url, headers={
+        #         'Authorization': f'Bearer {SESSION_DATA.access_token}',
+        #         'Content-Type': "application/json"
+        #     })
+        # except requests.exceptions.ReadTimeout:
+        #     pass
         logging.debug("Prices submitted.")
     else:
-        logging.error("Price submission failed")
-        OverlayUpdateHandler.update("status_bar", "Price submissions failed!")
+
+        logging.error("Price submission timed out.")
+        OverlayUpdateHandler.update("status_bar", "Price submissions timed out. Please wait a few minutes and check #scan_notifications")
     return success
 
 
