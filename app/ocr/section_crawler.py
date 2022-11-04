@@ -33,6 +33,7 @@ class SectionCrawler:
         self.scroll_state = ScrollState.top
         self.section_images_count = 0
         self.load_fail_count = 0
+        self.retry_count = 0
 
     def __str__(self) -> str:
         return f"{self.section}: Page {self.current_page} / {self.pages}"
@@ -72,7 +73,8 @@ class SectionCrawler:
             if self.stopped:
                 break
             crawl_success = self.crawl_page()
-            if not crawl_success and self.load_fail_count > 4:
+            if not crawl_success and (self.load_fail_count > 4 or self.retry_count > 4):
+                self.retry_count = 0
                 return True
             if self.stopped:
                 return False
@@ -89,6 +91,9 @@ class SectionCrawler:
         app_data_temp.mkdir(exist_ok=True)
         for _ in ScrollState:
             if self.stopped or not self.check_scrollbar():
+                return False
+            if self.retry_count > 4:
+                logging.error(f'Too many consecutive page resets, skipping to next section.')
                 return False
             self.reset_mouse_position()
             screenshot = self.snap_items()
@@ -141,6 +146,7 @@ class SectionCrawler:
         if refresh_button.compare_image_reference():
             click('left', refresh_button.center)
             logging.info("Clicked Refresh")
+            self.retry_count += 1
             time.sleep(0.1)
 
     def look_for_tp(self) -> bool:
