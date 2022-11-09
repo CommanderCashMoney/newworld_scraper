@@ -16,9 +16,8 @@ def scan_info_layout():
                 [
                     sg.Text('Pages'),
                     sg.InputText(key=events.PAGE_INPUT, size=(4, 1), enable_events=True, default_text=SESSION_DATA.pages),
-                    sg.Checkbox('Automatic Sections', key=events.AUTO_SECTIONS_TOGGLE, default=True, enable_events=True),
                     sg.Text('Server: '),
-                    sg.Combo([0], size=(2, 1), key=events.SERVER_SELECT, enable_events=True, readonly=True)
+                    sg.Combo([0], size=(15, 1), key=events.SERVER_SELECT, enable_events=True, readonly=True)
                 ]
             ]))
         ],

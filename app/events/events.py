@@ -24,7 +24,6 @@ EVENT_MAP = {
     events.USERNAME_INPUT: session_data.update_username,
     events.PASSWORD_INPUT: session_data.update_password,
     events.TEST_RUN_TOGGLE: session_data.update_test_run,
-    events.AUTO_SECTIONS_TOGGLE: session_data.update_auto_sections,
     events.SERVER_SELECT: session_data.update_server_select,
     events.CHANGE_KEY_BINDS: popup_keybinds,
     events.KEYBINDS_SAVED: save,

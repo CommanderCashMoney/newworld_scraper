@@ -60,6 +60,20 @@ def login_completed(response) -> None:
         for group in access_groups:
             if 'server-' in group:
                 server_access_ids.append(group[7:])
+        server_url = urljoin(SETTINGS.base_web_url, "api/servers/")
+        try:
+            r = requests.get(server_url, headers={'Content-Type': 'application/json'})
+        except requests.exceptions.ConnectionError:
+            r = None
+        if r:
+            server_list = json.loads(r.text)
+            for idx, server_id in enumerate(server_access_ids):
+                server_name = server_list[server_id]
+                server_access_ids[idx] = f"{server_id}-{server_name['name']}"
+        else:
+            for idx, server_id in enumerate(server_access_ids):
+                server_access_ids[idx] = f"{server_id}-"
+
         OverlayUpdateHandler.update(events.SERVER_SELECT, server_access_ids)
         update_server_select(server_access_ids[0])
         overlay.show_main()

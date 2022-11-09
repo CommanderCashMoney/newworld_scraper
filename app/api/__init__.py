@@ -32,12 +32,12 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
     from app.overlay.overlay_updates import OverlayUpdateHandler
     url = urljoin(SETTINGS.base_web_url, "/api/scanner_upload/")
     my_tz = get_localzone().zone
-
+    server_id = SESSION_DATA.server_id[:SESSION_DATA.server_id.index("-")]
     try:
         r = requests.post(url, data=json.dumps({
             "version": SETTINGS.VERSION,
             "price_data": price_data,
-            "server_id": SESSION_DATA.server_id,
+            "server_id": server_id,
             "timezone": my_tz,
             "resolution": resolution,
             "price_accuracy": price_accuracy,
