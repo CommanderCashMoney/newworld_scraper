@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
+import logging
 
 
 class ImageReference(BaseModel):
@@ -22,7 +23,11 @@ class ImageReference(BaseModel):
         img_grab_gray = cv2.cvtColor(reference_grab, cv2.COLOR_BGR2GRAY)
         res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
+        # debug version. Enable this
+        if max_val < self.min_conf:
+            logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
+            bpc = SETTINGS.temp_app_data
+            cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
         return max_val > self.min_conf
 
     @property
