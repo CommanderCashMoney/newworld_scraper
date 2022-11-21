@@ -4,11 +4,14 @@ from typing import DefaultDict
 from urllib.parse import urljoin
 
 import requests
+from retry import retry
 from tzlocal import get_localzone
 
 from app.events import VERSION_FETCHED_EVENT
 from app.settings import SETTINGS
 
+class APISubmitError(Exception):
+    pass
 
 def version_endpoint() -> str:
     ep = urljoin(SETTINGS.base_web_url, "api/version/")
@@ -26,59 +29,59 @@ def check_latest_version() -> str:
         return None
     return r.json()
 
-
+@retry(APISubmitError, tries=5, delay=2)
 def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> bool:
     from app.session_data import SESSION_DATA
-    from app.overlay.overlay_updates import OverlayUpdateHandler
+
     url = urljoin(SETTINGS.base_web_url, "/api/scanner_upload/")
     my_tz = get_localzone().zone
-    server_id = SESSION_DATA.server_id[:SESSION_DATA.server_id.index("-")]
+    server_id = SESSION_DATA.server_id[: SESSION_DATA.server_id.index("-")]
     try:
-        r = requests.post(url, data=json.dumps({
-            "version": SETTINGS.VERSION,
-            "price_data": price_data,
-            "server_id": server_id,
-            "timezone": my_tz,
-            "resolution": resolution,
-            "price_accuracy": price_accuracy,
-            "name_accuracy": name_accuracy
-        }, default=str), headers={
-            'Authorization': f'Bearer {SESSION_DATA.access_token}',
-            'Content-Type': "application/json"
-        })
-    except requests.exceptions.ConnectionError:
-        r = None
+        r = requests.post(
+            url,
+            data=json.dumps(
+                {
+                    "version": SETTINGS.VERSION,
+                    "price_data": price_data,
+                    "server_id": server_id,
+                    "timezone": my_tz,
+                    "resolution": resolution,
+                    "price_accuracy": price_accuracy,
+                    "name_accuracy": name_accuracy,
+                },
+                default=str,
+            ),
+            headers={
+                "Authorization": f"Bearer {SESSION_DATA.access_token}",
+                "Content-Type": "application/json",
+            },
+            timeout=300,
+        )
+    except requests.exceptions.ConnectionError as error:
+        logging.exception(error)
+        raise APISubmitError("The API timed out") from error
 
-    success = r is not None and r.status_code == 201
-    if success:
-        # update_server_url = urljoin(SETTINGS.base_web_url, f"api/update-server-prices/{SESSION_DATA.server_id}/")
-        # try:
-        #     requests.get(update_server_url, headers={
-        #         'Authorization': f'Bearer {SESSION_DATA.access_token}',
-        #         'Content-Type': "application/json"
-        #     })
-        # except requests.exceptions.ReadTimeout:
-        #     pass
-        logging.debug("Prices submitted.")
-    else:
+    if r.status_code != 201:
+        raise APISubmitError(f"The API responded with code {r.status_code}")
 
-        logging.error("Price submission timed out.")
-        OverlayUpdateHandler.update("status_bar", "Price submissions timed out. Please wait a few minutes and check #scan_notifications")
-    return success
-
+    logging.debug("Prices submitted.")
 
 def submit_bad_names(bad_names: DefaultDict[str, int]) -> None:
     from app.session_data import SESSION_DATA
+
     url = urljoin(SETTINGS.base_web_url, "/api/submit_bad_names/")
 
     try:
         r = requests.post(
             url,
-            json=[{
-                "bad_name": name,
-                "number_times_seen": seen_no,
-            } for name, seen_no in bad_names.items()],
-            headers={'Authorization': f'Bearer {SESSION_DATA.access_token}'}
+            json=[
+                {
+                    "bad_name": name,
+                    "number_times_seen": seen_no,
+                }
+                for name, seen_no in bad_names.items()
+            ],
+            headers={"Authorization": f"Bearer {SESSION_DATA.access_token}"},
         )
     except requests.exceptions.ConnectionError:
         r = None
@@ -93,4 +96,5 @@ def submit_bad_names(bad_names: DefaultDict[str, int]) -> None:
 
 def perform_latest_version_check() -> str:
     from app.overlay import overlay
+
     overlay.window.perform_long_operation(check_latest_version, VERSION_FETCHED_EVENT)
