@@ -19,6 +19,12 @@ from app.ocr.utils import (
 
 class OCRImage:
     def __init__(self, img_src: Path, section: str) -> None:
+        """An image used for text recognition
+
+        Args:
+            img_src (Path): the path of the file containing the image
+            section (str): the section from which the image was taken
+        """
         self.original_path = img_src
         self.section = section
         path = Path(img_src)
