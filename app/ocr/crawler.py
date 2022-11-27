@@ -113,25 +113,11 @@ class Crawler:
             logging.info("Crawl complete.")
 
         self.wait_for_parse()
-        logging.info("Parsing complete.")
-        should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
-        if should_submit:
-            logging.info("Submitting data to API.")
-            pending_submissions = APISubmission(
-                price_data=self.final_results,
-                bad_name_data=self.ocr_queue.validator.bad_names,
-                resolution=self.resolution.name,
-                price_accuracy=(self.ocr_queue.validator.price_accuracy or 0) * 100,
-                name_accuracy=(self.ocr_queue.validator.name_accuracy or 0) * 100
-            )
-            SESSION_DATA.pending_submission_data = pending_submissions
-            SESSION_DATA.last_scan_data = pending_submissions
-            self.send_pending_submissions()
-            if pending_submissions.submit_success:
-                OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
-            else:
-                OverlayUpdateHandler.update('status_bar', 'API Submit Failed.')
+
+        print(f'2prices from queue {self.ocr_queue.section_results}')  # todo remove this
+        print(f'2pending submissiong data {SESSION_DATA.pending_submission_data.price_data}')
         logging.info("Parsing results complete.")
+        OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.stop(reason="run completed.", wait_for_death=False)
 
     def wait_for_parse(self) -> None:
@@ -143,17 +129,10 @@ class Crawler:
                 logging.debug("Waiting for OCR Queue to finish...")
                 time.sleep(1)
 
-        self.final_results = [
-            {
-                "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
-                "avail": listing["avail"],
-                "price": listing["validated_price"],
-                "timestamp": listing["timestamp"],
-                "name_id": listing["name_id"],
-            }
-            for idx, listing in enumerate(self.ocr_queue.validator.price_list)
-            if idx not in self.ocr_queue.validator.bad_indexes
-        ]
+        print(f'prices from queue {self.ocr_queue.section_results}')  # todo remove this
+        print(f'pending submissiong data {SESSION_DATA.pending_submission_data}')
+        if SESSION_DATA.pending_submission_data:
+            time.sleep(5)
         self.ocr_queue.stop()
         dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
         for filename, info in dict_copy.items():

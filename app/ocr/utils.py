@@ -38,11 +38,11 @@ def parse_page_count(txt: str) -> Tuple[int, bool]:
             try:
                 last_zero = pages_str[:-1].rindex("0")
             except ValueError:
-                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                logging.error(f"Captured page count is greater than 500. Setting to max.")
                 return 500, False
             pages_str = pages_str[last_zero + 1:]
             if not pages_str.isnumeric() or int(pages_str) > 500:
-                logging.error(f"Captured page count is greater than 500. Reverting to 1.")
+                logging.error(f"Captured page count is greater than 500. Setting to max.")
                 return 500, False
         return int(pages_str), True
 
