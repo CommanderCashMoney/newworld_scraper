@@ -28,7 +28,7 @@ class Crawler:
         self.ocr_queue = ocr_queue
         self.ocr_queue.crawler = self
         self.resolution = get_resolution_obj()
-        self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys()]
+        self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys() if SESSION_DATA.scan_sections[k]]
         self.current_section = 0
         self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self._cancelled = False
@@ -96,8 +96,7 @@ class Crawler:
         self.started = time.perf_counter()
         self.timer_thread.start()
         for section_crawler in self.section_crawlers:
-            if "Reset" in section_crawler.section:
-                self.check_move()  # safe because we are about to reset
+            self.check_move()
             if self.stopped:
                 break
             self.current_section += 1
@@ -113,25 +112,10 @@ class Crawler:
             logging.info("Crawl complete.")
 
         self.wait_for_parse()
-        logging.info("Parsing complete.")
-        should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
-        if should_submit:
-            logging.info("Submitting data to API.")
-            pending_submissions = APISubmission(
-                price_data=self.final_results,
-                bad_name_data=self.ocr_queue.validator.bad_names,
-                resolution=self.resolution.name,
-                price_accuracy=(self.ocr_queue.validator.price_accuracy or 0) * 100,
-                name_accuracy=(self.ocr_queue.validator.name_accuracy or 0) * 100
-            )
-            SESSION_DATA.pending_submission_data = pending_submissions
-            SESSION_DATA.last_scan_data = pending_submissions
-            self.send_pending_submissions()
-            if pending_submissions.submit_success:
-                OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
-            else:
-                OverlayUpdateHandler.update('status_bar', 'API Submit Failed.')
+
+
         logging.info("Parsing results complete.")
+        OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.stop(reason="run completed.", wait_for_death=False)
 
     def wait_for_parse(self) -> None:
@@ -143,17 +127,9 @@ class Crawler:
                 logging.debug("Waiting for OCR Queue to finish...")
                 time.sleep(1)
 
-        self.final_results = [
-            {
-                "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
-                "avail": listing["avail"],
-                "price": listing["validated_price"],
-                "timestamp": listing["timestamp"],
-                "name_id": listing["name_id"],
-            }
-            for idx, listing in enumerate(self.ocr_queue.validator.price_list)
-            if idx not in self.ocr_queue.validator.bad_indexes
-        ]
+        if SESSION_DATA.pending_submission_data:
+            # put this wait in here because I was getting a rare bug where it wouldnt submit the last section. This might be not needed.
+            time.sleep(5)
         self.ocr_queue.stop()
         dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
         for filename, info in dict_copy.items():

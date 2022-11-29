@@ -129,12 +129,12 @@ class Overlay:
         if self.spinner_step > 470:
             self.spinner_step = 0
 
-    def popup_keybinds(self):
+    def popup_window(self, layout):
         x, y = self.window.current_location(more_accurate=True)
         width, height = self.window.size
         window = sg.Window(
             "Settings",
-            settings_layout(),
+            layout,
             use_default_focus=False,
             finalize=True,
             modal=True,

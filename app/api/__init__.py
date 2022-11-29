@@ -27,7 +27,7 @@ def check_latest_version() -> str:
     return r.json()
 
 
-def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> bool:
+def submit_price_data(price_data, resolution, price_accuracy, name_accuracy, section_name, session_id) -> bool:
     from app.session_data import SESSION_DATA
     from app.overlay.overlay_updates import OverlayUpdateHandler
     url = urljoin(SETTINGS.base_web_url, "/api/scanner_upload/")
@@ -41,7 +41,9 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
             "timezone": my_tz,
             "resolution": resolution,
             "price_accuracy": price_accuracy,
-            "name_accuracy": name_accuracy
+            "name_accuracy": name_accuracy,
+            "section_name": section_name,
+            "session_id": session_id
         }, default=str), headers={
             'Authorization': f'Bearer {SESSION_DATA.access_token}',
             'Content-Type': "application/json"
@@ -51,14 +53,6 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy) -> 
 
     success = r is not None and r.status_code == 201
     if success:
-        # update_server_url = urljoin(SETTINGS.base_web_url, f"api/update-server-prices/{SESSION_DATA.server_id}/")
-        # try:
-        #     requests.get(update_server_url, headers={
-        #         'Authorization': f'Bearer {SESSION_DATA.access_token}',
-        #         'Content-Type': "application/json"
-        #     })
-        # except requests.exceptions.ReadTimeout:
-        #     pass
         logging.debug("Prices submitted.")
     else:
 

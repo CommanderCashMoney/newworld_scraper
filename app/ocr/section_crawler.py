@@ -56,8 +56,6 @@ class SectionCrawler:
             self.parent.stop(reason="trading post could not be found.", wait_for_death=False)
             return
         self.select_section()
-        if "Reset" in self.section:
-            return
         self.pages = self.get_current_screen_page_count()
         logging.info(f"Found {self.pages} pages for section {self.section}")
         if pages_to_parse:
@@ -161,9 +159,14 @@ class SectionCrawler:
         return False
 
     def select_section(self) -> None:
-        if "RESET" not in self.section:
-            logging.info(f"Selecting new section {self.section}")
-        section_loc = self.resolution.sections[self.section]
+
+        if self.resolution.sections[self.section][1]:
+            # resource reset required
+            click('left', self.resolution.resources_reset_loc)
+            time.sleep(2)
+
+        logging.info(f"Selecting new section {self.section}")
+        section_loc = self.resolution.sections[self.section][0]
         click('left', section_loc)
         time.sleep(2)  # wait
 
