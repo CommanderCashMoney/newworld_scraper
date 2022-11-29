@@ -77,8 +77,6 @@ class OCRQueue:
             self.update_overlay("validate_fails", bad_indexes)
             logging.debug(f"Section validated: `{section}`")
             # SEND SECTION TO API
-            if section == 'Arcana':
-                print('lol')
             should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
             if should_submit:
                 self.section_results = [
@@ -99,7 +97,8 @@ class OCRQueue:
                     resolution=self.crawler.resolution.name,
                     price_accuracy=(self.validator.price_accuracy or 0) * 100,
                     name_accuracy=(self.validator.name_accuracy or 0) * 100,
-                    section_name=section
+                    section_name=section,
+                    session_id=SESSION_DATA.session_hash
                 )
                 SESSION_DATA.pending_submission_data = pending_submissions
                 SESSION_DATA.last_scan_data = pending_submissions

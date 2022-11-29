@@ -8,7 +8,7 @@ from app.api import submit_bad_names, submit_price_data
 
 
 class APISubmission:
-    def __init__(self, price_data: List[dict], bad_name_data: DefaultDict[str, int], resolution: str, price_accuracy: Decimal, name_accuracy: Decimal, section_name) -> None:
+    def __init__(self, price_data: List[dict], bad_name_data: DefaultDict[str, int], resolution: str, price_accuracy: Decimal, name_accuracy: Decimal, section_name, session_id) -> None:
         self.price_data = price_data
         self.bad_name_data = bad_name_data
         self.price_data_archive = deepcopy(price_data)
@@ -16,13 +16,14 @@ class APISubmission:
         self.price_accuracy = price_accuracy
         self.name_accuracy = name_accuracy
         self.section_name = section_name
+        self.session_id = session_id
 
     def submit(self):
         from app.overlay.overlay_updates import OverlayUpdateHandler
         OverlayUpdateHandler.update('status_bar', "Submitting data to API")
         if submit_bad_names(self.bad_name_data):
             self.bad_name_data.clear()
-        if submit_price_data(self.price_data, self.resolution, self.price_accuracy, self.name_accuracy, self.section_name):
+        if submit_price_data(self.price_data, self.resolution, self.price_accuracy, self.name_accuracy, self.section_name, self.session_id):
             self.price_data.clear()
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=True)
         OverlayUpdateHandler.visible(events.CHANGE_KEY_BINDS, visible=True)

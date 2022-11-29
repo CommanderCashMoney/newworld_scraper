@@ -28,7 +28,7 @@ class Crawler:
         self.ocr_queue = ocr_queue
         self.ocr_queue.crawler = self
         self.resolution = get_resolution_obj()
-        self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys()]
+        self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys() if SESSION_DATA.scan_sections[k]]
         self.current_section = 0
         self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self._cancelled = False
@@ -96,8 +96,7 @@ class Crawler:
         self.started = time.perf_counter()
         self.timer_thread.start()
         for section_crawler in self.section_crawlers:
-            if "Reset" in section_crawler.section:
-                self.check_move()  # safe because we are about to reset
+            self.check_move()
             if self.stopped:
                 break
             self.current_section += 1
@@ -114,8 +113,7 @@ class Crawler:
 
         self.wait_for_parse()
 
-        print(f'2prices from queue {self.ocr_queue.section_results}')  # todo remove this
-        print(f'2pending submissiong data {SESSION_DATA.pending_submission_data.price_data}')
+
         logging.info("Parsing results complete.")
         OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.stop(reason="run completed.", wait_for_death=False)
@@ -129,8 +127,6 @@ class Crawler:
                 logging.debug("Waiting for OCR Queue to finish...")
                 time.sleep(1)
 
-        print(f'prices from queue {self.ocr_queue.section_results}')  # todo remove this
-        print(f'pending submissiong data {SESSION_DATA.pending_submission_data}')
         if SESSION_DATA.pending_submission_data:
             time.sleep(5)
         self.ocr_queue.stop()

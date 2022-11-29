@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from enum import Enum
 from pathlib import Path
@@ -106,6 +107,14 @@ def save(values) -> None:
         SETTINGS.keybindings = KeyBindings(**values)
         SETTINGS.resolution = resolution
     overlay.window.set_alpha(1)
+
+
+def save_sections(sections) -> None:
+    from app.overlay import overlay
+    from app.session_data import SESSION_DATA
+    overlay.window.set_alpha(1)
+    SESSION_DATA.scan_sections = sections
+    logging.debug(f'Scan set for: {sections}')
 
 
 def save_username(username) -> None:

@@ -27,7 +27,7 @@ def check_latest_version() -> str:
     return r.json()
 
 
-def submit_price_data(price_data, resolution, price_accuracy, name_accuracy, section_name) -> bool:
+def submit_price_data(price_data, resolution, price_accuracy, name_accuracy, section_name, session_id) -> bool:
     from app.session_data import SESSION_DATA
     from app.overlay.overlay_updates import OverlayUpdateHandler
     url = urljoin(SETTINGS.base_web_url, "/api/scanner_upload/")
@@ -43,6 +43,7 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy, sec
             "price_accuracy": price_accuracy,
             "name_accuracy": name_accuracy,
             "section_name": section_name,
+            "session_id": session_id
         }, default=str), headers={
             'Authorization': f'Bearer {SESSION_DATA.access_token}',
             'Content-Type': "application/json"
