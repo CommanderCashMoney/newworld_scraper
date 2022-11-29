@@ -24,11 +24,10 @@ class CurrentData(BaseModel):
     refresh_token: str = ""
     session_hash: str = ""
     scan_sections: list = res_1440p.sections
-
     current_run_id: str = datetime.now().strftime("%Y%m%d-%H%M%S")
     crawler: "Crawler" = None
     pending_submission_data: APISubmission = None
-    last_scan_data: APISubmission = None
+    last_scan_data: list = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -41,11 +40,11 @@ class CurrentData(BaseModel):
         # OverlayUpdateHandler.visible(events.RESEND_DATA, visible=self.pending_submission_data is None)
 
     def save_last_scan_data(self, store_in: Path) -> None:
-        if self.last_scan_data is None:
+        if not self.last_scan_data:
             logging.error("Trying to save last scan data, but it's not available")  # should never happen
         store_file_path = store_in / datetime.now().strftime("%Y%m%d_%H%M%S.json")
         with store_file_path.open("w") as out_f:
-            json.dump(self.last_scan_data.price_data_archive, out_f, default=str)
+            json.dump(self.last_scan_data, out_f, default=str)
         logging.info(f"Data saved to `{store_file_path}`")
 
     def update_run_id(self) -> None:

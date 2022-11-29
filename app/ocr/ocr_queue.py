@@ -101,7 +101,7 @@ class OCRQueue:
                     session_id=SESSION_DATA.session_hash
                 )
                 SESSION_DATA.pending_submission_data = pending_submissions
-                SESSION_DATA.last_scan_data = pending_submissions
+                SESSION_DATA.last_scan_data.extend(pending_submissions.price_data_archive)
                 self.send_pending_submissions()
                 if pending_submissions.submit_success:
                     logging.info(f"{section} sent sucessfully.")
