@@ -128,6 +128,7 @@ class Crawler:
                 time.sleep(1)
 
         if SESSION_DATA.pending_submission_data:
+            # put this wait in here because I was getting a rare bug where it wouldnt submit the last section. This might be not needed.
             time.sleep(5)
         self.ocr_queue.stop()
         dict_copy = deepcopy(self.ocr_queue.validator.image_accuracy)
