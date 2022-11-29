@@ -26,6 +26,15 @@ class ListingValidator:
         self.last_good_price: Optional[Decimal] = None
         self.field_accuracy = defaultdict(int)
 
+    def empty(self):
+        self.price_list.clear()
+        self.bad_indexes = set()
+        self.current_index = 0
+        self.bad_names = defaultdict(int)
+        self.image_accuracy = defaultdict(lambda: defaultdict(int))  # dict of image file name: image accuracy
+        self.last_good_price: Optional[Decimal] = None
+        self.field_accuracy = defaultdict(int)
+
     def percentage_or_none(self, numerator: float, denominator: float) -> Optional[float]:
         try:
             return numerator / denominator

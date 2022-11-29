@@ -5,7 +5,9 @@ from threading import Thread
 
 from app.ocr.ocr_image import OCRImage
 from app.ocr.validation.listing_validation import ListingValidator
-
+from app.ocr.api_submission_data import APISubmission
+from app.session_data import SESSION_DATA
+from app.settings import SETTINGS
 
 class OCRQueue:
     def __init__(self, overlay_update_handler: "OverlayUpdateHandler" = None) -> None:
@@ -23,6 +25,7 @@ class OCRQueue:
         self.RUN_COMPLETE_EVENT = "FINISHED"
         self.PREMATURELY_STOP_EVENT = "STOP"
         self.ocr_processed_listings = 0
+        self.section_results = []
 
     def update_overlay(self, key, value) -> None:
         if not self.overlay_update_handler:
@@ -62,6 +65,7 @@ class OCRQueue:
                 continue
 
             section = self.to_validate[0]["section"]
+
             self.update_overlay('status_bar', f'Validating section {section}')
             self.validator.validate_section(self.to_validate)
             self.to_validate.clear()
@@ -71,9 +75,51 @@ class OCRQueue:
             accuracy_pc = round(accuracy * 100, 1)
             self.update_overlay("accuracy", f"{accuracy_pc}%")
             self.update_overlay("validate_fails", bad_indexes)
-            # logging.info(f"Section validated: `{section}`")
+            logging.debug(f"Section validated: `{section}`")
+            # SEND SECTION TO API
+            should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
+            if should_submit:
+                self.section_results = [
+                    {
+                        "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
+                        "avail": listing["avail"],
+                        "price": listing["validated_price"],
+                        "timestamp": listing["timestamp"],
+                        "name_id": listing["name_id"],
+                    }
+                    for idx, listing in enumerate(self.validator.price_list)
+                    if idx not in self.validator.bad_indexes
+                ]
+                logging.info(f"Submitting {section} data to API.")
+                pending_submissions = APISubmission(
+                    price_data=self.section_results,
+                    bad_name_data=self.validator.bad_names,
+                    resolution=self.crawler.resolution.name,
+                    price_accuracy=(self.validator.price_accuracy or 0) * 100,
+                    name_accuracy=(self.validator.name_accuracy or 0) * 100,
+                    section_name=section,
+                    session_id=SESSION_DATA.session_hash
+                )
+                SESSION_DATA.pending_submission_data = pending_submissions
+                SESSION_DATA.last_scan_data.extend(pending_submissions.price_data_archive)
+                self.send_pending_submissions()
+                if pending_submissions.submit_success:
+                    logging.info(f"{section} sent sucessfully.")
+                else:
+                    logging.info(f"{section} failed to send.")
+                self.validator.empty()
+
+
+
+
+
 
         logging.info(f"OCRQueue stopped processing")
+
+    def send_pending_submissions(self) -> None:
+        submission_data = SESSION_DATA.pending_submission_data
+        submission_data.submit()
+        # OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-")
 
     def start(self) -> None:
         if not self._processing_thread.is_alive():

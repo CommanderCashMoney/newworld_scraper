@@ -24,10 +24,10 @@ class ImageReference(BaseModel):
         res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         # debug version. Enable this
-        if max_val < self.min_conf:
-            logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
-            bpc = SETTINGS.temp_app_data
-            cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
+        # if max_val < self.min_conf:
+        #     logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
+        #     bpc = SETTINGS.temp_app_data
+        #     cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
         return max_val > self.min_conf
 
     @property
@@ -55,7 +55,8 @@ class ImageReference(BaseModel):
 
 class Resolution(BaseModel):
     name: str
-    sections: Dict[str, Tuple[int, int]]
+    sections: Dict[str, Tuple[Tuple[int, int], bool]]
+    resources_reset_loc: Tuple[int, int]
     trading_post: ImageReference
     top_scroll: ImageReference
     mid_scroll: ImageReference
@@ -109,30 +110,22 @@ res_1440p = Resolution(
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(842, 444, 200, 70),
     mouse_scroll_loc=(2435, 438),
+    # False and True indicate if a resource reset is needed before starting this section
+    resources_reset_loc=(170, 796),
     sections={
-           'Resources Reset 0': (170, 796),
-           'Raw Resources': (368, 488),
-           'Resources Reset 1': (170, 796),
-           'Arcana': (368, 568),
-           'Resources Reset 2': (170, 796),
-           'Potion Reagents': (368, 632),
-           'Resources Reset 3': (170, 796),
-           'Cooking Ingredients': (368, 708),
-           'Resources Reset 4': (170, 796),
-           'Dye Ingredients': (368, 788),
-           'Resources Reset 5': (170, 796),
-           'Refined Resouces': (368, 855),
-           'Resources Reset 6': (170, 796),
-           'Components': (368, 936),
-           'Resources Reset 7': (170, 796),
-           'Craft Mods': (368, 990),
-           'Resources Reset 8': (170, 796),
-           'Azoth': (368, 1068),
-           'Resources Reset 9': (170, 796),
-           'Runeglass Components': (368, 1140),
-           'Consumables': (165, 900),
-           'Ammunition': (165, 985),
-           'House Furnishings': (165, 1091)
+           'Raw Resources': ((368, 488), True),
+           'Arcana': ((368, 568), True),
+           'Potion Reagents': ((368, 632), True),
+           'Cooking Ingredients': ((368, 708), True),
+           'Dye Ingredients': ((368, 788), True),
+           'Refined Resouces': ((368, 855), True),
+           'Components': ((368, 936), True),
+           'Craft Mods': ((368, 990), True),
+           'Azoth': ((368, 1068), True),
+           'Runeglass Components': ((368, 1140), True),
+           'Consumables': ((165, 900), False),
+           'Ammunition': ((165, 985), False),
+           'House Furnishings': ((165, 1091), False)
        },
 )
 
@@ -161,30 +154,23 @@ res_1080p = Resolution(
     tp_location_col_x_coords=(1012, 1125),
     first_item_listing_bbox=(691, 316, 1129, 79),
     mouse_scroll_loc=(1826, 347),
+    resources_reset_loc=(125, 602),
+    # False and True indicate if a resource reset is needed before starting this section
     sections={
-           'Resources Reset 0': (125, 602),
-           'Raw Resources': (249, 365),
-           'Resources Reset 1': (125, 602),
-           'Arcana': (252, 424),
-           'Resources Reset 2': (125, 602),
-           'Potion Reagents': (248, 475),
-           'Resources Reset 3': (125, 602),
-           'Cooking Ingredients': (243, 532),
-           'Resources Reset 4': (125, 602),
-           'Dye Ingredients': (239, 582),
-           'Resources Reset 5': (125, 602),
-           'Refined Resources': (241, 638),
-           'Resources Reset 6': (125, 602),
-           'Components': (252, 697),
-           'Resources Reset 7': (125, 602),
-           'Craft Mods': (237, 746),
-           'Resources Reset 8': (125, 602),
-           'Azoth': (239, 803),
-           'Resources Reset 9': (125, 602),
-           'Runeglass Components': (239, 863),
-           'Consumables': (131, 673),
-           'Ammunition': (121, 740),
-           'House Furnishings': (123, 816)
+
+           'Raw Resources': ((249, 365), True),
+           'Arcana': ((252, 424), True),
+           'Potion Reagents': ((248, 475), True),
+           'Cooking Ingredients': ((243, 532), True),
+           'Dye Ingredients': ((239, 582), True),
+           'Refined Resources': ((241, 638), True),
+           'Components': ((252, 697), True),
+           'Craft Mods': ((237, 746), True),
+           'Azoth': ((239, 803), True),
+           'Runeglass Components': ((239, 863), True),
+           'Consumables': ((131, 673), False),
+           'Ammunition': ((121, 740), False),
+           'House Furnishings': ((123, 816), False)
     }
 )
 

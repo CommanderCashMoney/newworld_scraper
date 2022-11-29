@@ -2,12 +2,13 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-
+import time
 from pydantic import BaseModel
 
 from app import events
 from app.ocr.api_submission_data import APISubmission
 from app.settings import SETTINGS
+from app.ocr.resolution_settings import res_1440p
 
 
 class CurrentData(BaseModel):
@@ -21,11 +22,12 @@ class CurrentData(BaseModel):
     advanced_user: bool = False
     access_token: str = ""
     refresh_token: str = ""
-
+    session_hash: str = ""
+    scan_sections: list = res_1440p.sections
     current_run_id: str = datetime.now().strftime("%Y%m%d-%H%M%S")
     crawler: "Crawler" = None
     pending_submission_data: APISubmission = None
-    last_scan_data: APISubmission = None
+    last_scan_data: list = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -38,15 +40,17 @@ class CurrentData(BaseModel):
         # OverlayUpdateHandler.visible(events.RESEND_DATA, visible=self.pending_submission_data is None)
 
     def save_last_scan_data(self, store_in: Path) -> None:
-        if self.last_scan_data is None:
+        if not self.last_scan_data:
             logging.error("Trying to save last scan data, but it's not available")  # should never happen
         store_file_path = store_in / datetime.now().strftime("%Y%m%d_%H%M%S.json")
         with store_file_path.open("w") as out_f:
-            json.dump(self.last_scan_data.price_data_archive, out_f, default=str)
+            json.dump(self.last_scan_data, out_f, default=str)
         logging.info(f"Data saved to `{store_file_path}`")
 
     def update_run_id(self) -> None:
         self.current_run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.session_hash = f'{self.username}-{int(time.time())}'
+
 
 
 SESSION_DATA = CurrentData()
@@ -72,12 +76,6 @@ def update_password(value: str) -> None:
 def update_test_run(value: bool) -> None:
     SESSION_DATA.test_run = value
     logging.debug(f"Test run is now {value}.")
-
-
-def update_auto_sections(value: bool) -> None:
-    SESSION_DATA.auto_sections = value
-    logging.debug(f"Auto sections is now {value}.")
-
 
 def update_server_select(value: str) -> None:
     SESSION_DATA.server_id = value
