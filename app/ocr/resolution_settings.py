@@ -118,7 +118,7 @@ res_1440p = Resolution(
            'Potion Reagents': ((368, 632), True),
            'Cooking Ingredients': ((368, 708), True),
            'Dye Ingredients': ((368, 788), True),
-           'Refined Resouces': ((368, 855), True),
+           'Refined Resources': ((368, 855), True),
            'Components': ((368, 936), True),
            'Craft Mods': ((368, 990), True),
            'Azoth': ((368, 1068), True),
@@ -171,7 +171,7 @@ res_1080p = Resolution(
            'Consumables': ((131, 673), False),
            'Ammunition': ((121, 740), False),
            'House Furnishings': ((123, 816), False)
-    }
+    },
 )
 
 
