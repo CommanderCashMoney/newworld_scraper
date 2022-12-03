@@ -34,3 +34,25 @@ def bring_new_world_to_foreground() -> None:
     cw.find_window_wildcard(wildcard)
     cw.BringToTop()
     cw.SetAsForegroundWindow()
+
+
+
+def exit_to_desktop() -> None:
+    from app.ocr.resolution_settings import get_resolution_obj
+    from app.utils.keyboard import press_key
+    import pynput
+    from app.utils.mouse import click, mouse
+    import time
+    resolution = get_resolution_obj()
+    press_key(pynput.keyboard.Key.esc)
+    time.sleep(2)
+    press_key(pynput.keyboard.Key.esc)
+    time.sleep(2)
+    click('left', resolution.menu_loc)
+    time.sleep(2)
+    click('left', resolution.exit_to_desk_loc)
+    time.sleep(2)
+    click('left', resolution.yes_button_loc)
+
+
+

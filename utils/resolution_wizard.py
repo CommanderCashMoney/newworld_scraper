@@ -11,12 +11,14 @@ PRESSED = False
 
 def key_pressed(key):
     global IS_WAITING_FOR_PRESS
-    code = getattr(key, 'vk', None)
-    if not code:
-        return
-    if IS_WAITING_FOR_PRESS and code == 109:  # numpad -
+    # code = getattr(key, 'vk', None)
+    # if not code:
+    #     return
+    if key.name == 'scroll_lock' and IS_WAITING_FOR_PRESS:
         global PRESSED
         PRESSED = True
+    else:
+        return
 
 
 listener = pynput.keyboard.Listener(on_press=key_pressed)
@@ -43,8 +45,8 @@ def get_mouse_pos() -> Tuple[int, int]:
 
 
 def ask_for_area(for_area: str, capture=True) -> Tuple[Tuple[int, int, int, int], Any]:
-    pos1 = ask_with_callback(get_mouse_pos, f"Please hover top left of {for_area} and press Numpad -")
-    pos2 = ask_with_callback(get_mouse_pos, f"Please hover bottom right of {for_area} and press Numpad -")
+    pos1 = ask_with_callback(get_mouse_pos, f"Please hover top left of {for_area} and press scroll lock")
+    pos2 = ask_with_callback(get_mouse_pos, f"Please hover bottom right of {for_area} and press scroll lock")
     # left, top, width, height
     region = pos1[0], pos1[1], pos2[0] - pos1[0], pos2[1] - pos1[1]
     # top, left

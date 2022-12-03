@@ -13,7 +13,7 @@ class ImageReference(BaseModel):
     file_name: str
     min_conf: float
 
-    def compare_image_reference(self) -> bool:
+    def compare_image_reference(self, ret_val=bool):
         from app.settings import SETTINGS
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
         reference_grab = screenshot_bbox(*self.screen_bbox).img_array
@@ -28,7 +28,10 @@ class ImageReference(BaseModel):
         #     logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
         #     bpc = SETTINGS.temp_app_data
         #     cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
-        return max_val > self.min_conf
+        if ret_val == bool:
+            return max_val > self.min_conf
+        else:
+            return max_val
 
     @property
     def x(self) -> int:
@@ -81,6 +84,28 @@ class Resolution(BaseModel):
     tp_perk_col_x_coords: Tuple[int, int]
     tp_rarity_col_x_coords: Tuple[int, int]
     tp_location_col_x_coords: Tuple[int, int]
+    menu_loc: Tuple[int, int]
+    exit_to_desk_loc: Tuple[int, int]
+    yes_button_loc: Tuple[int, int]
+    resources_reset_loc: Tuple[int, int]
+
+    #  sold orders
+    sold_order_top_scroll: ImageReference
+    sold_order_bottom_scroll: ImageReference
+    sold_order_items_bbox: Tuple[int, int, int, int]
+    sold_order_items_full_bbox: Tuple[int, int, int, int]
+    sold_order_tp_name_col_x_coords: Tuple[int, int]
+    sold_order_tp_price_col_x_coords: Tuple[int, int]
+    sold_order_qty_col_x_coords: Tuple[int, int]
+    sold_order_sold_qty_col_x_coords: Tuple[int, int]
+    sold_order_tp_gs_col_x_coords: Tuple[int, int]
+    sold_order_tp_gem_col_x_coords: Tuple[int, int]
+    sold_order_tp_perk_col_x_coords: Tuple[int, int]
+    sold_order_tp_status_col_x_coords: Tuple[int, int]
+    sold_order_tp_completion_time_col_x_coords: Tuple[int, int]
+    sold_order_completed_tab: Tuple[int, int]
+    sold_order_mouse_scroll_loc: Tuple[int, int]
+    sold_order_price_sort_down: ImageReference
 
     def __str__(self) -> str:
         return f"<Resolution: {self.name}>"
@@ -110,8 +135,30 @@ res_1440p = Resolution(
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(842, 444, 200, 70),
     mouse_scroll_loc=(2435, 438),
-    # False and True indicate if a resource reset is needed before starting this section
+    menu_loc=(2492,75),
+    exit_to_desk_loc=(1746,815),
+    yes_button_loc=(1463,864),
     resources_reset_loc=(170, 796),
+    # --------Sold Orders ----------------
+    sold_order_top_scroll=ImageReference(screen_bbox=(2374, 509, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
+    sold_order_bottom_scroll=ImageReference(screen_bbox=(2380, 1342, 24, 14), file_name="sold_order_bottom_scroll.png", min_conf=0.70),
+    sold_order_items_bbox=(757, 523, 1601, 709),
+    sold_order_items_full_bbox=(757, 523, 1616, 812),
+    sold_order_tp_name_col_x_coords=(0, 316),
+    sold_order_tp_price_col_x_coords=(316, 439),
+    sold_order_qty_col_x_coords=(439, 563),
+    sold_order_sold_qty_col_x_coords=(563, 686),
+    sold_order_tp_gs_col_x_coords=(686, 810),
+    sold_order_tp_gem_col_x_coords=(810, 933),
+    sold_order_tp_perk_col_x_coords=(933, 1057),
+    sold_order_tp_status_col_x_coords=(1057, 1238),
+    sold_order_tp_completion_time_col_x_coords=(1238, 1428),
+    sold_order_completed_tab=(833, 397),
+    sold_order_mouse_scroll_loc=(2370, 528),
+    sold_order_price_sort_down=ImageReference(screen_bbox=(1076, 483, 17, 25), file_name="sold_order_price_sort_down.png", min_conf=0.70),
+
+    # ------------------------------------
+    # False and True indicate if a resource reset is needed before starting this section
     sections={
            'Raw Resources': ((368, 488), True),
            'Arcana': ((368, 568), True),
@@ -125,7 +172,8 @@ res_1440p = Resolution(
            'Runeglass Components': ((368, 1140), True),
            'Consumables': ((165, 900), False),
            'Ammunition': ((165, 985), False),
-           'House Furnishings': ((165, 1091), False)
+           'House Furnishings': ((165, 1091), False),
+           'Sold Items': ((1183, 207), False),
        },
 )
 
@@ -155,6 +203,27 @@ res_1080p = Resolution(
     first_item_listing_bbox=(691, 316, 1129, 79),
     mouse_scroll_loc=(1826, 347),
     resources_reset_loc=(125, 602),
+    menu_loc=(1869, 53),
+    exit_to_desk_loc=(1310, 610),
+    yes_button_loc=(1103, 649),
+    # --------Sold Orders ----------------
+    sold_order_top_scroll=ImageReference(screen_bbox=(2374, 509, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
+    sold_order_bottom_scroll=ImageReference(screen_bbox=(2380, 1342, 24, 14), file_name="sold_order_bottom_scroll.png",
+                                            min_conf=0.70),
+    sold_order_items_bbox=(757, 523, 1601, 709),# todo not for 1080p and everything below
+    sold_order_items_full_bbox=(757, 523, 1616, 812),
+    sold_order_tp_name_col_x_coords=(0, 316),
+    sold_order_tp_price_col_x_coords=(316, 439),
+    sold_order_qty_col_x_coords=(439, 563),
+    sold_order_sold_qty_col_x_coords=(563, 686),
+    sold_order_tp_gs_col_x_coords=(686, 810),
+    sold_order_tp_gem_col_x_coords=(810, 933),
+    sold_order_tp_perk_col_x_coords=(933, 1057),
+    sold_order_tp_status_col_x_coords=(1057, 1238),
+    sold_order_tp_completion_time_col_x_coords=(1238, 1428),
+    sold_order_completed_tab=(630, 296),
+    sold_order_mouse_scroll_loc=(2370, 528),
+    sold_order_price_sort_down=ImageReference(screen_bbox=(1076, 483, 17, 25), file_name="sold_order_price_sort_down.png", min_conf=0.70),
     # False and True indicate if a resource reset is needed before starting this section
     sections={
 
@@ -170,7 +239,8 @@ res_1080p = Resolution(
            'Runeglass Components': ((239, 863), True),
            'Consumables': ((131, 673), False),
            'Ammunition': ((121, 740), False),
-           'House Furnishings': ((123, 816), False)
+           'House Furnishings': ((123, 816), False),
+           'Sold Items': ((885, 152), False)
     },
 )
 

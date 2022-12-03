@@ -84,9 +84,10 @@ def load_settings() -> Settings:
         with SETTINGS_FILE_LOC.open() as f:
             settings_values = json.load(f)
             username = settings_values.pop("un", "")
+            password = settings_values.pop("pw", "")
             resolution = settings_values.pop("resolution", get_default_resolution_key())
             keybinds = KeyBindings(**settings_values)
-            return Settings(api_username=username, resolution=resolution, keybindings=keybinds)
+            return Settings(api_username=username, api_password=password, resolution=resolution, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
     return Settings()
@@ -102,6 +103,7 @@ def save(values) -> None:
         json.dump({
             "un": SETTINGS.api_username,
             "resolution": resolution,
+            "pw": SETTINGS.api_password,
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
@@ -115,13 +117,17 @@ def save_sections(sections) -> None:
     overlay.window.set_alpha(1)
     SESSION_DATA.scan_sections = sections
     logging.debug(f'Scan set for: {sections}')
+    # from app.utils.window import exit_to_desktop, bring_new_world_to_foreground
+    # bring_new_world_to_foreground()
+    # exit_to_desktop()
 
 
-def save_username(username) -> None:
+def save_username(username, pw) -> None:
     SETTINGS.api_username = username
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": username,
             "resolution": SETTINGS.resolution,
+            "pw": pw,
             **SETTINGS.keybindings.dict()
         }, f)

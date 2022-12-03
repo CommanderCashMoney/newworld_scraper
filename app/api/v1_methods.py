@@ -28,6 +28,7 @@ def login():
     status_code = r.status_code if r is not None else None
     if status_code == 200:
         logging.info('login successful')
+        save_username(un, pw)
         return r
     elif r is None:
         logging.info("Login failed - no connection to server")
@@ -80,4 +81,4 @@ def login_completed(response) -> None:
         SESSION_DATA.advanced_user = 'advanced' in access_groups
         if SESSION_DATA.advanced_user:
             OverlayUpdateHandler.visible("advanced")
-        save_username(json_response["username"])
+
