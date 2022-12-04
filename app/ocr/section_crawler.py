@@ -131,23 +131,24 @@ class SectionCrawler:
             #  has a scrollbar
             print('hasscrollbar')  # todo cleanup
             while not self.stopped:
-                screenshot = self.snap_items(self.resolution.sold_order_items_bbox)
-                self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
                 if bottom_scroll.compare_image_reference():
+                    print('reached bottom')  # todo cleanup
                     print(f'bottom scroll conf: {bottom_scroll.compare_image_reference(ret_val="debug")}')
+                    screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
+                    self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
                     break
+                else:
+                    screenshot = self.snap_items(self.resolution.sold_order_items_bbox)
+                    self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
+
                 mouse.scroll(0, -6)
                 time.sleep(0.5)
-            print('reached bottom')  # todo cleanup
 
         else:
             # no scroll. just take one pic. differ bbox because for scroll we only look at top 6 rows
             print('no scroll')  # todo cleanup
             screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
             self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
-
-
-
 
         self.parent.ocr_queue.notify_section_complete()
         return True

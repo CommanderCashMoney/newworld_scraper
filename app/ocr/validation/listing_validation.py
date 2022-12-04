@@ -5,6 +5,7 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import List, Optional
 from urllib.parse import urljoin
+import dateutil.parser
 from dateutil import parser
 import requests
 
@@ -97,7 +98,6 @@ class ListingValidator:
         if self.price_list[self.current_index]['avail'] == "0":
             self.price_list[self.current_index]['avail'] = "1"
 
-
         return True
 
     def validate_name(self) -> bool:
@@ -155,10 +155,15 @@ class ListingValidator:
             c_time = c_time.replace(',,', 'M')
             c_time = c_time.replace('P,', 'PM')
             c_time = c_time.replace('A,', 'AM')
-            c_datetime = parser.parse(c_time)
+            c_time = c_time.replace('7022', '2022')
+            c_time = c_time.replace('2702', '2022')
+            c_time = c_time.replace('79', '19')
+            c_time = c_time.replace('1130', '11/30')
+            try:
+                c_datetime = parser.parse(c_time, fuzzy=True)
+            except dateutil.parser.ParserError:
+                c_datetime = c_time
             self.price_list[self.current_index]['completion_time'] = c_datetime
-
-
 
     def validate_section(self, price_list: List[dict]) -> None:
         self.set_api_info()

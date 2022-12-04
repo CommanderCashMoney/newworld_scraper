@@ -92,6 +92,7 @@ class OCRQueue:
                             "price": listing["validated_price"],
                             "timestamp": listing["timestamp"],
                             "name_id": listing["name_id"],
+                            "gs": listing.get("gs", '0'),
                             "status": listing.get("status", 'unknown'),
                             "completion_time": listing.get("completion_time", '-'),
                         }
