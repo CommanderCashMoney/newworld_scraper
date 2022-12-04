@@ -10,7 +10,6 @@ import pynput
 from win32gui import GetForegroundWindow, GetWindowText
 
 from app import events
-from app.ocr.api_submission_data import APISubmission
 from app.ocr.ocr_queue import OCRQueue
 from app.ocr.resolution_settings import get_resolution_obj
 from app.ocr.section_crawler import SectionCrawler
@@ -100,7 +99,10 @@ class Crawler:
             if self.stopped:
                 break
             self.current_section += 1
-            section_crawler.crawl(pages_to_parse)
+            if section_crawler.section == 'Sold Items':
+                section_crawler.crawl_sold_items()
+            else:
+                section_crawler.crawl(pages_to_parse)
 
         if self.stopped:
             logging.info(f"Stopped crawling because {self.stop_reason}.")
@@ -169,6 +171,7 @@ class Crawler:
         OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
         OverlayUpdateHandler.enable(events.RUN_BUTTON)
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
+        OverlayUpdateHandler.visible(events.SECTION_TOGGLE, visible=True)
 
     @property
     def stopped(self) -> bool:

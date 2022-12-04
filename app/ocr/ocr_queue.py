@@ -56,7 +56,11 @@ class OCRQueue:
                 break
 
             if next_item != self.SECTION_COMPLETE_EVENT:
-                parsed_prices = next_item.parse_prices()
+                if next_item.section == 'Sold Items':
+                    parsed_prices = next_item.parse_sold_item_prices()
+                else:
+                    parsed_prices = next_item.parse_prices()
+
                 self.ocr_processed_listings += len(parsed_prices)
                 self.update_overlay("listings_count", self.ocr_processed_listings)
                 self.to_validate.extend(parsed_prices)
@@ -65,7 +69,6 @@ class OCRQueue:
                 continue
 
             section = self.to_validate[0]["section"]
-
             self.update_overlay('status_bar', f'Validating section {section}')
             self.validator.validate_section(self.to_validate)
             self.to_validate.clear()
@@ -79,17 +82,36 @@ class OCRQueue:
             # SEND SECTION TO API
             should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run
             if should_submit:
-                self.section_results = [
-                    {
-                        "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
-                        "avail": listing["avail"],
-                        "price": listing["validated_price"],
-                        "timestamp": listing["timestamp"],
-                        "name_id": listing["name_id"],
-                    }
-                    for idx, listing in enumerate(self.validator.price_list)
-                    if idx not in self.validator.bad_indexes
-                ]
+
+                if section == 'Sold Items':
+                    self.section_results = [
+                        {
+                            "name": listing["validated_name"],
+                            "qty": listing["qty"],
+                            "sold": listing["sold"],
+                            "price": listing["validated_price"],
+                            "timestamp": listing["timestamp"],
+                            "name_id": listing["name_id"],
+                            "gs": listing.get("gs", '0'),
+                            "status": listing.get("status", 'unknown'),
+                            "completion_time": listing.get("completion_time", '-'),
+                        }
+                        for idx, listing in enumerate(self.validator.price_list)
+                        if idx not in self.validator.bad_indexes
+                    ]
+                else:
+
+                    self.section_results = [
+                        {
+                            "name": listing["validated_name"],  # technically we shouldn't even be using this b/c we have id
+                            "avail": listing["avail"],
+                            "price": listing["validated_price"],
+                            "timestamp": listing["timestamp"],
+                            "name_id": listing["name_id"],
+                        }
+                        for idx, listing in enumerate(self.validator.price_list)
+                        if idx not in self.validator.bad_indexes
+                    ]
                 logging.info(f"Submitting {section} data to API.")
                 pending_submissions = APISubmission(
                     price_data=self.section_results,
@@ -108,10 +130,6 @@ class OCRQueue:
                 else:
                     logging.info(f"{section} failed to send.")
                 self.validator.empty()
-
-
-
-
 
 
         logging.info(f"OCRQueue stopped processing")

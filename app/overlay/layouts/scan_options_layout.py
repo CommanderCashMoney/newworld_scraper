@@ -8,6 +8,9 @@ def sections_layout():
     sections = res_1440p.sections
     for s in sections:
         section_checkboxes.append([sg.Checkbox(f'{s}', key=f'{s}', default=True, enable_events=False)])
+
     section_checkboxes.append([sg.Button('Save', enable_events=True, key=events.SECTIONS_SAVED)])
+
+
     return section_checkboxes
 

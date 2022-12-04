@@ -4,6 +4,7 @@ import os
 from enum import Enum
 from pathlib import Path
 from typing import Dict
+from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
 
 from pydantic import BaseSettings, Field, root_validator
 
@@ -26,7 +27,7 @@ class KeyBindings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.4.1"
+    VERSION = "1.4.2"
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
@@ -78,15 +79,16 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
-
 def load_settings() -> Settings:
     try:
         with SETTINGS_FILE_LOC.open() as f:
             settings_values = json.load(f)
             username = settings_values.pop("un", "")
+            pw = settings_values.pop("pw", "").encode("utf-8")
+            password = b64d(pw)
             resolution = settings_values.pop("resolution", get_default_resolution_key())
             keybinds = KeyBindings(**settings_values)
-            return Settings(api_username=username, resolution=resolution, keybindings=keybinds)
+            return Settings(api_username=username, api_password=password, resolution=resolution, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
     return Settings()
@@ -98,10 +100,12 @@ SETTINGS = load_settings()
 def save(values) -> None:
     from app.overlay import overlay
     resolution = values.pop("resolution", SETTINGS.resolution)
+    pw = b64e(bytes(SETTINGS.api_password, 'utf-8'))
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": SETTINGS.api_username,
             "resolution": resolution,
+            "pw": pw.decode('utf-8'),
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
@@ -115,13 +119,18 @@ def save_sections(sections) -> None:
     overlay.window.set_alpha(1)
     SESSION_DATA.scan_sections = sections
     logging.debug(f'Scan set for: {sections}')
+    # from app.utils.window import exit_to_desktop, bring_new_world_to_foreground
+    # bring_new_world_to_foreground()
+    # exit_to_desktop()
 
 
-def save_username(username) -> None:
+def save_username(username, pw) -> None:
     SETTINGS.api_username = username
+    pw = b64e(bytes(pw, 'utf-8'))
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": username,
             "resolution": SETTINGS.resolution,
+            "pw": pw.decode('utf-8'),
             **SETTINGS.keybindings.dict()
         }, f)

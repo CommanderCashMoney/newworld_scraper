@@ -94,20 +94,73 @@ class SectionCrawler:
                 logging.error(f'Too many consecutive page resets, skipping to next section.')
                 return False
             self.reset_mouse_position()
-            screenshot = self.snap_items()
+            screenshot = self.snap_items(self.resolution.items_bbox)
             self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
             self.scroll()
         OverlayUpdateHandler.update("pages_left", self.pages - self.current_page)
         return True
 
-    def snap_items(self) -> Any:
+    def crawl_sold_items(self):
+        bring_new_world_to_foreground()
+        if not self.look_for_tp():
+            logging.error("Couldn't find TP")
+            self.parent.stop(reason="trading post could not be found.", wait_for_death=False)
+            return
+        self.select_section()
+        # choose completed items tab
+        click('left', self.resolution.sold_order_completed_tab)
+        time.sleep(2)
+        # check to see if price is sorted properly. This tends to get reset
+        sorted_arrow = self.resolution.sold_order_price_sort_down
+        for x in range(3):
+            if not sorted_arrow.compare_image_reference():
+                click('left', sorted_arrow.center)
+                time.sleep(0.5)
+            else:
+                break
+        # crawl
+        OverlayUpdateHandler.update('status_bar', f'Crawling section {self.section}')
+        app_data_temp = SETTINGS.temp_app_data / self.parent.run_id
+        app_data_temp.mkdir(exist_ok=True)
+        #  set good mouse position
+        mouse.position = self.resolution.sold_order_mouse_scroll_loc
+        # check for scrollbar
+        top_scroll = self.resolution.sold_order_top_scroll
+        bottom_scroll = self.resolution.sold_order_bottom_scroll
+        if top_scroll.compare_image_reference():
+            #  has a scrollbar
+            print('hasscrollbar')  # todo cleanup
+            while not self.stopped:
+                if bottom_scroll.compare_image_reference():
+                    print('reached bottom')  # todo cleanup
+                    print(f'bottom scroll conf: {bottom_scroll.compare_image_reference(ret_val="debug")}')
+                    screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
+                    self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
+                    break
+                else:
+                    screenshot = self.snap_items(self.resolution.sold_order_items_bbox)
+                    self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
+
+                mouse.scroll(0, -6)
+                time.sleep(0.5)
+
+        else:
+            # no scroll. just take one pic. differ bbox because for scroll we only look at top 6 rows
+            print('no scroll')  # todo cleanup
+            screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
+            self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
+
+        self.parent.ocr_queue.notify_section_complete()
+        return True
+
+    def snap_items(self, bbox) -> Any:
         self.section_images_count += 1
         prefix = str(self.section_images_count).zfill(3)
         fn = f"{self.section}-{prefix}-{self.scroll_state.value}.png"
         full_path = SETTINGS.temp_app_data / self.parent.run_id / fn
         if self.scroll_state == ScrollState.btm:
             return screenshot_bbox(*self.resolution.items_bbox_last, str(full_path))
-        return screenshot_bbox(*self.resolution.items_bbox, str(full_path))
+        return screenshot_bbox(*bbox, str(full_path))
 
     def scroll(self) -> None:
         scroll_distance = -11 if self.scroll_state != ScrollState.btm else -2

@@ -5,7 +5,8 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import List, Optional
 from urllib.parse import urljoin
-
+import dateutil.parser
+from dateutil import parser
 import requests
 
 from app.ocr.validation.price_validation import PriceSectionValidator
@@ -77,13 +78,27 @@ class ListingValidator:
         return psv.listings[self.current_index - price_index_offset].get("validated_price")
 
     def validate_quantity(self) -> bool:
-        qty = self.price_list[self.current_index].get("avail", "1")
-        self.price_list[self.current_index]["avail"] = qty
-        if qty.isnumeric():
-            if int(qty) > 10000:
-                return False
+        # default =1 for avail and qty, but it's 0 for sold
+        fields_to_val = ['qty', 'sold', 'avail']
+        for col in fields_to_val:
+            cur_obj = self.price_list[self.current_index]
+            new_val = cur_obj.get(col, "0")
+            if not new_val.isnumeric():
+                new_val = "0"
+            elif int(new_val) > 10000:
+                new_val = "1"
+            self.price_list[self.current_index][col] = new_val
+        # this is all a bit messy. I should cleran this up
+        if self.price_list[self.current_index]['qty'] == "0":
+            self.price_list[self.current_index]['qty'] = "1"
+        if self.price_list[self.current_index]['sold'] == "0" and self.price_list[self.current_index]['status'] == 'Completed':
+            self.price_list[self.current_index]['sold'] = "1"
+        if self.price_list[self.current_index]['sold'] > self.price_list[self.current_index]['qty']:
+            self.price_list[self.current_index]['qty'] = self.price_list[self.current_index]['sold']
+        if self.price_list[self.current_index]['avail'] == "0":
+            self.price_list[self.current_index]['avail'] = "1"
 
-        return qty.isnumeric()
+        return True
 
     def validate_name(self) -> bool:
         validated_name_key = "validated_name"
@@ -121,6 +136,35 @@ class ListingValidator:
         self.bad_names[name] += 1
         return False
 
+
+    def validate_status(self):
+        status = self.price_list[self.current_index].get('status', 'Completed')
+        if status != 'Completed' and status != 'Expired':
+            if self.price_list[self.current_index]['sold'] > 0:
+                status = 'Completed'
+            if self.price_list[self.current_index]['sold'] == 0:
+                status = 'Expired'
+        self.price_list[self.current_index]['status'] = status
+
+
+    def validate_completed_time(self):
+        cur_obj = self.price_list[self.current_index]
+        # clean up common ocr misread when time is cut off
+        c_time = cur_obj.get("completion_time")
+        if c_time:
+            c_time = c_time.replace(',,', 'M')
+            c_time = c_time.replace('P,', 'PM')
+            c_time = c_time.replace('A,', 'AM')
+            c_time = c_time.replace('7022', '2022')
+            c_time = c_time.replace('2702', '2022')
+            c_time = c_time.replace('79', '19')
+            c_time = c_time.replace('1130', '11/30')
+            try:
+                c_datetime = parser.parse(c_time, fuzzy=True)
+            except dateutil.parser.ParserError:
+                c_datetime = c_time
+            self.price_list[self.current_index]['completion_time'] = c_datetime
+
     def validate_section(self, price_list: List[dict]) -> None:
         self.set_api_info()
         self.last_good_price = None
@@ -135,7 +179,9 @@ class ListingValidator:
             validated_price = self.get_valid_price(psv, price_index_offset)
             price_invalid = validated_price is None
             name_invalid = not self.validate_name()
+            self.validate_status()
             quantity_invalid = not self.validate_quantity()  # can never be non valid
+            self.validate_completed_time()
 
             current_price["validated_price"] = validated_price
             filename = current_price["filename"].name
