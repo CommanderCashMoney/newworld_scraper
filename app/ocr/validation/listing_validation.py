@@ -140,10 +140,13 @@ class ListingValidator:
     def validate_status(self):
         status = self.price_list[self.current_index].get('status', 'Completed')
         if status != 'Completed' and status != 'Expired':
-            if self.price_list[self.current_index]['sold'] > 0:
-                status = 'Completed'
-            if self.price_list[self.current_index]['sold'] == 0:
-                status = 'Expired'
+            sold = self.price_list[self.current_index].get('sold', 0)
+            if sold.isnumeric():
+                sold = int(sold)
+                if sold > 0:
+                    status = 'Completed'
+                if sold == 0:
+                    status = 'Expired'
         self.price_list[self.current_index]['status'] = status
 
 
