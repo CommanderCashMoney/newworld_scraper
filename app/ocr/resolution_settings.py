@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
-import logging
+import numpy as np
 
 
 class ImageReference(BaseModel):
@@ -18,7 +18,8 @@ class ImageReference(BaseModel):
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
         reference_grab = screenshot_bbox(*self.screen_bbox).img_array
         reference_image_file = resource_path(f"app/images/new_world/{SETTINGS.resolution}/{self.file_name}")
-        reference_img = cv2.imread(reference_image_file)
+        reference_img = cv2.imdecode(np.fromfile(reference_image_file, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        # reference_img = cv2.imread(reference_image_file)
         img_gray = cv2.cvtColor(reference_img, cv2.COLOR_BGR2GRAY)
         img_grab_gray = cv2.cvtColor(reference_grab, cv2.COLOR_BGR2GRAY)
         res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)

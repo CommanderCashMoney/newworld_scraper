@@ -117,7 +117,9 @@ class Screenshot:
             image = self.get_image(pil_high_quality)
             image.save(self.file_path)
         else:
-            cv2.imwrite(file_path, self.img_array)
+            is_success, im_buf_arr = cv2.imencode(".png", self.img_array)
+            im_buf_arr.tofile(file_path)
+            # cv2.imwrite(file_path, self.img_array)
 
 
 def screenshot_bbox(left: int, top: int, width: int, height: int, save_to: str = None) -> Screenshot:
