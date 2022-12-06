@@ -104,6 +104,7 @@ class Resolution(BaseModel):
     sold_order_tp_status_col_x_coords: Tuple[int, int]
     sold_order_tp_completion_time_col_x_coords: Tuple[int, int]
     sold_order_completed_tab: Tuple[int, int]
+    sold_order_sold_items_tab: Tuple[int, int]
     sold_order_mouse_scroll_loc: Tuple[int, int]
     sold_order_price_sort_down: ImageReference
 
@@ -154,6 +155,7 @@ res_1440p = Resolution(
     sold_order_tp_status_col_x_coords=(1057, 1238),
     sold_order_tp_completion_time_col_x_coords=(1238, 1428),
     sold_order_completed_tab=(833, 397),
+    sold_order_sold_items_tab=(382, 557),
     sold_order_mouse_scroll_loc=(2370, 528),
     sold_order_price_sort_down=ImageReference(screen_bbox=(1076, 483, 17, 25), file_name="sold_order_price_sort_down.png", min_conf=0.70),
 
@@ -222,6 +224,7 @@ res_1080p = Resolution(
     sold_order_tp_status_col_x_coords=(793, 929),
     sold_order_tp_completion_time_col_x_coords=(929, 1071),
     sold_order_completed_tab=(630, 296),
+    sold_order_sold_items_tab=(287, 414),
     sold_order_mouse_scroll_loc=(1778, 396),
     sold_order_price_sort_down=ImageReference(screen_bbox=(807, 362, 13, 19), file_name="sold_order_price_sort_down.png", min_conf=0.70),
     # False and True indicate if a resource reset is needed before starting this section

@@ -110,6 +110,9 @@ class SectionCrawler:
         # choose completed items tab
         click('left', self.resolution.sold_order_completed_tab)
         time.sleep(2)
+        # choose sold order tab
+        click('left', self.resolution.sold_order_sold_items_tab)
+        time.sleep(2)
         # check to see if price is sorted properly. This tends to get reset
         sorted_arrow = self.resolution.sold_order_price_sort_down
         for x in range(3):
