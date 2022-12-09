@@ -170,8 +170,8 @@ class Crawler:
 
     def reset_ui_state(self) -> None:
         OverlayUpdateHandler.visible("advanced", visible=SESSION_DATA.advanced_user)
-        OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
-        OverlayUpdateHandler.visible(events.CLOSE_NW_TOGGLE, visible=True)
+        # OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
+        # OverlayUpdateHandler.visible(events.CLOSE_NW_TOGGLE, visible=True)
         OverlayUpdateHandler.enable(events.RUN_BUTTON)
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
         OverlayUpdateHandler.visible(events.SECTION_TOGGLE, visible=True)
