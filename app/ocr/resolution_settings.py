@@ -137,9 +137,9 @@ res_1440p = Resolution(
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(842, 444, 200, 70),
     mouse_scroll_loc=(2435, 438),
-    menu_loc=(2492,75),
-    exit_to_desk_loc=(1746,815),
-    yes_button_loc=(1463,864),
+    menu_loc=(2492, 75),
+    exit_to_desk_loc=(1765, 884),
+    yes_button_loc=(1463, 864),
     resources_reset_loc=(170, 796),
     # --------Sold Orders ----------------
     sold_order_top_scroll=ImageReference(screen_bbox=(2374, 509, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
@@ -207,7 +207,7 @@ res_1080p = Resolution(
     mouse_scroll_loc=(1826, 347),
     resources_reset_loc=(125, 602),
     menu_loc=(1869, 53),
-    exit_to_desk_loc=(1310, 610),
+    exit_to_desk_loc=(1325, 664),
     yes_button_loc=(1103, 649),
     # --------Sold Orders ----------------
     sold_order_top_scroll=ImageReference(screen_bbox=(1785, 382, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),

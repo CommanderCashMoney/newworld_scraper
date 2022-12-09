@@ -28,6 +28,7 @@ def start_run(values) -> None:
     OverlayUpdateHandler.update("error_output", "")
     OverlayUpdateHandler.disable(RUN_BUTTON)
     OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=False)
+    OverlayUpdateHandler.visible(events.CLOSE_NW_TOGGLE, visible=False)
     OverlayUpdateHandler.visible("advanced", visible=False)
     OverlayUpdateHandler.visible(events.CHANGE_KEY_BINDS, visible=False)
     OverlayUpdateHandler.visible(events.SECTION_TOGGLE, visible=False)

@@ -18,6 +18,7 @@ class CurrentData(BaseModel):
     pages: int = 1 if SETTINGS.is_dev else 500
     server_id: str = None
     test_run: bool = True
+    close_nw: bool = False
     auto_sections: bool = True  # doesn't do anything atm
     advanced_user: bool = False
     access_token: str = ""
@@ -76,6 +77,10 @@ def update_password(value: str) -> None:
 def update_test_run(value: bool) -> None:
     SESSION_DATA.test_run = value
     logging.debug(f"Test run is now {value}.")
+
+def update_close_nw(value: bool) -> None:
+    SESSION_DATA.close_nw = value
+    logging.debug(f"Close NW after scan: {value}.")
 
 def update_server_select(value: str) -> None:
     SESSION_DATA.server_id = value
