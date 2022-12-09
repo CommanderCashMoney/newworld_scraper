@@ -9,6 +9,7 @@ def scan_info_layout():
         [
             sg.Button('Start Scan', size=(15, 1), key=events.RUN_BUTTON),
             sg.Checkbox('Test Run', key=events.TEST_RUN_TOGGLE, default=True, enable_events=True),
+            sg.Checkbox('Close NW after scan', key=events.CLOSE_NW_TOGGLE, default=False, enable_events=True),
         ],
         [sg.Text('_' * 60)],
         [

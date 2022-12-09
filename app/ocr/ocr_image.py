@@ -3,7 +3,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-
+import numpy as np
 import cv2
 from PIL import Image
 
@@ -30,7 +30,8 @@ class OCRImage:
 
     @property
     def original_image(self):
-        return cv2.imread(str(self.original_path))
+        return cv2.imdecode(np.fromfile(str(self.original_path), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        # return cv2.imread(str(self.original_path))
 
     def parse_prices(self) -> defaultdict:
         """Parse prices from images, do no validation yet."""

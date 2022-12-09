@@ -18,7 +18,7 @@ from app.session_data import SESSION_DATA
 from app.settings import SETTINGS
 from app.utils import format_seconds
 from app.utils.keyboard import press_key
-from app.utils.window import bring_new_world_to_foreground
+from app.utils.window import bring_new_world_to_foreground, exit_to_desktop
 
 
 class Crawler:
@@ -113,6 +113,8 @@ class Crawler:
             self.ocr_queue.complete_current_work_and_die()
             logging.info("Crawl complete.")
 
+        if SESSION_DATA.close_nw:
+            exit_to_desktop()
         self.wait_for_parse()
 
 
@@ -169,6 +171,7 @@ class Crawler:
     def reset_ui_state(self) -> None:
         OverlayUpdateHandler.visible("advanced", visible=SESSION_DATA.advanced_user)
         OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
+        OverlayUpdateHandler.visible(events.CLOSE_NW_TOGGLE, visible=True)
         OverlayUpdateHandler.enable(events.RUN_BUTTON)
         OverlayUpdateHandler.fire_event(events.OCR_COMPLETE)
         OverlayUpdateHandler.visible(events.SECTION_TOGGLE, visible=True)
