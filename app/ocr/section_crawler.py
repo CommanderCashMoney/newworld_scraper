@@ -34,6 +34,7 @@ class SectionCrawler:
         self.section_images_count = 0
         self.load_fail_count = 0
         self.retry_count = 0
+        self.is_buy_order = False
 
     def __str__(self) -> str:
         return f"{self.section}: Page {self.current_page} / {self.pages}"
@@ -49,7 +50,8 @@ class SectionCrawler:
     def resolution(self) -> Resolution:
         return get_resolution_obj()
 
-    def crawl(self, pages_to_parse: int = 500) -> None:
+    def crawl(self, pages_to_parse: int = 500, is_buy_order=False) -> None:
+        self.is_buy_order = is_buy_order
         bring_new_world_to_foreground()
         if not self.look_for_tp():
             logging.error("Couldn't find TP")
@@ -94,11 +96,15 @@ class SectionCrawler:
                 logging.error(f'Too many consecutive page resets, skipping to next section.')
                 return False
             self.reset_mouse_position()
-            screenshot = self.snap_items(self.resolution.items_bbox)
+            if self.is_buy_order:
+                screenshot = self.snap_items(self.resolution.buy_order_items_bbox)
+            else:
+                screenshot = self.snap_items(self.resolution.items_bbox)
             self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
             self.scroll()
         OverlayUpdateHandler.update("pages_left", self.pages - self.current_page)
         return True
+
 
     def crawl_sold_items(self):
         bring_new_world_to_foreground()
@@ -132,10 +138,10 @@ class SectionCrawler:
         bottom_scroll = self.resolution.sold_order_bottom_scroll
         if top_scroll.compare_image_reference():
             #  has a scrollbar
-            print('hasscrollbar')  # todo cleanup
+
             while not self.stopped:
                 if bottom_scroll.compare_image_reference():
-                    print('reached bottom')  # todo cleanup
+
                     print(f'bottom scroll conf: {bottom_scroll.compare_image_reference(ret_val="debug")}')
                     screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
                     self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
@@ -149,7 +155,6 @@ class SectionCrawler:
 
         else:
             # no scroll. just take one pic. differ bbox because for scroll we only look at top 6 rows
-            print('no scroll')  # todo cleanup
             screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
             self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
 
@@ -162,11 +167,17 @@ class SectionCrawler:
         fn = f"{self.section}-{prefix}-{self.scroll_state.value}.png"
         full_path = SETTINGS.temp_app_data / self.parent.run_id / fn
         if self.scroll_state == ScrollState.btm:
-            return screenshot_bbox(*self.resolution.items_bbox_last, str(full_path))
+            if self.is_buy_order:
+                return screenshot_bbox(*self.resolution.buy_order_items_bbox_last, str(full_path))
+            else:
+                return screenshot_bbox(*self.resolution.items_bbox_last, str(full_path))
         return screenshot_bbox(*bbox, str(full_path))
 
     def scroll(self) -> None:
-        scroll_distance = -11 if self.scroll_state != ScrollState.btm else -2
+        if self.is_buy_order:
+            scroll_distance = -8 if self.scroll_state != ScrollState.btm else -5
+        else:
+            scroll_distance = -11 if self.scroll_state != ScrollState.btm else -2
         mouse.scroll(0, scroll_distance)
         if self.scroll_state == ScrollState.top:
             self.scroll_state = ScrollState.mid
@@ -174,7 +185,10 @@ class SectionCrawler:
             self.scroll_state = ScrollState.btm
 
     def get_current_screen_page_count(self) -> int:
-        pages_bbox = self.resolution.pages_bbox
+        if self.is_buy_order:
+            pages_bbox = self.resolution.buy_order_pages_bbox
+        else:
+            pages_bbox = self.resolution.pages_bbox
         screenshot = screenshot_bbox(*pages_bbox)
         res = pre_process_page_count_image(screenshot.img_array)
         custom_config = """--psm 8 -c tessedit_char_whitelist="0123456789of " """
@@ -190,13 +204,17 @@ class SectionCrawler:
         return pages
 
     def press_cancel_or_refresh(self):
-        cancel_button = self.resolution.cancel_button
+        if self.is_buy_order:
+            cancel_button = self.resolution.buy_order_cancel_button
+            refresh_button = self.resolution.buy_order_refresh_button
+        else:
+            cancel_button = self.resolution.cancel_button
+            refresh_button = self.resolution.refresh_button
         if cancel_button.compare_image_reference():
             click('left', cancel_button.center)
             logging.info("Accidentally clicked an item - cancelling purchase")
             time.sleep(0.5)
 
-        refresh_button = self.resolution.refresh_button
         if refresh_button.compare_image_reference():
             click('left', refresh_button.center)
             logging.info("Clicked Refresh")
@@ -216,37 +234,55 @@ class SectionCrawler:
 
     def select_section(self) -> None:
 
-        if self.resolution.sections[self.section][1]:
-            # resource reset required
-            click('left', self.resolution.resources_reset_loc)
-            time.sleep(2)
+        if not self.is_buy_order:
+            if self.resolution.sections[self.section][1]:
+                # resource reset required
+                click('left', self.resolution.resources_reset_loc)
+                time.sleep(2)
 
         logging.info(f"Selecting new section {self.section}")
-        section_loc = self.resolution.sections[self.section][0]
+        if self.is_buy_order:
+            section_loc = self.resolution.buy_order_sections[self.section][0]
+        else:
+            section_loc = self.resolution.sections[self.section][0]
         click('left', section_loc)
         time.sleep(2)  # wait
 
     def next_page(self):
         if not self.look_for_tp():
             return False
-        click('left', self.resolution.next_page_coords)
+        if self.is_buy_order:
+            click('left', self.resolution.buy_order_next_page_coords)
+        else:
+            click('left', self.resolution.next_page_coords)
         self.scroll_state = ScrollState.top
         self.current_page += 1
         self.reset_mouse_position()
         return True
 
     def reset_mouse_position(self) -> None:
-        mouse.position = self.resolution.mouse_scroll_loc
+        if self.is_buy_order:
+            mouse.position = self.resolution.buy_order_mouse_scroll_loc
+        else:
+            mouse.position = self.resolution.mouse_scroll_loc
 
     def check_scrollbar(self) -> bool:
         self.press_cancel_or_refresh()
         # look for scrollbar
-        if self.scroll_state == ScrollState.top:
-            scroll_ref = self.resolution.top_scroll
-        elif self.scroll_state == ScrollState.mid:
-            scroll_ref = self.resolution.mid_scroll
-        elif self.scroll_state == ScrollState.btm:
-            scroll_ref = self.resolution.bottom_scroll
+        if self.is_buy_order:
+            if self.scroll_state == ScrollState.top:
+                scroll_ref = self.resolution.buy_order_top_scroll
+            elif self.scroll_state == ScrollState.mid:
+                scroll_ref = self.resolution.buy_order_mid_scroll
+            elif self.scroll_state == ScrollState.btm:
+                scroll_ref = self.resolution.buy_order_bottom_scroll
+        else:
+            if self.scroll_state == ScrollState.top:
+                scroll_ref = self.resolution.top_scroll
+            elif self.scroll_state == ScrollState.mid:
+                scroll_ref = self.resolution.mid_scroll
+            elif self.scroll_state == ScrollState.btm:
+                scroll_ref = self.resolution.bottom_scroll
 
         for attempt in range(30):
             if scroll_ref.compare_image_reference():

@@ -28,6 +28,7 @@ class Crawler:
         self.ocr_queue.crawler = self
         self.resolution = get_resolution_obj()
         self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys() if SESSION_DATA.scan_sections[k]]
+        self.buy_order_section_crawlers = [SectionCrawler(self, k) for k in self.resolution.buy_order_sections.keys()]
         self.current_section = 0
         self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self._cancelled = False
@@ -101,6 +102,8 @@ class Crawler:
             self.current_section += 1
             if section_crawler.section == 'Sold Items':
                 section_crawler.crawl_sold_items()
+            elif section_crawler.section == 'Buy Orders':
+                self.crawl_buy_orders()
             else:
                 section_crawler.crawl(pages_to_parse)
 
@@ -121,6 +124,15 @@ class Crawler:
         logging.info("Parsing results complete.")
         OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.stop(reason="run completed.", wait_for_death=False)
+
+    def crawl_buy_orders(self):
+        pages_to_parse = SESSION_DATA.pages
+        for section_crawler in self.buy_order_section_crawlers:
+            self.check_move()
+            if self.stopped:
+                break
+            self.current_section += 1
+            section_crawler.crawl(pages_to_parse)
 
     def wait_for_parse(self) -> None:
         if self.ocr_queue.thread_is_alive:
