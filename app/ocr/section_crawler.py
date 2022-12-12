@@ -124,7 +124,7 @@ class SectionCrawler:
         for x in range(3):
             if not sorted_arrow.compare_image_reference():
                 click('left', sorted_arrow.center)
-                time.sleep(0.5)
+                time.sleep(1)
             else:
                 break
         # crawl
@@ -300,7 +300,10 @@ class SectionCrawler:
         if self.pages != self.current_page:
             self.check_scrollbar()
         else:
-            first_listing = self.resolution.first_item_listing_bbox
+            if self.is_buy_order:
+                first_listing = self.resolution.buy_order_first_item_listing_bbox
+            else:
+                first_listing = self.resolution.first_item_listing_bbox
             img = screenshot_bbox(*first_listing).img_array
             ref_grab = pre_process_listings_image(img)
             pure_black = 112500

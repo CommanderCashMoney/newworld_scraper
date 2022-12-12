@@ -35,20 +35,36 @@ class OCRImage:
 
     def parse_prices(self) -> defaultdict:
         """Parse prices from images, do no validation yet."""
-        columns = {
-            "name": {
-                "config": EVERYTHING_CONFIG,
-                "coords": self.resolution.tp_name_col_x_coords,
-            },
-            "price": {
-                "config": NUMBERS_PERIODS_COMMAS_CONFIG,
-                "coords": self.resolution.tp_price_col_x_coords,
-            },
-            "avail": {
-                "config": INTEGERS_ONLY_CONFIG,
-                "coords": self.resolution.tp_avail_col_x_coords,
+        if self.section.find('Buy Order -') >= 0:
+            columns = {
+                "name": {
+                    "config": EVERYTHING_CONFIG,
+                    "coords": self.resolution.buy_order_tp_name_col_x_coords,
+                },
+                "price": {
+                    "config": NUMBERS_PERIODS_COMMAS_CONFIG,
+                    "coords": self.resolution.buy_order_tp_price_col_x_coords,
+                },
+                "qty": {
+                    "config": INTEGERS_ONLY_CONFIG,
+                    "coords": self.resolution.buy_order_tp_qty_col_x_coords,
+                }
             }
-        }
+        else:
+            columns = {
+                "name": {
+                    "config": EVERYTHING_CONFIG,
+                    "coords": self.resolution.tp_name_col_x_coords,
+                },
+                "price": {
+                    "config": NUMBERS_PERIODS_COMMAS_CONFIG,
+                    "coords": self.resolution.tp_price_col_x_coords,
+                },
+                "avail": {
+                    "config": INTEGERS_ONLY_CONFIG,
+                    "coords": self.resolution.tp_avail_col_x_coords,
+                }
+            }
         results = []
         img_arr = pre_process_listings_image(self.original_image)
         img = Image.fromarray(img_arr)

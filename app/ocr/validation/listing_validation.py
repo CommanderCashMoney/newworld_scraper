@@ -77,28 +77,38 @@ class ListingValidator:
     def get_valid_price(self, psv: PriceSectionValidator, price_index_offset: int) -> Optional[Decimal]:
         return psv.listings[self.current_index - price_index_offset].get("validated_price")
 
-    def validate_quantity(self) -> bool:
-        # default =1 for avail and qty, but it's 0 for sold
-        fields_to_val = ['qty', 'sold', 'avail']
-        for col in fields_to_val:
-            cur_obj = self.price_list[self.current_index]
-            new_val = cur_obj.get(col, "0")
-            if not new_val.isnumeric():
-                new_val = "0"
-            elif int(new_val) > 10000:
-                new_val = "1"
-            self.price_list[self.current_index][col] = new_val
-        # this is all a bit messy. I should cleran this up
-        if self.price_list[self.current_index]['qty'] == "0":
-            self.price_list[self.current_index]['qty'] = "1"
-        if self.price_list[self.current_index]['sold'] == "0" and self.price_list[self.current_index]['status'] == 'Completed':
-            self.price_list[self.current_index]['sold'] = "1"
-        if self.price_list[self.current_index]['sold'] > self.price_list[self.current_index]['qty']:
-            self.price_list[self.current_index]['qty'] = self.price_list[self.current_index]['sold']
-        if self.price_list[self.current_index]['avail'] == "0":
+    def validate_avail(self):
+        cur_obj = self.price_list[self.current_index]
+        avail = cur_obj.get('avail', "1")
+        if avail == '0' or not avail.isnumeric():
+            self.price_list[self.current_index]['avail'] = "1"
+        if int(avail) > 10000:
+            self.price_list[self.current_index]['avail'] = "1"
+        if not cur_obj.get('avail'):
             self.price_list[self.current_index]['avail'] = "1"
 
-        return True
+    def validate_qty(self):
+        cur_obj = self.price_list[self.current_index]
+        qty = cur_obj.get('qty', "1")
+        if qty == '0' or not qty.isnumeric():
+            self.price_list[self.current_index]['qty'] = "1"
+        if int(qty) > 10000:
+            self.price_list[self.current_index]['qty'] = "10000"
+        if not cur_obj.get('qty'):
+            self.price_list[self.current_index]['qty'] = "1"
+
+    def validate_sold(self):
+        cur_obj = self.price_list[self.current_index]
+        sold = cur_obj.get('sold', "0")
+        if not sold.isnumeric():
+            self.price_list[self.current_index]['sold'] = "0"
+        if int(sold) > 10000:
+            self.price_list[self.current_index]['sold'] = "1"
+        if self.price_list[self.current_index]['sold'] == "0" and self.price_list[self.current_index]['status'] == 'Completed':
+            self.price_list[self.current_index]['sold'] = "1"
+        if not cur_obj.get('sold'):
+            self.price_list[self.current_index]['sold'] = "0"
+
 
     def validate_name(self) -> bool:
         validated_name_key = "validated_name"
@@ -168,7 +178,7 @@ class ListingValidator:
                 c_datetime = c_time
             self.price_list[self.current_index]['completion_time'] = c_datetime
 
-    def validate_section(self, price_list: List[dict]) -> None:
+    def validate_section(self, price_list: List[dict], section) -> None:
         self.set_api_info()
         self.last_good_price = None
         self.price_list.extend(price_list)
@@ -183,13 +193,19 @@ class ListingValidator:
             price_invalid = validated_price is None
             name_invalid = not self.validate_name()
             self.validate_status()
-            quantity_invalid = not self.validate_quantity()  # can never be non valid
+            if section == 'Sold Items':
+                self.validate_sold()
+            elif 'Buy Order - ' in section:
+                self.validate_qty()
+            else:
+                self.validate_avail()
+            # quantity_invalid = not self.validate_quantity()
             self.validate_completed_time()
 
             current_price["validated_price"] = validated_price
             filename = current_price["filename"].name
 
-            invalid = name_invalid or price_invalid or quantity_invalid
+            invalid = name_invalid or price_invalid
             current_price["valid"] = not invalid
             if invalid:
                 # logging.debug(f"Could not validate {json.dumps(current_price, indent=2, default=str)}")

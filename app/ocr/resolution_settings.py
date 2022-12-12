@@ -133,8 +133,8 @@ class Resolution(BaseModel):
     buy_order_first_item_listing_bbox: Tuple[int, int, int, int]
     buy_order_mouse_scroll_loc: Tuple[int, int]
     buy_order_all_items_tab: Tuple[int, int]
-    buy_order_sections: Dict[str, Tuple[int, int]]
-
+    buy_order_sections: Dict[str, Tuple[Tuple[int, int], bool]]
+    buy_order_sort_down_arrow: ImageReference
     def __str__(self) -> str:
         return f"<Resolution: {self.name}>"
 
@@ -195,8 +195,8 @@ res_1440p = Resolution(
     buy_order_refresh_button=ImageReference(screen_bbox=(1558, 946, 170, 40), file_name="refresh_btn.png", min_conf=0.90),
     buy_order_next_page_coords=(2379, 411),
     buy_order_pages_bbox=(2310, 398, 34, 19),
-    buy_order_items_bbox=(949, 298, 1468, 714),
-    buy_order_items_bbox_last=(949, 992, 1468, 406),
+    buy_order_items_bbox=(949, 508, 1468, 714),
+    buy_order_items_bbox_last=(949, 786, 1468, 612),
     buy_order_tp_row_height=256,
     buy_order_tp_name_col_x_coords=(0, 336),
     buy_order_tp_price_col_x_coords=(336, 548),
@@ -209,6 +209,8 @@ res_1440p = Resolution(
     buy_order_first_item_listing_bbox=(870, 516, 200, 70),
     buy_order_mouse_scroll_loc=(2412, 523),
     buy_order_all_items_tab=(1003, 311),
+    buy_order_sort_down_arrow=ImageReference(screen_bbox=(1288, 471, 17, 25), file_name="sort_up_arrow.png", min_conf=0.90),
+
 
     # ------------------------------------
     # False and True indicate if a resource reset is needed before starting this section
@@ -231,10 +233,10 @@ res_1440p = Resolution(
            'Sold Items': ((1183, 207), False),
        },
     buy_order_sections={
-            'Resources': (200, 901),
-            'Consumables': (195, 1005),
-            'Ammunition': (195, 1090),
-            'House Furnishings': (195, 1196),
+            'Buy Order - Resources': ((200, 901), False),
+            'Buy Order - Consumables': ((195, 1005), False),
+            'Buy Order - Ammunition': ((195, 1090), False),
+            'Buy Order - House Furnishings': ((195, 1196), False),
     },
 )
 
@@ -286,6 +288,35 @@ res_1080p = Resolution(
     sold_order_sold_items_tab=(287, 414),
     sold_order_mouse_scroll_loc=(1778, 396),
     sold_order_price_sort_down=ImageReference(screen_bbox=(807, 362, 13, 19), file_name="sold_order_price_sort_down.png", min_conf=0.70),
+    # --------Buy Orders ----------------
+    sell_tab_coords=(754, 210),
+    buy_order_all_items=(985, 308),
+    buy_order_top_scroll=ImageReference(screen_bbox=(2416, 497, 34, 34), file_name="top_of_scroll.png", min_conf=0.90),
+    buy_order_mid_scroll=ImageReference(screen_bbox=(2421, 1196, 27, 27), file_name="mid_scroll_bottom.png",
+                                        min_conf=0.86),
+    buy_order_bottom_scroll=ImageReference(screen_bbox=(2421, 987, 25, 38), file_name="bottom_of_scroll_bottom.png",
+                                           min_conf=0.90),
+    buy_order_cancel_button=ImageReference(screen_bbox=(967, 1127, 90, 30), file_name="cancel_btn.png", min_conf=0.90),
+    buy_order_refresh_button=ImageReference(screen_bbox=(1558, 946, 170, 40), file_name="refresh_btn.png",
+                                            min_conf=0.90),
+    buy_order_next_page_coords=(2379, 411),
+    buy_order_pages_bbox=(2310, 398, 34, 19),
+    buy_order_items_bbox=(949, 508, 1468, 714),
+    buy_order_items_bbox_last=(949, 992, 1468, 406),
+    buy_order_tp_row_height=256,
+    buy_order_tp_name_col_x_coords=(0, 336),
+    buy_order_tp_price_col_x_coords=(336, 548),
+    buy_order_tp_tier_col_x_coords=(548, 665),
+    buy_order_tp_gs_col_x_coords=(665, 785),
+    buy_order_tp_attri_col_x_coords=(785, 972),
+    buy_order_tp_perk_col_x_coords=(972, 1145),
+    buy_order_tp_gem_col_x_coords=(1145, 1279),
+    buy_order_tp_qty_col_x_coords=(1279, 1413),
+    buy_order_first_item_listing_bbox=(870, 516, 200, 70),
+    buy_order_mouse_scroll_loc=(2412, 523),
+    buy_order_all_items_tab=(1003, 311),
+    buy_order_sort_down_arrow=ImageReference(screen_bbox=(1288, 471, 17, 25), file_name="sold_order_price_sort_down.png", min_conf=0.90),
+
     # False and True indicate if a resource reset is needed before starting this section
     sections={
 
@@ -303,6 +334,12 @@ res_1080p = Resolution(
            'Ammunition': ((121, 740), False),
            'House Furnishings': ((123, 816), False),
            'Sold Items': ((885, 152), False)
+    },
+    buy_order_sections={
+        'Buy Order - Resources': ((200, 901), False),
+        'Buy Order - Consumables': ((195, 1005), False),
+        'Buy Order - Ammunition': ((195, 1090), False),
+        'Buy Order - House Furnishings': ((195, 1196), False),
     },
 )
 

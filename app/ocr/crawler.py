@@ -19,7 +19,7 @@ from app.settings import SETTINGS
 from app.utils import format_seconds
 from app.utils.keyboard import press_key
 from app.utils.window import bring_new_world_to_foreground, exit_to_desktop
-
+from app.utils.mouse import click
 
 class Crawler:
     def __init__(self, ocr_queue: OCRQueue, run_id: str) -> None:
@@ -63,6 +63,7 @@ class Crawler:
             logging.info("Moving character...")
             time.sleep(2)
             self.move()
+            return
 
     def move(self) -> None:
         try:
@@ -129,10 +130,22 @@ class Crawler:
         pages_to_parse = SESSION_DATA.pages
         for section_crawler in self.buy_order_section_crawlers:
             self.check_move()
+            click('left', self.resolution.sell_tab_coords)
+            time.sleep(2)
+            # choose sold order tab
+            click('left', self.resolution.buy_order_all_items)
+            time.sleep(2)
+            sorted_arrow = self.resolution.buy_order_sort_down_arrow
+            for x in range(3):
+                if not sorted_arrow.compare_image_reference():
+                    click('left', sorted_arrow.center)
+                    time.sleep(3)
+                else:
+                    break
             if self.stopped:
                 break
             self.current_section += 1
-            section_crawler.crawl(pages_to_parse)
+            section_crawler.crawl(pages_to_parse, is_buy_order=True)
 
     def wait_for_parse(self) -> None:
         if self.ocr_queue.thread_is_alive:
