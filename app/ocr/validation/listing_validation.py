@@ -104,7 +104,7 @@ class ListingValidator:
             self.price_list[self.current_index]['sold'] = "0"
         if int(sold) > 10000:
             self.price_list[self.current_index]['sold'] = "1"
-        if self.price_list[self.current_index]['sold'] == "0" and self.price_list[self.current_index]['status'] == 'Completed':
+        if sold == "0" and self.price_list[self.current_index].get('status') == 'Completed':
             self.price_list[self.current_index]['sold'] = "1"
         if not cur_obj.get('sold'):
             self.price_list[self.current_index]['sold'] = "0"

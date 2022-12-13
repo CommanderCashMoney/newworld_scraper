@@ -87,8 +87,8 @@ class OCRQueue:
                     self.section_results = [
                         {
                             "name": listing["validated_name"],
-                            "qty": listing["qty"],
-                            "sold": listing["sold"],
+                            "qty": listing.get("qty", '1'),
+                            "sold": listing.get("sold", '0'),
                             "price": listing["validated_price"],
                             "timestamp": listing["timestamp"],
                             "name_id": listing["name_id"],

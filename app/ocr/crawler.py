@@ -106,6 +106,13 @@ class Crawler:
             elif section_crawler.section == 'Buy Orders':
                 self.crawl_buy_orders()
             else:
+                sorted_arrow = self.resolution.sort_up_arrow
+                for x in range(3):
+                    if not sorted_arrow.compare_image_reference():
+                        click('left', sorted_arrow.center)
+                        time.sleep(3)
+                    else:
+                        break
                 section_crawler.crawl(pages_to_parse)
 
         if self.stopped:

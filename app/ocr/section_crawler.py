@@ -290,10 +290,13 @@ class SectionCrawler:
                 return True
             time.sleep(0.1)
         if self.current_page != self.pages:
-            logging.error(f'Took too long waiting for page to load {self}, skipping page.')
+            scrollbar_conf = scroll_ref.compare_image_reference(ret_val='debug')
+            logging.error(f'Page load for {self} took too long, trying again. Conf: {scrollbar_conf} Pos: {self.scroll_state}')
+            self.current_page -= 1
             self.load_fail_count += 1
+
             if self.load_fail_count > 4:
-                logging.error(f'Too many page load fails, moving to next section. Failed at {self}')
+                logging.error(f'Too many page load fails, moving to next section. May have reached the end of section. Failed at {self}')
         return False
 
     def wait_for_load(self):
