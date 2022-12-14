@@ -19,7 +19,7 @@ from app.settings import SETTINGS
 from app.utils import format_seconds
 from app.utils.keyboard import press_key
 from app.utils.window import bring_new_world_to_foreground, exit_to_desktop
-
+from app.utils.mouse import click
 
 class Crawler:
     def __init__(self, ocr_queue: OCRQueue, run_id: str) -> None:
@@ -28,6 +28,7 @@ class Crawler:
         self.ocr_queue.crawler = self
         self.resolution = get_resolution_obj()
         self.section_crawlers = [SectionCrawler(self, k) for k in self.resolution.sections.keys() if SESSION_DATA.scan_sections[k]]
+        self.buy_order_section_crawlers = [SectionCrawler(self, k) for k in self.resolution.buy_order_sections.keys()]
         self.current_section = 0
         self.crawler_thread = Thread(target=self.crawl, name="Crawler", daemon=True)
         self._cancelled = False
@@ -62,6 +63,7 @@ class Crawler:
             logging.info("Moving character...")
             time.sleep(2)
             self.move()
+            return
 
     def move(self) -> None:
         try:
@@ -101,7 +103,16 @@ class Crawler:
             self.current_section += 1
             if section_crawler.section == 'Sold Items':
                 section_crawler.crawl_sold_items()
+            elif section_crawler.section == 'Buy Orders':
+                self.crawl_buy_orders()
             else:
+                sorted_arrow = self.resolution.sort_up_arrow
+                for x in range(3):
+                    if not sorted_arrow.compare_image_reference():
+                        click('left', sorted_arrow.center)
+                        time.sleep(3)
+                    else:
+                        break
                 section_crawler.crawl(pages_to_parse)
 
         if self.stopped:
@@ -121,6 +132,27 @@ class Crawler:
         logging.info("Parsing results complete.")
         OverlayUpdateHandler.update('status_bar', 'Run successfully completed.')
         self.stop(reason="run completed.", wait_for_death=False)
+
+    def crawl_buy_orders(self):
+        pages_to_parse = SESSION_DATA.pages
+        for section_crawler in self.buy_order_section_crawlers:
+            self.check_move()
+            click('left', self.resolution.sell_tab_coords)
+            time.sleep(2)
+            # choose sold order tab
+            click('left', self.resolution.buy_order_all_items)
+            time.sleep(2)
+            sorted_arrow = self.resolution.buy_order_sort_down_arrow
+            for x in range(3):
+                if not sorted_arrow.compare_image_reference():
+                    click('left', sorted_arrow.center)
+                    time.sleep(3)
+                else:
+                    break
+            if self.stopped:
+                break
+            self.current_section += 1
+            section_crawler.crawl(pages_to_parse, is_buy_order=True)
 
     def wait_for_parse(self) -> None:
         if self.ocr_queue.thread_is_alive:

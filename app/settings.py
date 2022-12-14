@@ -27,7 +27,7 @@ class KeyBindings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.4.6"
+    VERSION = "1.5.0"
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
@@ -119,9 +119,7 @@ def save_sections(sections) -> None:
     overlay.window.set_alpha(1)
     SESSION_DATA.scan_sections = sections
     logging.debug(f'Scan set for: {sections}')
-    # from app.utils.window import exit_to_desktop, bring_new_world_to_foreground
-    # bring_new_world_to_foreground()
-    # exit_to_desktop()
+
 
 
 def save_username(username, pw) -> None:

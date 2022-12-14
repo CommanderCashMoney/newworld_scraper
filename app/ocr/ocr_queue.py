@@ -70,7 +70,7 @@ class OCRQueue:
 
             section = self.to_validate[0]["section"]
             self.update_overlay('status_bar', f'Validating section {section}')
-            self.validator.validate_section(self.to_validate)
+            self.validator.validate_section(self.to_validate, section)
             self.to_validate.clear()
 
             bad_indexes = len(self.validator.bad_indexes)
@@ -87,14 +87,26 @@ class OCRQueue:
                     self.section_results = [
                         {
                             "name": listing["validated_name"],
-                            "qty": listing["qty"],
-                            "sold": listing["sold"],
+                            "qty": listing.get("qty", '1'),
+                            "sold": listing.get("sold", '0'),
                             "price": listing["validated_price"],
                             "timestamp": listing["timestamp"],
                             "name_id": listing["name_id"],
                             "gs": listing.get("gs", '0'),
                             "status": listing.get("status", 'unknown'),
                             "completion_time": listing.get("completion_time", '-'),
+                        }
+                        for idx, listing in enumerate(self.validator.price_list)
+                        if idx not in self.validator.bad_indexes
+                    ]
+                elif section.find('Buy Order - ') >= 0:
+                    self.section_results = [
+                        {
+                            "name": listing["validated_name"],
+                            "qty": listing["qty"],
+                            "price": listing["validated_price"],
+                            "timestamp": listing["timestamp"],
+                            "name_id": listing["name_id"],
                         }
                         for idx, listing in enumerate(self.validator.price_list)
                         if idx not in self.validator.bad_indexes
