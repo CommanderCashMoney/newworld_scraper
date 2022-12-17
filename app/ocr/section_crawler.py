@@ -75,6 +75,7 @@ class SectionCrawler:
             crawl_success = self.crawl_page()
             if not crawl_success and (self.load_fail_count > 4 or self.retry_count > 4):
                 self.retry_count = 0
+                self.parent.ocr_queue.notify_section_complete()
                 return True
             if self.stopped:
                 return False
