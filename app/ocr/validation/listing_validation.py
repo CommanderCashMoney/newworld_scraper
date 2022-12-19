@@ -82,7 +82,10 @@ class ListingValidator:
         avail = cur_obj.get('avail', "1")
         if avail == '0' or not avail.isnumeric():
             self.price_list[self.current_index]['avail'] = "1"
-        if int(avail) > 10000:
+        try:
+            if int(avail) > 10000:
+                self.price_list[self.current_index]['avail'] = "1"
+        except Exception:
             self.price_list[self.current_index]['avail'] = "1"
         if not cur_obj.get('avail'):
             self.price_list[self.current_index]['avail'] = "1"
@@ -92,7 +95,10 @@ class ListingValidator:
         qty = cur_obj.get('qty', "1")
         if qty == '0' or not qty.isnumeric():
             self.price_list[self.current_index]['qty'] = "1"
-        if int(qty) > 10000:
+        try:
+            if int(qty) > 10000:
+                self.price_list[self.current_index]['qty'] = "10000"
+        except Exception:
             self.price_list[self.current_index]['qty'] = "10000"
         if not cur_obj.get('qty'):
             self.price_list[self.current_index]['qty'] = "1"
@@ -102,7 +108,10 @@ class ListingValidator:
         sold = cur_obj.get('sold', "0")
         if not sold.isnumeric():
             self.price_list[self.current_index]['sold'] = "0"
-        if int(sold) > 10000:
+        try:
+            if int(sold) > 10000:
+                self.price_list[self.current_index]['sold'] = "1"
+        except Exception:
             self.price_list[self.current_index]['sold'] = "1"
         if sold == "0" and self.price_list[self.current_index].get('status') == 'Completed':
             self.price_list[self.current_index]['sold'] = "1"

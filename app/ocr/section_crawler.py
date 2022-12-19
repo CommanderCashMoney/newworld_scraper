@@ -137,10 +137,12 @@ class SectionCrawler:
         # check for scrollbar
         top_scroll = self.resolution.sold_order_top_scroll
         bottom_scroll = self.resolution.sold_order_bottom_scroll
+
         if top_scroll.compare_image_reference():
             #  has a scrollbar
+            p = time.perf_counter()
 
-            while not self.stopped:
+            while not self.stopped and (time.perf_counter() - p) < 15:
                 if bottom_scroll.compare_image_reference():
 
                     print(f'bottom scroll conf: {bottom_scroll.compare_image_reference(ret_val="debug")}')
@@ -225,8 +227,8 @@ class SectionCrawler:
     def look_for_tp(self) -> bool:
         for _ in range(2):
             self.press_cancel_or_refresh()
-            trading_post_ref = self.resolution.trading_post
-            if trading_post_ref.compare_image_reference():
+            my_orders_clip_ref = self.resolution.my_orders_clip_icon
+            if my_orders_clip_ref.compare_image_reference():
                 return True
             else:
                 logging.debug("Couldn't find TP, trying again")

@@ -94,7 +94,7 @@ pages_bbox, _ = ask_for_area("The bounding box of the number of pages", capture=
 print(pages_bbox)
 exit()
 
-trading_post = request_crop_of("trading_post_label.png", "Trading Post Label")
+# trading_post = request_crop_of("trading_post_label.png", "Trading Post Label")
 top_scroll = request_crop_of("top_of_scroll.png", "Top of Scroll", move_and_wait=True)
 mid_scroll = request_crop_of("mid_scroll_bottom.png", "Mid Scroll Bottom", move_and_wait=True)
 bottom_scroll = request_crop_of("bottom_of_scroll_bottom.png", "Bottom Scroll Bottom", move_and_wait=True)
@@ -143,7 +143,7 @@ house_furnishings = ask_for_location("house_furnishings")
 
 print(f"""
 res_1080p = Resolution(
-    trading_post=ImageReference(screen_bbox={trading_post}, file_name="trading_post_label.png", min_conf=0.92),
+    
     top_scroll=ImageReference(screen_bbox={top_scroll}, file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox={mid_scroll}, file_name="mid_scroll_bottom.png", min_conf=0.95),
     bottom_scroll=ImageReference(screen_bbox={bottom_scroll}, file_name="bottom_of_scroll_bottom.png", min_conf=0.95),
