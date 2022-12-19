@@ -13,7 +13,7 @@ class ImageReference(BaseModel):
     file_name: str
     min_conf: float
 
-    def compare_image_reference(self, ret_val=bool):
+    def compare_image_reference(self, ret_val=False):
         from app.settings import SETTINGS
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
         reference_grab = screenshot_bbox(*self.screen_bbox).img_array
@@ -25,11 +25,11 @@ class ImageReference(BaseModel):
         res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         # debug version. Enable this
-        if max_val < self.min_conf:
-            logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
-            bpc = SETTINGS.temp_app_data
-            cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
-        if ret_val == bool:
+        # if max_val < self.min_conf:
+        #     logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
+        #     bpc = SETTINGS.temp_app_data
+        #     cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
+        if not ret_val:
             return max_val > self.min_conf
         else:
             return max_val
@@ -62,7 +62,8 @@ class Resolution(BaseModel):
     sections: Dict[str, Tuple[Tuple[int, int], bool]]
     resources_reset_loc: Tuple[int, int]
     # trading_post: ImageReference
-    my_orders_clip_icon: ImageReference
+    # my_orders_clip_icon: ImageReference
+    buy_icon: ImageReference
     top_scroll: ImageReference
     mid_scroll: ImageReference
     bottom_scroll: ImageReference
@@ -144,7 +145,8 @@ class Resolution(BaseModel):
 res_1440p = Resolution(
     name="1440p",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.90),
-    my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    buy_icon=ImageReference(screen_bbox=(249, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.90),
     mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.90),
     bottom_scroll=ImageReference(screen_bbox=(2443, 915, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.90),
@@ -248,7 +250,8 @@ res_1440p = Resolution(
 res_1080p = Resolution(
     name="1080p",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.90),
-    my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    # my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    buy_icon=ImageReference(screen_bbox=(187, 143, 23, 17), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(1833, 314, 18, 19), file_name="top_of_scroll.png", min_conf=0.90),
     mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.90),
     bottom_scroll=ImageReference(screen_bbox=(1835, 1031, 13, 19), file_name="bottom_of_scroll_bottom.png", min_conf=0.90),

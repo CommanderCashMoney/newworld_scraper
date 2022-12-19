@@ -227,7 +227,7 @@ class SectionCrawler:
     def look_for_tp(self) -> bool:
         for _ in range(2):
             self.press_cancel_or_refresh()
-            my_orders_clip_ref = self.resolution.my_orders_clip_icon
+            my_orders_clip_ref = self.resolution.buy_icon
             if my_orders_clip_ref.compare_image_reference():
                 return True
             else:
