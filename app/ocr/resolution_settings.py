@@ -144,7 +144,7 @@ class Resolution(BaseModel):
 res_1440p = Resolution(
     name="1440p",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.90),
-    my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.90),
+    my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.90),
     mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.90),
     bottom_scroll=ImageReference(screen_bbox=(2443, 915, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.90),
@@ -248,7 +248,7 @@ res_1440p = Resolution(
 res_1080p = Resolution(
     name="1080p",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.90),
-    my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.90),
+    my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(1833, 314, 18, 19), file_name="top_of_scroll.png", min_conf=0.90),
     mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.90),
     bottom_scroll=ImageReference(screen_bbox=(1835, 1031, 13, 19), file_name="bottom_of_scroll_bottom.png", min_conf=0.90),
