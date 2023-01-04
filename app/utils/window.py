@@ -1,6 +1,7 @@
 import win32gui, win32con
 import re
-
+from playsound import playsound
+from app.utils import resource_path
 
 class Window:
     def __init__(self):
@@ -35,6 +36,16 @@ def bring_new_world_to_foreground() -> None:
     cw.BringToTop()
     cw.SetAsForegroundWindow()
 
+def bring_scanner_to_foreground() -> None:
+    wildcard = "^Trade Price Scraper*"
+    cw = Window()
+    cw.find_window_wildcard(wildcard)
+    cw.BringToTop()
+    cw.SetAsForegroundWindow()
+
+def play_sound() -> None:
+    sound_file = resource_path(f"app/sounds/ka-ching.mp3")
+    playsound(sound_file)
 
 
 def exit_to_desktop() -> None:

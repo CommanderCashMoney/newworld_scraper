@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     api_password: str = ""
     resolution: str = Field(default_factory=get_default_resolution_key)
     disable_afk_timer = False
+    playsound = False
 
     log_file: str = "logging.txt"
 
@@ -87,8 +88,9 @@ def load_settings() -> Settings:
             pw = settings_values.pop("pw", "").encode("utf-8")
             password = b64d(pw)
             resolution = settings_values.pop("resolution", get_default_resolution_key())
+            playsound = settings_values.pop("playsound", False)
             keybinds = KeyBindings(**settings_values)
-            return Settings(api_username=username, api_password=password, resolution=resolution, keybindings=keybinds)
+            return Settings(api_username=username, api_password=password, resolution=resolution, playsound=playsound, keybindings=keybinds)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
     return Settings()
@@ -100,16 +102,20 @@ SETTINGS = load_settings()
 def save(values) -> None:
     from app.overlay import overlay
     resolution = values.pop("resolution", SETTINGS.resolution)
+    playsound = values.pop("playsound", SETTINGS.playsound)
     pw = b64e(bytes(SETTINGS.api_password, 'utf-8'))
     with SETTINGS_FILE_LOC.open("w") as f:
         json.dump({
             "un": SETTINGS.api_username,
             "resolution": resolution,
+            "playsound": playsound,
             "pw": pw.decode('utf-8'),
             **values
         }, f)
         SETTINGS.keybindings = KeyBindings(**values)
         SETTINGS.resolution = resolution
+        SETTINGS.playsound = playsound
+
     overlay.window.set_alpha(1)
 
 

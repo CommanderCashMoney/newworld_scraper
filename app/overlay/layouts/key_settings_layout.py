@@ -27,6 +27,9 @@ def settings_layout():
             sg.Combo(["1080p", "1440p"], key='resolution', default_value=SETTINGS.resolution, readonly=True)
         ],
         [
+            sg.Checkbox('Play sound when finished', key='playsound', default=SETTINGS.playsound)
+        ],
+        [
             sg.Button('Save', enable_events=True, key=events.KEYBINDS_SAVED)
         ]
     ]

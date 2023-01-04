@@ -18,7 +18,7 @@ from app.session_data import SESSION_DATA
 from app.settings import SETTINGS
 from app.utils import format_seconds
 from app.utils.keyboard import press_key
-from app.utils.window import bring_new_world_to_foreground, exit_to_desktop
+from app.utils.window import bring_new_world_to_foreground, exit_to_desktop, bring_scanner_to_foreground, play_sound
 from app.utils.mouse import click
 
 class Crawler:
@@ -126,7 +126,10 @@ class Crawler:
 
         if SESSION_DATA.close_nw:
             exit_to_desktop()
+        bring_scanner_to_foreground()
         self.wait_for_parse()
+        if SETTINGS.playsound:
+            play_sound()
 
 
         logging.info("Parsing results complete.")
