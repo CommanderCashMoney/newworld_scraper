@@ -58,6 +58,11 @@ def login_completed(response) -> None:
         OverlayUpdateHandler.update('login_status', '')
         access_groups = json_response['groups']
         server_access_ids = []
+        if 'scanner_user' not in access_groups:
+            overlay.enable(events.LOGIN_BUTTON)
+            OverlayUpdateHandler.update('login_status', 'login failed - no scan permissions')
+            overlay.read()
+            return
         for group in access_groups:
             if 'server-' in group:
                 server_access_ids.append(group[7:])
