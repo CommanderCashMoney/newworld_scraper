@@ -56,7 +56,7 @@ def submit_price_data(price_data, resolution, price_accuracy, name_accuracy, sec
         logging.debug("Prices submitted.")
     else:
 
-        logging.error("Price submission timed out.")
+        logging.error(f"Price submission failed - {r.text}")
         OverlayUpdateHandler.update("status_bar", "Price submissions timed out. Please wait a few minutes and check #scan_notifications")
     return success
 
