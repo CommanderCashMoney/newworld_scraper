@@ -27,7 +27,7 @@ class KeyBindings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.5.6"
+    VERSION = "1.5.7"
 
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
