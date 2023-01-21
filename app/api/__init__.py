@@ -23,6 +23,7 @@ def check_latest_version() -> str:
         if r.status_code != 200:
             return None
     except requests.exceptions.ConnectionError:
+        logging.error(f"Error in checking latest version")
         return None
     return r.json()
 
