@@ -24,7 +24,7 @@ def settings_layout():
         ],
         [
             sg.Text('Resolution', auto_size_text=True),
-            sg.Combo(["1080p", "1440p", "2560x1080"], key='resolution', default_value=SETTINGS.resolution, readonly=True)
+            sg.Combo(["1920x1080", "2560x1080", "2560x1440", "3840x2160"], key='resolution', default_value=SETTINGS.resolution, readonly=True)
         ],
         [
             sg.Checkbox('Play sound when finished', key='playsound', default=SETTINGS.playsound)

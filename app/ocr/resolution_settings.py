@@ -141,6 +141,110 @@ class Resolution(BaseModel):
     def __str__(self) -> str:
         return f"<Resolution: {self.name}>"
 
+res_4k = Resolution(
+    name="3480x2160",
+    # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.90),
+    # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    buy_icon=ImageReference(screen_bbox=(249, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
+    top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.90),
+    mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.90),
+    bottom_scroll=ImageReference(screen_bbox=(2443, 915, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.90),
+    cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", min_conf=0.90),
+    refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", min_conf=0.90),
+    next_page_coords=(2400, 300),
+    pages_bbox=(2335, 293, 33, 17),
+    items_bbox=(927, 430, 1510, 919),
+    items_bbox_last=(927, 1198, 1510, 200),
+    tp_row_height=256,
+    tp_name_col_x_coords=(0, 380),
+    tp_price_col_x_coords=(380, 550),
+    tp_avail_col_x_coords=(1320, 1440),
+    tp_tier_col_x_coords=(551, 630),
+    tp_gs_col_x_coords=(631, 712),  # no longer accurate
+    tp_gem_col_x_coords=(712, 802),
+    tp_perk_col_x_coords=(0, 0),  # don't actually know
+    tp_rarity_col_x_coords=(957, 1079),
+    tp_location_col_x_coords=(1342, 1510),
+    first_item_listing_bbox=(842, 444, 200, 70),
+    mouse_scroll_loc=(2435, 438),
+    menu_loc=(2492, 75),
+    exit_to_desk_loc=(1765, 884),
+    yes_button_loc=(1463, 864),
+    resources_reset_loc=(170, 796),
+    sort_up_arrow=ImageReference(screen_bbox=(1316, 392, 17, 25), file_name="sort_up_arrow.png", min_conf=0.90),
+    # --------Sold Orders ----------------
+    sold_order_top_scroll=ImageReference(screen_bbox=(2374, 509, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
+    sold_order_bottom_scroll=ImageReference(screen_bbox=(2380, 1342, 24, 14), file_name="sold_order_bottom_scroll.png", min_conf=0.70),
+    sold_order_items_bbox=(757, 523, 1601, 709),
+    sold_order_items_full_bbox=(757, 523, 1616, 812),
+    sold_order_tp_name_col_x_coords=(0, 316),
+    sold_order_tp_price_col_x_coords=(316, 439),
+    sold_order_qty_col_x_coords=(439, 563),
+    sold_order_sold_qty_col_x_coords=(563, 686),
+    sold_order_tp_gs_col_x_coords=(686, 810),
+    sold_order_tp_gem_col_x_coords=(810, 933),
+    sold_order_tp_perk_col_x_coords=(933, 1057),
+    sold_order_tp_status_col_x_coords=(1057, 1238),
+    sold_order_tp_completion_time_col_x_coords=(1238, 1428),
+    sold_order_completed_tab=(833, 397),
+    sold_order_sold_items_tab=(382, 557),
+    sold_order_mouse_scroll_loc=(2370, 528),
+    sold_order_price_sort_down=ImageReference(screen_bbox=(1076, 483, 17, 25), file_name="sold_order_price_sort_down.png", min_conf=0.70),
+    # --------Buy Orders ----------------
+    sell_tab_coords=(754, 210),
+    buy_order_all_items=(985, 308),
+    buy_order_top_scroll=ImageReference(screen_bbox=(2416, 497, 34, 34), file_name="top_of_scroll.png", min_conf=0.90),
+    buy_order_mid_scroll=ImageReference(screen_bbox=(2421, 1196, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.86),
+    buy_order_bottom_scroll=ImageReference(screen_bbox=(2421, 987, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.90),
+    buy_order_cancel_button=ImageReference(screen_bbox=(967, 1127, 90, 30), file_name="cancel_btn.png", min_conf=0.90),
+    buy_order_refresh_button=ImageReference(screen_bbox=(1558, 946, 170, 40), file_name="refresh_btn.png", min_conf=0.90),
+    buy_order_next_page_coords=(2379, 411),
+    buy_order_pages_bbox=(2310, 398, 34, 19),
+    buy_order_items_bbox=(949, 508, 1468, 714),
+    buy_order_items_bbox_last=(949, 786, 1468, 612),
+    buy_order_tp_row_height=256,
+    buy_order_tp_name_col_x_coords=(0, 336),
+    buy_order_tp_price_col_x_coords=(336, 548),
+    buy_order_tp_tier_col_x_coords=(548, 665),
+    buy_order_tp_gs_col_x_coords=(665, 785),
+    buy_order_tp_attri_col_x_coords=(785, 972),
+    buy_order_tp_perk_col_x_coords=(972, 1145),
+    buy_order_tp_gem_col_x_coords=(1145, 1279),
+    buy_order_tp_qty_col_x_coords=(1279, 1413),
+    buy_order_first_item_listing_bbox=(870, 516, 200, 70),
+    buy_order_mouse_scroll_loc=(2412, 523),
+    buy_order_all_items_tab=(1003, 311),
+    buy_order_sort_down_arrow=ImageReference(screen_bbox=(1288, 471, 17, 25), file_name="sort_up_arrow.png", min_conf=0.90),
+
+
+    # ------------------------------------
+    # False and True indicate if a resource reset is needed before starting this section
+    # buy_order_adjustment=(30, 105),  # add this to the loc of the section below to get the loc for buy orders
+    sections={
+           'Raw Resources': ((368, 488), True),
+           'Arcana': ((368, 568), True),
+           'Potion Reagents': ((368, 632), True),
+           'Cooking Ingredients': ((368, 708), True),
+           'Dye Ingredients': ((368, 788), True),
+           'Refined Resources': ((368, 855), True),
+           'Components': ((368, 936), True),
+           'Craft Mods': ((368, 990), True),
+           'Azoth': ((368, 1068), True),
+           'Runeglass Components': ((368, 1140), True),
+           'Consumables': ((165, 900), False),
+           'Ammunition': ((165, 985), False),
+           'House Furnishings': ((165, 1091), False),
+           'Buy Orders': ((754, 210), False),
+           'Sold Items': ((1183, 207), False),
+       },
+    buy_order_sections={
+            'Buy Order - Resources': ((200, 901), False),
+            'Buy Order - Consumables': ((195, 1005), False),
+            'Buy Order - Ammunition': ((195, 1090), False),
+            'Buy Order - House Furnishings': ((195, 1196), False),
+    },
+)
+
 res_2560x1080p = Resolution(
     name="2560x1080",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.90),
@@ -251,7 +355,7 @@ res_2560x1080p = Resolution(
 )
 
 res_1440p = Resolution(
-    name="1440p",
+    name="2560x1440",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.90),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
     buy_icon=ImageReference(screen_bbox=(249, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
@@ -356,7 +460,7 @@ res_1440p = Resolution(
 
 
 res_1080p = Resolution(
-    name="1080p",
+    name="1920x1080",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.90),
     # my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
     buy_icon=ImageReference(screen_bbox=(187, 143, 23, 17), file_name="buy_icon.png", min_conf=0.70),
@@ -463,9 +567,10 @@ res_1080p = Resolution(
 
 
 resolutions = {
-    "1080p": res_1080p,
-    "1440p": res_1440p,
-    "2560x1080": res_2560x1080p
+    "1920x1080": res_1080p,
+    "2560x1440": res_1440p,
+    "2560x1080": res_2560x1080p,
+    "3840x2160": res_4k
 }
 
 

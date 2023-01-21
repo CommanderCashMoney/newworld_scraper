@@ -19,4 +19,4 @@ def get_default_resolution_key():
     if res_str in resolutions:
         return res_str
     logging.warning(f"Your resolution was detected as {width}x{height}, but this is not supported.")
-    return "1440p"
+    return "2560x1440"
