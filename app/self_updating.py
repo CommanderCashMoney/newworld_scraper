@@ -49,6 +49,8 @@ def version_fetched(response) -> None:
             overlay.show_update_window()
         return
     # otherwise, we error out.
+    logging.error(f"Failed to connect to nwmp version check - {response}")
+
     hide = [
         "un_text",
         events.USERNAME_INPUT,

@@ -60,7 +60,7 @@ def request_crop_of(file_name: str, descriptor: str = None, move_and_wait=False,
     if descriptor is None:
         descriptor = file_name
 
-    base = "app/images/new_world/1080p"
+    base = "app/images/new_world/1920x1080"
 
     area, screenshot = ask_for_area(descriptor, capture=capture)
     if move_and_wait:
