@@ -62,6 +62,35 @@ def parse_page_count(txt: str) -> Tuple[int, bool]:
     return pages, True
 
 
+def parse_current_page(txt: dict) -> Tuple[int, bool]:
+    text_list = txt['text']
+    raw_text_list = ''.join(text_list)
+    print(f'raw: {raw_text_list}')
+    # loop through conf scores and remove low scores
+    for idx, val in reversed(list(enumerate(txt['conf']))):
+        if val == '-1':
+            text_list.pop(idx)
+
+    text_string = ''.join(text_list)
+    groups = re.search(r"\d+", text_string)
+    if groups:
+        try:
+            int_found = groups[0]
+            if int_found[0] == '9' and int(int_found) > 500:
+                print('removed a 9')
+                int_found = int_found[1:]
+            if int(int_found) > 500:
+                print('greater than 500')
+                return 500, False
+            else:
+                return int(int_found)+1, True
+        except IndexError:
+            return 500, False
+    else:
+        print(f'None: {text_string}')
+        return 500, False
+
+
 def pre_process_listings_image(img, scale=2.5):
     img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
     width = int(img.shape[1] * scale)
@@ -98,6 +127,21 @@ def pre_process_page_count_image(img_arr):
     binary_img = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     return np.invert(binary_img)
 
+def pre_process_current_page_image(img_arr):
+    img = cv2.cvtColor(img_arr, cv2.COLOR_BGRA2RGB)
+    width = int(img.shape[1] * 2.5)
+    height = int(img.shape[0] * 2.5)
+    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_BITS)
+
+    lower_color = np.array([75, 75, 85])
+    upper_color = np.array([255, 255, 255])
+
+    mask = cv2.inRange(img, lower_color, upper_color)
+    res = cv2.bitwise_and(img, img, mask=mask)
+    img_gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
+    res = cv2.bilateralFilter(img_gray, 5, 50, 100)
+    # res = cv2.threshold(res, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    return np.invert(res)
 
 class Screenshot:
     def __init__(self, np_arr: np.ndarray) -> None:

@@ -9,7 +9,7 @@ from pytesseract import pytesseract
 
 from app.ocr.resolution_settings import get_resolution_obj
 from app.ocr.resolution_settings import Resolution
-from app.ocr.utils import parse_page_count, pre_process_page_count_image, screenshot_bbox, pre_process_listings_image
+from app.ocr.utils import parse_page_count, pre_process_page_count_image, screenshot_bbox, pre_process_listings_image, parse_current_page, pre_process_current_page_image
 from app.overlay.overlay_updates import OverlayUpdateHandler
 from app.utils.mouse import click, mouse
 from app.utils.timer import Timer
@@ -69,7 +69,21 @@ class SectionCrawler:
             logging.info(f"Crawl for section {self.section} complete.")
 
     def crawl_section(self) -> bool:
-        for i in range(self.pages):
+        i = 0
+        while i < self.pages:
+            i += 1
+            print(self.get_current_page())
+            if i == self.pages:
+                print(f'scanner thinks its on last page {i}')
+                current_page = self.get_current_page()
+                if current_page and current_page < i:
+                    if current_page < self.pages:
+                        print(f'We actually had {self.pages - current_page} page left')
+                        i = current_page
+                    else:
+                        print('we are actually on the last page')
+                else:
+                    print('We are actually on the last page, or we dont know')
             if self.stopped:
                 break
             crawl_success = self.crawl_page()
@@ -82,6 +96,7 @@ class SectionCrawler:
             if not self.next_page():
                 self.parent.stop("Couldn't find TP.", wait_for_death=False)
                 return False
+
         OverlayUpdateHandler.update("pages_left", "-")
         self.parent.ocr_queue.notify_section_complete()
         return True
@@ -206,6 +221,23 @@ class SectionCrawler:
         logging.debug(f"{self.section} - Number of pages looks like: {pages_str} - got {pages}")
         return pages
 
+    def get_current_page(self) -> int:
+        current_page_bbox = self.resolution.current_page_bbox
+        screenshot = screenshot_bbox(*current_page_bbox)
+        res = pre_process_current_page_image(screenshot.img_array)
+        custom_config = """--psm 7 -c tessedit_char_whitelist="0123456789Pageof " """
+        txt = pytesseract.image_to_data(res, output_type=pytesseract.Output.DICT, config=custom_config)
+        current_page, validation_success = parse_current_page(txt)
+        print(f'current page: {current_page} - looks like {validation_success}')
+        if not validation_success:
+            bpc = SETTINGS.temp_app_data / self.parent.run_id / "bad-page-counts"
+            bpc.mkdir(exist_ok=True, parents=True)
+            bpc = bpc / f"{self.parent.run_id}-{self.section}-0.png"
+            screenshot.save_image(str(bpc), pil_high_quality=True)
+            return None
+        return current_page
+
+
     def press_cancel_or_refresh(self):
         if self.is_buy_order:
             cancel_button = self.resolution.buy_order_cancel_button
@@ -255,9 +287,9 @@ class SectionCrawler:
         if not self.look_for_tp():
             return False
         if self.is_buy_order:
-            click('left', self.resolution.buy_order_next_page_coords)
+            click('left', self.resolution.buy_order_next_page_coords, hold=0.05)
         else:
-            click('left', self.resolution.next_page_coords)
+            click('left', self.resolution.next_page_coords, hold=0.05)
         self.scroll_state = ScrollState.top
         self.current_page += 1
         self.reset_mouse_position()
@@ -294,8 +326,7 @@ class SectionCrawler:
             time.sleep(0.1)
         if self.current_page != self.pages:
             scrollbar_conf = scroll_ref.compare_image_reference(ret_val='debug')
-            logging.error(f'Page load for {self} took too long, trying again. Conf: {scrollbar_conf} Pos: {self.scroll_state}')
-            self.current_page -= 1
+            logging.error(f'Page load for {self} took too long, trying again. Conf: {round(scrollbar_conf, 2)} Pos: {self.scroll_state}')
             self.load_fail_count += 1
 
             if self.load_fail_count > 4:

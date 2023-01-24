@@ -72,6 +72,7 @@ class Resolution(BaseModel):
     next_page_coords: Tuple[int, int]
     mouse_scroll_loc: Tuple[int, int]
     pages_bbox: Tuple[int, int, int, int]
+    current_page_bbox: Tuple[int, int, int, int]
     items_bbox: Tuple[int, int, int, int]
     items_bbox_last: Tuple[int, int, int, int]
     first_item_listing_bbox: Tuple[int, int, int, int]
@@ -153,6 +154,7 @@ res_4k = Resolution(
     refresh_button=ImageReference(screen_bbox=(2330, 1358, 235, 34), file_name="refresh_btn.png", min_conf=0.90),
     next_page_coords=(3600, 450),
     pages_bbox=(3503, 440, 50, 26),
+    current_page_bbox=(2273, 293, 47, 19),
     items_bbox=(1391, 645, 2265, 1379),
     items_bbox_last=(1391, 1797, 2265, 300),
     tp_row_height=384,
@@ -258,6 +260,7 @@ res_2560x1080p = Resolution(
     refresh_button=ImageReference(screen_bbox=(1483, 677, 120, 19), file_name="refresh_btn.png", min_conf=0.90),
     next_page_coords=(2122, 227),
     pages_bbox=(2068, 217, 30, 17),
+    current_page_bbox=(2273, 293, 47, 19),
     items_bbox=(1011, 320, 1129, 696),
     items_bbox_last=(1011, 896, 1129, 153),
     tp_row_height=79 * 2.5,
@@ -365,7 +368,8 @@ res_1440p = Resolution(
     cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", min_conf=0.90),
     refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", min_conf=0.90),
     next_page_coords=(2400, 300),
-    pages_bbox=(2335, 293, 33, 17),
+    pages_bbox=(2335, 293, 54, 17),
+    current_page_bbox=(2221, 292, 107, 21),
     items_bbox=(927, 430, 1510, 919),
     items_bbox_last=(927, 1198, 1510, 200),
     tp_row_height=256,
@@ -471,6 +475,7 @@ res_1080p = Resolution(
     refresh_button=ImageReference(screen_bbox=(1163, 676, 120, 19), file_name="refresh_btn.png", min_conf=0.90),
     next_page_coords=(1802, 227),
     pages_bbox=(1748, 217, 30, 17),
+    current_page_bbox=(1666, 219, 80, 16),
     items_bbox=(691, 320, 1129, 696),
     items_bbox_last=(691, 896, 1129, 153),
     tp_row_height=79*2.5,
