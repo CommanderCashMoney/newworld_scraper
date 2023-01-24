@@ -64,8 +64,6 @@ def parse_page_count(txt: str) -> Tuple[int, bool]:
 
 def parse_current_page(txt: dict) -> Tuple[int, bool]:
     text_list = txt['text']
-    raw_text_list = ''.join(text_list)
-    print(f'raw: {raw_text_list}')
     # loop through conf scores and remove low scores
     for idx, val in reversed(list(enumerate(txt['conf']))):
         if val == '-1':
@@ -77,17 +75,14 @@ def parse_current_page(txt: dict) -> Tuple[int, bool]:
         try:
             int_found = groups[0]
             if int_found[0] == '9' and int(int_found) > 500:
-                print('removed a 9')
                 int_found = int_found[1:]
             if int(int_found) > 500:
-                print('greater than 500')
                 return 500, False
             else:
                 return int(int_found)+1, True
         except IndexError:
             return 500, False
     else:
-        print(f'None: {text_string}')
         return 500, False
 
 

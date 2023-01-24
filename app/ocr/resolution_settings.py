@@ -123,6 +123,7 @@ class Resolution(BaseModel):
     buy_order_refresh_button: ImageReference
     buy_order_next_page_coords: Tuple[int, int]
     buy_order_pages_bbox: Tuple[int, int, int, int]
+    buy_order_current_page_bbox: Tuple[int, int, int, int]
     buy_order_items_bbox: Tuple[int, int, int, int]
     buy_order_items_bbox_last: Tuple[int, int, int, int]
     buy_order_tp_row_height: int
@@ -154,7 +155,7 @@ res_4k = Resolution(
     refresh_button=ImageReference(screen_bbox=(2330, 1358, 235, 34), file_name="refresh_btn.png", min_conf=0.90),
     next_page_coords=(3600, 450),
     pages_bbox=(3503, 440, 50, 26),
-    current_page_bbox=(2273, 293, 47, 19),
+    current_page_bbox=(3332, 438, 161, 32),
     items_bbox=(1391, 645, 2265, 1379),
     items_bbox_last=(1391, 1797, 2265, 300),
     tp_row_height=384,
@@ -202,6 +203,7 @@ res_4k = Resolution(
     buy_order_refresh_button=ImageReference(screen_bbox=(2336, 1418, 235, 34), file_name="refresh_btn.png", min_conf=0.90),
     buy_order_next_page_coords=(3569, 617),
     buy_order_pages_bbox=(3465, 597, 51, 29),
+    buy_order_current_page_bbox=(3296, 597, 161, 32),
     buy_order_items_bbox=(1424, 762, 2202, 1071),
     buy_order_items_bbox_last=(1424, 1179, 2202, 918),
     buy_order_tp_row_height=384,
@@ -260,7 +262,7 @@ res_2560x1080p = Resolution(
     refresh_button=ImageReference(screen_bbox=(1483, 677, 120, 19), file_name="refresh_btn.png", min_conf=0.90),
     next_page_coords=(2122, 227),
     pages_bbox=(2068, 217, 30, 17),
-    current_page_bbox=(2273, 293, 47, 19),
+    current_page_bbox=(1986, 219, 80, 16),
     items_bbox=(1011, 320, 1129, 696),
     items_bbox_last=(1011, 896, 1129, 153),
     tp_row_height=79 * 2.5,
@@ -313,6 +315,7 @@ res_2560x1080p = Resolution(
                                             min_conf=0.90),
     buy_order_next_page_coords=(2104, 308),
     buy_order_pages_bbox=(2053, 299, 26, 14),
+    buy_order_current_page_bbox=(1968, 299, 80, 16),
     buy_order_items_bbox=(1032, 381, 1101, 536),
     buy_order_items_bbox_last=(1032, 744, 1101, 305),
     buy_order_tp_row_height=79 * 2.5,
@@ -417,6 +420,7 @@ res_1440p = Resolution(
     buy_order_refresh_button=ImageReference(screen_bbox=(1558, 946, 170, 40), file_name="refresh_btn.png", min_conf=0.90),
     buy_order_next_page_coords=(2379, 411),
     buy_order_pages_bbox=(2310, 398, 34, 19),
+    buy_order_current_page_bbox=(2197, 398, 107, 21),
     buy_order_items_bbox=(949, 508, 1468, 714),
     buy_order_items_bbox_last=(949, 786, 1468, 612),
     buy_order_tp_row_height=256,
@@ -527,6 +531,7 @@ res_1080p = Resolution(
                                             min_conf=0.90),
     buy_order_next_page_coords=(1784, 308),
     buy_order_pages_bbox=(1733, 299, 26, 14),
+    buy_order_current_page_bbox=(1648, 299, 80, 16),
     buy_order_items_bbox=(712, 381, 1101, 536),
     buy_order_items_bbox_last=(712, 744, 1101, 305),
     buy_order_tp_row_height=79*2.5,

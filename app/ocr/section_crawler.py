@@ -72,18 +72,14 @@ class SectionCrawler:
         i = 0
         while i < self.pages:
             i += 1
-            print(self.get_current_page())
+
             if i == self.pages:
-                print(f'scanner thinks its on last page {i}')
                 current_page = self.get_current_page()
                 if current_page and current_page < i:
                     if current_page < self.pages:
-                        print(f'We actually had {self.pages - current_page} page left')
+                        logging.info(f'Reached end of section but found {self.pages - current_page} extra pages')
                         i = current_page
-                    else:
-                        print('we are actually on the last page')
-                else:
-                    print('We are actually on the last page, or we dont know')
+
             if self.stopped:
                 break
             crawl_success = self.crawl_page()
@@ -159,8 +155,6 @@ class SectionCrawler:
 
             while not self.stopped and (time.perf_counter() - p) < 15:
                 if bottom_scroll.compare_image_reference():
-
-                    print(f'bottom scroll conf: {bottom_scroll.compare_image_reference(ret_val="debug")}')
                     screenshot = self.snap_items(self.resolution.sold_order_items_full_bbox)
                     self.parent.ocr_queue.add_to_queue(screenshot.file_path, self.section)
                     break
@@ -222,13 +216,16 @@ class SectionCrawler:
         return pages
 
     def get_current_page(self) -> int:
-        current_page_bbox = self.resolution.current_page_bbox
+        if self.is_buy_order:
+            current_page_bbox = self.resolution.buy_order_current_page_bbox
+        else:
+            current_page_bbox = self.resolution.current_page_bbox
         screenshot = screenshot_bbox(*current_page_bbox)
         res = pre_process_current_page_image(screenshot.img_array)
         custom_config = """--psm 7 -c tessedit_char_whitelist="0123456789Pageof " """
         txt = pytesseract.image_to_data(res, output_type=pytesseract.Output.DICT, config=custom_config)
         current_page, validation_success = parse_current_page(txt)
-        print(f'current page: {current_page} - looks like {validation_success}')
+
         if not validation_success:
             bpc = SETTINGS.temp_app_data / self.parent.run_id / "bad-page-counts"
             bpc.mkdir(exist_ok=True, parents=True)
