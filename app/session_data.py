@@ -29,6 +29,7 @@ class CurrentData(BaseModel):
     crawler: "Crawler" = None
     pending_submission_data: APISubmission = None
     last_scan_data: list = []
+    debug: bool = False
 
     class Config:
         arbitrary_types_allowed = True
@@ -85,6 +86,10 @@ def update_close_nw(value: bool) -> None:
 def update_server_select(value: str) -> None:
     SESSION_DATA.server_id = value
     logging.debug(f"Server is now {value}.")
+
+def update_debug(value: bool) -> None:
+    SESSION_DATA.debug = value
+    logging.debug(f"Debug is now {value}.")
 
 
 def save_scan_data(value) -> None:

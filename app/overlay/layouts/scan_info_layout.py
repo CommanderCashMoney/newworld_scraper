@@ -72,7 +72,8 @@ def scan_info_layout():
                 ])
             ),
             sg.pin(sg.Button('Settings', key=events.CHANGE_KEY_BINDS)),
-            sg.pin(sg.Button('Sections', key=events.SECTION_TOGGLE))
+            sg.pin(sg.Button('Sections', key=events.SECTION_TOGGLE)),
+            sg.pin(sg.Checkbox('Debug', key=events.DEBUG_TOGGLE, default=False, enable_events=True))
         ]
     ]
 

@@ -15,6 +15,7 @@ class ImageReference(BaseModel):
 
     def compare_image_reference(self, ret_val=False):
         from app.settings import SETTINGS
+        from app.session_data import SESSION_DATA
         """Return true if the bbox of the img_ref matches the source image within a confidence level"""
         reference_grab = screenshot_bbox(*self.screen_bbox).img_array
         reference_image_file = resource_path(f"app/images/new_world/{SETTINGS.resolution}/{self.file_name}")
@@ -25,10 +26,11 @@ class ImageReference(BaseModel):
         res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         # debug version. Enable this
-        # if max_val < self.min_conf:
-        #     logging.info(f'{self.file_name} couldnt be matched. Conf score: {max_val}')
-        #     bpc = SETTINGS.temp_app_data
-        #     cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
+        if SESSION_DATA.debug:
+            if max_val < self.min_conf:
+                logging.info(f'{self.file_name} couldnt be matched. Conf score: {round(max_val, 2)}')
+                bpc = SETTINGS.temp_app_data
+                cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
         if not ret_val:
             return max_val > self.min_conf
         else:

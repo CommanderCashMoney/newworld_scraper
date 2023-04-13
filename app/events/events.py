@@ -30,6 +30,7 @@ EVENT_MAP = {
     events.KEYBINDS_SAVED: save,
     events.SECTION_TOGGLE: popup_sections,
     events.SECTIONS_SAVED: save_sections,
+    events.DEBUG_TOGGLE: session_data.update_debug,
 
 
     # events.RESEND_DATA: session_data.SESSION_DATA.submit_pending_submission_data,
