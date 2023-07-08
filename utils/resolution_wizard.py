@@ -95,7 +95,7 @@ print(pages_bbox)
 exit()
 
 # trading_post = request_crop_of("trading_post_label.png", "Trading Post Label")
-top_scroll = request_crop_of("top_of_scroll.png", "Top of Scroll", move_and_wait=True)
+top_scroll = request_crop_of("top_of_scroll.png", "top_of_scroll.png", move_and_wait=True)
 mid_scroll = request_crop_of("mid_scroll_bottom.png", "Mid Scroll Bottom", move_and_wait=True)
 bottom_scroll = request_crop_of("bottom_of_scroll_bottom.png", "Bottom Scroll Bottom", move_and_wait=True)
 cancel_button = request_crop_of("cancel_btn.png", "Cancel Button", move_and_wait=True)

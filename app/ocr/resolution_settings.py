@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
+
 import numpy as np
 
 
@@ -28,9 +29,10 @@ class ImageReference(BaseModel):
         # debug version. Enable this
         if SESSION_DATA.debug:
             if max_val < self.min_conf:
-                logging.info(f'{self.file_name} couldnt be matched. Conf score: {round(max_val, 2)}')
-                bpc = SETTINGS.temp_app_data
-                cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
+                if self.file_name not in ['cancel_btn.png', 'refresh_btn.png']:
+                    logging.info(f'{self.file_name} couldnt be matched. Conf score: {round(max_val, 2)}')
+                    bpc = SETTINGS.temp_app_data
+                    cv2.imwrite(f'{bpc}/bad{self.file_name}', reference_grab)
         if not ret_val:
             return max_val > self.min_conf
         else:
@@ -142,8 +144,10 @@ class Resolution(BaseModel):
     buy_order_all_items_tab: Tuple[int, int]
     buy_order_sections: Dict[str, Tuple[Tuple[int, int], bool]]
     buy_order_sort_down_arrow: ImageReference
+
     def __str__(self) -> str:
         return f"<Resolution: {self.name}>"
+
 
 res_4k = Resolution(
     name="3840x2160",
@@ -367,9 +371,10 @@ res_1440p = Resolution(
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
     buy_icon=ImageReference(screen_bbox=(249, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
-    top_scroll=ImageReference(screen_bbox=(2438, 418, 34, 34), file_name="top_of_scroll.png", min_conf=0.80),
-    mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.80),
-    bottom_scroll=ImageReference(screen_bbox=(2443, 915, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.75),
+    top_scroll=ImageReference(screen_bbox=(2455, 421, 12, 14), file_name="top_of_scroll.png", min_conf=0.97),
+    mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
+    bottom_scroll=ImageReference(screen_bbox=(2443, 915, 25, 38), file_name="bottom_of_scroll_bottom.png",
+                                 min_conf=0.95),
     cancel_button=ImageReference(screen_bbox=(961, 1032, 90, 30), file_name="cancel_btn.png", min_conf=0.80),
     refresh_button=ImageReference(screen_bbox=(1543, 900, 170, 40), file_name="refresh_btn.png", min_conf=0.80),
     next_page_coords=(2400, 300),
@@ -395,8 +400,9 @@ res_1440p = Resolution(
     resources_reset_loc=(170, 796),
     sort_up_arrow=ImageReference(screen_bbox=(1316, 392, 17, 25), file_name="sort_up_arrow.png", min_conf=0.80),
     # --------Sold Orders ----------------
-    sold_order_top_scroll=ImageReference(screen_bbox=(2374, 509, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
-    sold_order_bottom_scroll=ImageReference(screen_bbox=(2380, 1342, 24, 14), file_name="sold_order_bottom_scroll.png", min_conf=0.70),
+    sold_order_top_scroll=ImageReference(screen_bbox=(2391, 512, 12, 14), file_name="top_of_scroll.png", min_conf=0.95),
+    sold_order_bottom_scroll=ImageReference(screen_bbox=(2392, 1342, 12, 14), file_name="sold_order_bottom_scroll.png",
+                                            min_conf=0.90),
     sold_order_items_bbox=(757, 523, 1601, 709),
     sold_order_items_full_bbox=(757, 523, 1616, 812),
     sold_order_tp_name_col_x_coords=(0, 316),
@@ -411,15 +417,19 @@ res_1440p = Resolution(
     sold_order_completed_tab=(833, 397),
     sold_order_sold_items_tab=(382, 557),
     sold_order_mouse_scroll_loc=(2370, 528),
-    sold_order_price_sort_down=ImageReference(screen_bbox=(1076, 483, 17, 25), file_name="sold_order_price_sort_down.png", min_conf=0.70),
+    sold_order_price_sort_down=ImageReference(screen_bbox=(1076, 483, 17, 25),
+                                              file_name="sold_order_price_sort_down.png", min_conf=0.70),
     # --------Buy Orders ----------------
     sell_tab_coords=(754, 210),
     buy_order_all_items=(985, 308),
-    buy_order_top_scroll=ImageReference(screen_bbox=(2416, 497, 34, 34), file_name="top_of_scroll.png", min_conf=0.70),
-    buy_order_mid_scroll=ImageReference(screen_bbox=(2421, 1196, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.70),
-    buy_order_bottom_scroll=ImageReference(screen_bbox=(2421, 987, 25, 38), file_name="bottom_of_scroll_bottom.png", min_conf=0.70),
+    buy_order_top_scroll=ImageReference(screen_bbox=(2433, 500, 12, 14), file_name="top_of_scroll.png", min_conf=0.96),
+    buy_order_mid_scroll=ImageReference(screen_bbox=(2421, 1196, 27, 27), file_name="mid_scroll_bottom.png",
+                                        min_conf=0.88),
+    buy_order_bottom_scroll=ImageReference(screen_bbox=(2421, 987, 25, 38), file_name="bottom_of_scroll_bottom.png",
+                                           min_conf=0.94),
     buy_order_cancel_button=ImageReference(screen_bbox=(967, 1127, 90, 30), file_name="cancel_btn.png", min_conf=0.80),
-    buy_order_refresh_button=ImageReference(screen_bbox=(1558, 946, 170, 40), file_name="refresh_btn.png", min_conf=0.80),
+    buy_order_refresh_button=ImageReference(screen_bbox=(1558, 946, 170, 40), file_name="refresh_btn.png",
+                                            min_conf=0.80),
     buy_order_next_page_coords=(2379, 411),
     buy_order_pages_bbox=(2310, 398, 34, 19),
     buy_order_current_page_bbox=(2197, 398, 107, 21),
@@ -437,8 +447,8 @@ res_1440p = Resolution(
     buy_order_first_item_listing_bbox=(870, 516, 200, 70),
     buy_order_mouse_scroll_loc=(2412, 523),
     buy_order_all_items_tab=(1003, 311),
-    buy_order_sort_down_arrow=ImageReference(screen_bbox=(1288, 471, 17, 25), file_name="sort_up_arrow.png", min_conf=0.80),
-
+    buy_order_sort_down_arrow=ImageReference(screen_bbox=(1288, 471, 17, 25), file_name="sort_up_arrow.png",
+                                             min_conf=0.80),
 
     # ------------------------------------
     # False and True indicate if a resource reset is needed before starting this section
@@ -468,15 +478,15 @@ res_1440p = Resolution(
     },
 )
 
-
 res_1080p = Resolution(
     name="1920x1080",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
     buy_icon=ImageReference(screen_bbox=(187, 143, 23, 17), file_name="buy_icon.png", min_conf=0.70),
-    top_scroll=ImageReference(screen_bbox=(1833, 314, 18, 19), file_name="top_of_scroll.png", min_conf=0.70),
-    mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.80),
-    bottom_scroll=ImageReference(screen_bbox=(1835, 1031, 13, 19), file_name="bottom_of_scroll_bottom.png", min_conf=0.70),
+    top_scroll=ImageReference(screen_bbox=(1841, 315, 9, 31), file_name="top_of_scroll.png", min_conf=0.95),
+    mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.95),
+    bottom_scroll=ImageReference(screen_bbox=(1841, 1016, 9, 42), file_name="bottom_of_scroll_bottom.png",
+                                 min_conf=0.70),
     cancel_button=ImageReference(screen_bbox=(720, 772, 63, 17), file_name="cancel_btn.png", min_conf=0.70),
     refresh_button=ImageReference(screen_bbox=(1163, 676, 120, 19), file_name="refresh_btn.png", min_conf=0.70),
     next_page_coords=(1802, 227),
@@ -484,7 +494,7 @@ res_1080p = Resolution(
     current_page_bbox=(1666, 219, 80, 16),
     items_bbox=(691, 320, 1129, 696),
     items_bbox_last=(691, 896, 1129, 153),
-    tp_row_height=79*2.5,
+    tp_row_height=79 * 2.5,
     tp_name_col_x_coords=(0, 275),
     tp_price_col_x_coords=(275, 418),
     tp_avail_col_x_coords=(1000, 1083),
@@ -504,7 +514,7 @@ res_1080p = Resolution(
     # --------Sold Orders ----------------
     sold_order_top_scroll=ImageReference(screen_bbox=(1785, 382, 34, 34), file_name="top_of_scroll.png", min_conf=0.95),
     sold_order_bottom_scroll=ImageReference(screen_bbox=(1785, 1007, 18, 11), file_name="sold_order_bottom_scroll.png",
-                                            min_conf=0.70),
+                                            min_conf=0.95),
     sold_order_items_bbox=(568, 392, 1201, 532),
     sold_order_items_full_bbox=(568, 392, 1201, 609),
     sold_order_tp_name_col_x_coords=(0, 237),
@@ -519,15 +529,16 @@ res_1080p = Resolution(
     sold_order_completed_tab=(630, 296),
     sold_order_sold_items_tab=(287, 414),
     sold_order_mouse_scroll_loc=(1778, 396),
-    sold_order_price_sort_down=ImageReference(screen_bbox=(807, 362, 13, 19), file_name="sold_order_price_sort_down.png", min_conf=0.70),
+    sold_order_price_sort_down=ImageReference(screen_bbox=(807, 362, 13, 19),
+                                              file_name="sold_order_price_sort_down.png", min_conf=0.70),
     # --------Buy Orders ----------------
     sell_tab_coords=(566, 158),
     buy_order_all_items=(739, 231),
-    buy_order_top_scroll=ImageReference(screen_bbox=(1817, 373, 18, 19), file_name="top_of_scroll.png", min_conf=0.70),
+    buy_order_top_scroll=ImageReference(screen_bbox=(1825, 374, 9, 31), file_name="top_of_scroll.png", min_conf=0.91),
     buy_order_mid_scroll=ImageReference(screen_bbox=(1817, 600, 18, 23), file_name="mid_scroll_bottom.png",
-                                        min_conf=0.70),
-    buy_order_bottom_scroll=ImageReference(screen_bbox=(1817, 1034, 13, 19), file_name="buy_order_bottom_of_scroll.png",
-                                           min_conf=0.70),
+                                        min_conf=0.91),
+    buy_order_bottom_scroll=ImageReference(screen_bbox=(1825, 1015, 9, 42), file_name="bottom_of_scroll_bottom.png",
+                                           min_conf=0.91),
     buy_order_cancel_button=ImageReference(screen_bbox=(723, 842, 63, 17), file_name="cancel_btn.png", min_conf=0.80),
     buy_order_refresh_button=ImageReference(screen_bbox=(1166, 706, 120, 19), file_name="refresh_btn.png",
                                             min_conf=0.80),
@@ -536,7 +547,7 @@ res_1080p = Resolution(
     buy_order_current_page_bbox=(1648, 299, 80, 16),
     buy_order_items_bbox=(712, 381, 1101, 536),
     buy_order_items_bbox_last=(712, 744, 1101, 305),
-    buy_order_tp_row_height=79*2.5,
+    buy_order_tp_row_height=79 * 2.5,
     buy_order_tp_name_col_x_coords=(0, 252),
     buy_order_tp_price_col_x_coords=(252, 411),
     buy_order_tp_tier_col_x_coords=(411, 499),
@@ -548,7 +559,8 @@ res_1080p = Resolution(
     buy_order_first_item_listing_bbox=(653, 387, 150, 53),
     buy_order_mouse_scroll_loc=(1809, 392),
     buy_order_all_items_tab=(752, 233),
-    buy_order_sort_down_arrow=ImageReference(screen_bbox=(966, 353, 13, 19), file_name="sort_up_arrow.png", min_conf=0.80),
+    buy_order_sort_down_arrow=ImageReference(screen_bbox=(966, 353, 13, 19), file_name="sort_up_arrow.png",
+                                             min_conf=0.80),
 
     # False and True indicate if a resource reset is needed before starting this section
     sections={
@@ -576,7 +588,6 @@ res_1080p = Resolution(
         'Buy Order - House Furnishings': ((146, 897), False),
     },
 )
-
 
 resolutions = {
     "1920x1080": res_1080p,
