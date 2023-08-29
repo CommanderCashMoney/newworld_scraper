@@ -84,6 +84,12 @@ class Crawler:
 
     def crawl(self) -> None:
         self.ocr_queue.start()
+
+        if SETTINGS.ignore_sections:
+            logging.info(f"Crawling only the current page")
+            pages_to_parse = 1
+            self.section_crawlers = self.section_crawlers[:1]
+
         if SESSION_DATA.test_run:
             logging.info(f"Starting test run")
             pages_to_parse = 1
@@ -96,7 +102,8 @@ class Crawler:
         self.started = time.perf_counter()
         self.timer_thread.start()
         for section_crawler in self.section_crawlers:
-            self.check_move()
+            if not SETTINGS.disable_moving:
+                self.check_move()
             if self.stopped:
                 break
             self.current_section += 1

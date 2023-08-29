@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     resolution: str = Field(default_factory=get_default_resolution_key)
     disable_afk_timer = False
     playsound = False
-
+    ignore_sections = False
+    disable_moving = False
     log_file: str = "logging.txt"
 
     keybindings: KeyBindings

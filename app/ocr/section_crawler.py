@@ -57,7 +57,8 @@ class SectionCrawler:
             logging.error("Couldn't find TP")
             self.parent.stop(reason="trading post could not be found.", wait_for_death=False)
             return
-        self.select_section()
+        if not SETTINGS.ignore_sections:
+            self.select_section()
         self.pages = self.get_current_screen_page_count()
         logging.info(f"Found {self.pages} pages for section {self.section}")
         if pages_to_parse:
@@ -321,13 +322,24 @@ class SectionCrawler:
                 self.load_fail_count = 0
                 return True
             time.sleep(0.1)
-        if self.current_page != self.pages:
+        if self.current_page != self.pages:  # if we're not on the last page, try again
             scrollbar_conf = scroll_ref.compare_image_reference(ret_val='debug')
             logging.error(f'Page load for {self} took too long, trying again. Conf: {round(scrollbar_conf, 2)} Pos: {self.scroll_state}')
             self.load_fail_count += 1
 
             if self.load_fail_count > 4:
                 logging.error(f'Too many page load fails, moving to next section. May have reached the end of section. Failed at {self}')
+        elif self.current_page == self.pages:
+            if self.scroll_state == ScrollState.top:
+                scroll_ref = self.resolution.bottom_scroll
+                if scroll_ref.compare_image_reference():
+                    # this means we are on the last page and the scrollbar is at the bottom.
+                    logging.info(f'Reached last page. Scrollbar is at the bottom')
+                    return False
+                else:
+                    # this means we are on the last page and the scroll bar isnt at the bottom or top. So it likely is not there at all and we can assume the last page is a single page. So return true
+                    logging.debug(f'Reached last page. It did not have a scrollbar')
+                    return True
         return False
 
     def wait_for_load(self):
