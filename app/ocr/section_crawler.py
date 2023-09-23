@@ -186,16 +186,17 @@ class SectionCrawler:
                 return screenshot_bbox(*self.resolution.items_bbox_last, str(full_path))
         return screenshot_bbox(*bbox, str(full_path))
 
-    def scroll(self) -> None:
+    def scroll(self, retry=False) -> None:
         if self.is_buy_order:
             scroll_distance = -8 if self.scroll_state != ScrollState.btm else -5
         else:
             scroll_distance = -11 if self.scroll_state != ScrollState.btm else -2
         mouse.scroll(0, scroll_distance)
-        if self.scroll_state == ScrollState.top:
-            self.scroll_state = ScrollState.mid
-        elif self.scroll_state == ScrollState.mid:
-            self.scroll_state = ScrollState.btm
+        if not retry:
+            if self.scroll_state == ScrollState.top:
+                self.scroll_state = ScrollState.mid
+            elif self.scroll_state == ScrollState.mid:
+                self.scroll_state = ScrollState.btm
 
     def get_current_screen_page_count(self) -> int:
         if self.is_buy_order:
@@ -321,6 +322,12 @@ class SectionCrawler:
             if scroll_ref.compare_image_reference():
                 self.load_fail_count = 0
                 return True
+            # Sometimes the game doesnt seem the register the mouse wheel scroll down and thinks it's on the middle section but the scroll bar is on the top.
+            if attempt == 10 and self.scroll_state == ScrollState.mid:
+                if self.resolution.top_scroll.compare_image_reference():
+                    logging.debug(f'Game didnt register the scroll down, trying again')
+                    self.scroll(retry=True)
+
             time.sleep(0.1)
         if self.current_page != self.pages:  # if we're not on the last page, try again
             scrollbar_conf = scroll_ref.compare_image_reference(ret_val='debug')
