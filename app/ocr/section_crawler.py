@@ -323,10 +323,23 @@ class SectionCrawler:
                 self.load_fail_count = 0
                 return True
             # Sometimes the game doesnt seem the register the mouse wheel scroll down and thinks it's on the middle section but the scroll bar is on the top.
-            if attempt == 10 and self.scroll_state == ScrollState.mid:
-                if self.resolution.top_scroll.compare_image_reference():
-                    logging.debug(f'Game didnt register the scroll down, trying again')
+            if attempt > 5 and self.scroll_state == ScrollState.mid:
+                if self.is_buy_order:
+                    top_scroll_ref = self.resolution.buy_order_top_scroll
+                    # bottom_scroll_ref = self.resolution.buy_order_bottom_scroll
+                else:
+                    top_scroll_ref = self.resolution.top_scroll
+                    # bottom_scroll_ref = self.resolution.bottom_scroll
+
+                if top_scroll_ref.compare_image_reference():
+                    print(f'Game didnt register the scroll down, trying again - {attempt}')
                     self.scroll(retry=True)
+
+                    time.sleep(0.5)
+                # elif bottom_scroll_ref.compare_image_reference():
+                #     print(f'Scrolled down too far, scrolling back up to top - {attempt}')
+                #     mouse.scroll(0, 14)
+                #     time.sleep(0.5)
 
             time.sleep(0.1)
         if self.current_page != self.pages:  # if we're not on the last page, try again

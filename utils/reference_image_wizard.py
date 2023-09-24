@@ -37,6 +37,7 @@ layout = [
         ], key='-COL1-'),
         sg.Column([
             [sg.Button(eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' verify')],
+            [sg.Button(eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' find')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).bottom_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).sold_order_top_scroll.file_name + ' sold verify')],
@@ -70,7 +71,7 @@ def convert_to_grey_and_compare(reference_img, reference_grab):
     res = cv2.matchTemplate(img_grab_gray, img_gray, cv2.TM_CCOEFF_NORMED)
 
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    return max_val
+    return max_val, max_loc
 
 
 while True:
@@ -93,6 +94,7 @@ while True:
         ])
         window['-COL2-'].update([
             [sg.Button(eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' verify')],
+            [sg.Button(eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' find')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).bottom_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).sold_order_top_scroll.file_name + ' sold verify')],
@@ -135,6 +137,15 @@ while True:
         reference_image_file = resource_path("app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(resolution_mapping[selected_resolution]).top_scroll.file_name)
         reference_img = cv2.imread(reference_image_file)
         print(convert_to_grey_and_compare(reference_img, reference_grab))
+    elif event == eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' find':
+        reference_grab = screenshot_bbox(0, 0, 5120,1440).img_array
+        reference_image_file = resource_path(
+            "app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(
+                resolution_mapping[selected_resolution]).top_scroll.file_name)
+        reference_img = cv2.imread(reference_image_file)
+        print(convert_to_grey_and_compare(reference_img, reference_grab))
+
+
     elif event == eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' verify':
         reference_grab = screenshot_bbox(*eval(resolution_mapping[selected_resolution]).mid_scroll.screen_bbox).img_array
         reference_image_file = resource_path("app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(resolution_mapping[selected_resolution]).mid_scroll.file_name)
