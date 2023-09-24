@@ -89,7 +89,7 @@ def update_server_select(value: str) -> None:
 
 def update_debug(value: bool) -> None:
     SESSION_DATA.debug = value
-    SETTINGS.console_logging_level = "DEBUG"
+    # SETTINGS.console_logging_level = "DEBUG"  # todo this is not working
     logging.debug(f"Debug is now {value}.")
 
 
