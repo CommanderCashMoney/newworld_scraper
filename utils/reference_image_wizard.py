@@ -5,10 +5,10 @@ from app.utils import resource_path
 from app.ocr.resolution_settings import res_1440p
 from app.ocr.resolution_settings import res_1080p
 from app.ocr.resolution_settings import res_4k
-from app.ocr.resolution_settings import res_5120x1440p
+from app.ocr.resolution_settings import res_5120x1440p, res_3440x1440p
 
 # Create a list of resolution options for the dropdown
-resolution_options = ['1440p', '1080p', '3840x2160', '5120x1440']
+resolution_options = ['1440p', '1080p', '3840x2160', '5120x1440', '3440x1440']
 
 # Default selected resolution
 selected_resolution = '1440p'
@@ -18,7 +18,8 @@ resolution_mapping = {
     '1440p': 'res_1440p',
     '1080p': 'res_1080p',
     '3840x2160': 'res_4k',
-    '5120x1440': 'res_5120x1440p'
+    '5120x1440': 'res_5120x1440p',
+    '3440x1440': 'res_3440x1440p'
 }
 
 # Create the layout for the window

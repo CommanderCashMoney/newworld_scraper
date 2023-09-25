@@ -594,7 +594,7 @@ res_3440x1440p = Resolution(
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
     buy_icon=ImageReference(screen_bbox=(689, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
-    top_scroll=ImageReference(screen_bbox=(2895, 421, 17, 55), file_name="top_of_scroll.png", min_conf=0.96),
+    top_scroll=ImageReference(screen_bbox=(2895, 401, 17, 55), file_name="top_of_scroll.png", min_conf=0.96),
     mid_scroll=ImageReference(screen_bbox=(2882, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
     bottom_scroll=ImageReference(screen_bbox=(2883, 915, 25, 38), file_name="bottom_of_scroll_bottom.png",
                                  min_conf=0.95),
@@ -623,7 +623,7 @@ res_3440x1440p = Resolution(
     resources_reset_loc=(610, 796),
     sort_up_arrow=ImageReference(screen_bbox=(1756, 392, 17, 25), file_name="sort_up_arrow.png", min_conf=0.80),
     # --------Sold Orders ----------------
-    sold_order_top_scroll=ImageReference(screen_bbox=(2831, 512, 12, 34), file_name="top_of_scroll.png", min_conf=0.97),
+    sold_order_top_scroll=ImageReference(screen_bbox=(2832, 492, 12, 34), file_name="top_of_scroll.png", min_conf=0.97),
     sold_order_bottom_scroll=ImageReference(screen_bbox=(2832, 1342, 12, 14), file_name="sold_order_bottom_scroll.png",
                                             min_conf=0.90),
     sold_order_items_bbox=(1197, 523, 2041, 709),
@@ -645,7 +645,7 @@ res_3440x1440p = Resolution(
     # --------Buy Orders ----------------
     sell_tab_coords=(1194, 210),
     buy_order_all_items=(1425, 308),
-    buy_order_top_scroll=ImageReference(screen_bbox=(2873, 500, 12, 34), file_name="top_of_scroll.png", min_conf=0.97),
+    buy_order_top_scroll=ImageReference(screen_bbox=(2874, 480, 17, 55), file_name="top_of_scroll.png", min_conf=0.97),
     buy_order_mid_scroll=ImageReference(screen_bbox=(2861, 1196, 27, 27), file_name="mid_scroll_bottom.png",
                                         min_conf=0.90),
     buy_order_bottom_scroll=ImageReference(screen_bbox=(2861, 987, 25, 38), file_name="bottom_of_scroll_bottom.png",
