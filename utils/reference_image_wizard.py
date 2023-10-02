@@ -2,10 +2,7 @@ import PySimpleGUI as sg
 import cv2
 from app.ocr.utils import screenshot_bbox
 from app.utils import resource_path
-from app.ocr.resolution_settings import res_1440p
-from app.ocr.resolution_settings import res_1080p
-from app.ocr.resolution_settings import res_4k
-from app.ocr.resolution_settings import res_5120x1440p, res_3440x1440p
+from app.ocr.resolution_settings import *
 
 # Create a list of resolution options for the dropdown
 resolution_options = ['1440p', '1080p', '3840x2160', '5120x1440', '3440x1440']
@@ -21,6 +18,9 @@ resolution_mapping = {
     '5120x1440': 'res_5120x1440p',
     '3440x1440': 'res_3440x1440p'
 }
+
+
+
 
 # Create the layout for the window
 layout = [
@@ -40,10 +40,13 @@ layout = [
             [sg.Button(eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).top_scroll.file_name + ' find')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' verify')],
+            [sg.Button(eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' find')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).bottom_scroll.file_name + ' verify')],
+            [sg.Button(eval(resolution_mapping[selected_resolution]).bottom_scroll.file_name + ' find')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).sold_order_top_scroll.file_name + ' sold verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).sold_order_bottom_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name + ' verify - Buy Order')],
+            [sg.Button(eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name + ' find - Buy Order')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).buy_order_mid_scroll.file_name + ' verify - Buy Order')],
             [sg.Button(
                 eval(resolution_mapping[selected_resolution]).buy_order_bottom_scroll.file_name + ' verify - Buy Order')],
@@ -101,6 +104,7 @@ while True:
             [sg.Button(eval(resolution_mapping[selected_resolution]).sold_order_top_scroll.file_name + ' sold verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).sold_order_bottom_scroll.file_name + ' verify')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name + ' verify - Buy Order')],
+            [sg.Button(eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name + ' find - Buy Order')],
             [sg.Button(eval(resolution_mapping[selected_resolution]).buy_order_mid_scroll.file_name + ' verify - Buy Order')],
             [sg.Button(
                 eval(resolution_mapping[selected_resolution]).buy_order_bottom_scroll.file_name + ' verify - Buy Order')],
@@ -145,6 +149,20 @@ while True:
                 resolution_mapping[selected_resolution]).top_scroll.file_name)
         reference_img = cv2.imread(reference_image_file)
         print(convert_to_grey_and_compare(reference_img, reference_grab))
+    elif event == eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' find':
+        reference_grab = screenshot_bbox(0, 0, 5120,1440).img_array
+        reference_image_file = resource_path(
+            "app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(
+                resolution_mapping[selected_resolution]).mid_scroll.file_name)
+        reference_img = cv2.imread(reference_image_file)
+        print(convert_to_grey_and_compare(reference_img, reference_grab))
+    elif event == eval(resolution_mapping[selected_resolution]).bottom_scroll.file_name + ' find':
+        reference_grab = screenshot_bbox(0, 0, 5120,1440).img_array
+        reference_image_file = resource_path(
+            "app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(
+                resolution_mapping[selected_resolution]).bottom_scroll.file_name)
+        reference_img = cv2.imread(reference_image_file)
+        print(convert_to_grey_and_compare(reference_img, reference_grab))
 
 
     elif event == eval(resolution_mapping[selected_resolution]).mid_scroll.file_name + ' verify':
@@ -173,6 +191,13 @@ while True:
         reference_grab = screenshot_bbox(*eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.screen_bbox).img_array
         reference_image_file = resource_path(
             "app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name)
+        reference_img = cv2.imread(reference_image_file)
+        print(convert_to_grey_and_compare(reference_img, reference_grab))
+    elif event == eval(resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name + ' find - Buy Order':
+        reference_grab = screenshot_bbox(0, 0, 5120,1440).img_array
+        reference_image_file = resource_path(
+            "app/images/new_world/" + eval(resolution_mapping[selected_resolution]).name + "/" + eval(
+                resolution_mapping[selected_resolution]).buy_order_top_scroll.file_name)
         reference_img = cv2.imread(reference_image_file)
         print(convert_to_grey_and_compare(reference_img, reference_grab))
     elif event == eval(resolution_mapping[selected_resolution]).buy_order_mid_scroll.file_name + ' verify - Buy Order':
