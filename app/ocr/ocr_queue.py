@@ -74,10 +74,16 @@ class OCRQueue:
             self.to_validate.clear()
 
             bad_indexes = len(self.validator.bad_indexes)
-            accuracy = 1 - bad_indexes / len(self.validator.price_list) or 1
-            accuracy_pc = round(accuracy * 100, 1)
-            self.update_overlay("accuracy", f"{accuracy_pc}%")
-            self.update_overlay("validate_fails", bad_indexes)
+            # accuracy = 1 - bad_indexes / len(self.validator.price_list) or 1
+            # accuracy_pc = round(accuracy * 100, 1)
+            # add total to the session data. This is what we show on the overlay
+            SESSION_DATA.total_listings_scanned += len(self.validator.price_list)
+            SESSION_DATA.total_bad_listings += bad_indexes
+            overall_accuracy = 1 - SESSION_DATA.total_bad_listings / SESSION_DATA.total_listings_scanned or 1
+            overall_accuracy_percent = round(overall_accuracy * 100, 1)
+
+            self.update_overlay("accuracy", f"{overall_accuracy_percent}%")
+            self.update_overlay("validate_fails", SESSION_DATA.total_bad_listings)
             logging.debug(f"Section validated: `{section}`")
             # SEND SECTION TO API
             should_submit = SETTINGS.is_dev or not SESSION_DATA.test_run

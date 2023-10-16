@@ -30,7 +30,8 @@ class CurrentData(BaseModel):
     pending_submission_data: APISubmission = None
     last_scan_data: list = []
     debug: bool = False
-
+    total_listings_scanned: int = 0
+    total_bad_listings: int = 0
     class Config:
         arbitrary_types_allowed = True
 
