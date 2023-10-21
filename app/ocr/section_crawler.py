@@ -231,7 +231,7 @@ class SectionCrawler:
         if not validation_success:
             bpc = SETTINGS.temp_app_data / self.parent.run_id / "bad-page-counts"
             bpc.mkdir(exist_ok=True, parents=True)
-            bpc = bpc / f"{self.parent.run_id}-{self.section}-0.png"
+            bpc = bpc / f"{self.parent.run_id}-{self.section}-0-current-page.png"
             screenshot.save_image(str(bpc), pil_high_quality=True)
             return None
         return current_page
