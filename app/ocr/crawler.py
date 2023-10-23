@@ -228,7 +228,15 @@ class Crawler:
             bring_new_world_to_foreground()
         except:  # noqa
             # self.stop(reason="New World doesn't seem to be open.", is_error=True, wait_for_death=False)
+            bring_scanner_to_foreground()
             return None
+        time.sleep(1)
+        buy_icon_img = self.resolution.buy_icon
+        if not buy_icon_img.compare_image_reference():
+            logging.error("Couldn't find TP, please make sure the Trading Post is open")
+            bring_scanner_to_foreground()
+            return None
+
 
         resolution = get_resolution_obj()
         time.sleep(1)
@@ -248,6 +256,7 @@ class Crawler:
         server_names =  [value['name'] for value in SESSION_DATA.server_list.values()]
         if parsed_server_name is None or '' or len(parsed_server_name) < 3:
             logging.warning(f'Could not parse server name from image: {parsed_server_name}')
+            bring_scanner_to_foreground()
             return None
 
         if parsed_server_name in server_names:
@@ -262,6 +271,7 @@ class Crawler:
             update_server_select(f'{server_id}-{matched_server_name}')
             if distance > 2:
                 logging.warning(f'Could not find a close match for server name: {parsed_server_name}')
+                bring_scanner_to_foreground()
                 return None
             return matched_server_name
 
