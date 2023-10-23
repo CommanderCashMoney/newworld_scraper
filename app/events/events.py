@@ -18,6 +18,7 @@ EVENT_MAP = {
     events.NEW_VERSION_DOWNLOADED: download_complete,
     events.INSTALLER_LAUNCHED_EVENT: DO_NOTHING,  # todo: should this be calling some exit func?
     events.RUN_BUTTON: start_run,
+    events.OCR_COMPLETE: DO_NOTHING,
 
     # update settings
     events.PAGE_INPUT: session_data.update_pages,

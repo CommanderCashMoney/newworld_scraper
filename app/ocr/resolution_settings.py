@@ -67,6 +67,7 @@ class Resolution(BaseModel):
     resources_reset_loc: Tuple[int, int]
     # trading_post: ImageReference
     # my_orders_clip_icon: ImageReference
+    server_name_bbox: Tuple[int, int, int, int]
     buy_icon: ImageReference
     top_scroll: ImageReference
     mid_scroll: ImageReference
@@ -152,6 +153,7 @@ res_5120x1440p = Resolution(
     name="5120x1440",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    server_name_bbox=(4911, 948, 180, 42),
     buy_icon=ImageReference(screen_bbox=(1530, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(3730, 423, 17, 55), file_name="top_of_scroll.png", min_conf=0.96),
     mid_scroll=ImageReference(screen_bbox=(3722, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -264,6 +266,7 @@ res_4k = Resolution(
     name="3840x2160",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.90),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    server_name_bbox=(3527, 1422, 270, 63),
     buy_icon=ImageReference(screen_bbox=(372, 286, 45, 33), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(3683, 602, 18, 51), file_name="top_of_scroll.png", min_conf=0.97),
     mid_scroll=ImageReference(screen_bbox=(3664, 1971, 39, 39), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -287,7 +290,7 @@ res_4k = Resolution(
     tp_location_col_x_coords=(2013, 2265),
     first_item_listing_bbox=(1263, 666, 300, 105),
     mouse_scroll_loc=(3653, 657),
-    menu_loc=(3738, 113),
+    menu_loc=(3716, 75),
     exit_to_desk_loc=(2648, 1436),
     yes_button_loc=(2195, 1296),
     resources_reset_loc=(255, 1194),
@@ -370,6 +373,7 @@ res_2560x1080p = Resolution(
     name="2560x1080",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    server_name_bbox=(2403, 711, 135, 32),
     buy_icon=ImageReference(screen_bbox=(508, 143, 23, 17), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(2161, 315, 9, 31), file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox=(2153, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -395,7 +399,7 @@ res_2560x1080p = Resolution(
     first_item_listing_bbox=(1011, 316, 1129, 79),
     mouse_scroll_loc=(2146, 347),
     resources_reset_loc=(445, 602),
-    menu_loc=(2189, 53),
+    menu_loc=(2509, 53),
     exit_to_desk_loc=(1645, 719),
     yes_button_loc=(1423, 649),
     sort_up_arrow=ImageReference(screen_bbox=(1307, 294, 13, 19), file_name="sort_up_arrow.png", min_conf=0.80),
@@ -481,6 +485,7 @@ res_1440p = Resolution(
     name="2560x1440",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    server_name_bbox=(2351, 948, 180, 42),
     buy_icon=ImageReference(screen_bbox=(249, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(2455, 401, 17, 55), file_name="top_of_scroll.png", min_conf=0.96),
     mid_scroll=ImageReference(screen_bbox=(2442, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -505,7 +510,7 @@ res_1440p = Resolution(
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(842, 444, 200, 70),
     mouse_scroll_loc=(2431, 438),
-    menu_loc=(2492, 75),
+    menu_loc=(2477, 50),
     exit_to_desk_loc=(1765, 957),
     yes_button_loc=(1463, 864),
     resources_reset_loc=(170, 796),
@@ -593,6 +598,7 @@ res_3440x1440p = Resolution(
     name="3440x1440",
     # trading_post=ImageReference(screen_bbox=(450, 32, 165, 64), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(1056, 192, 20, 22), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    server_name_bbox=(3231, 948, 180, 42),
     buy_icon=ImageReference(screen_bbox=(689, 191, 30, 22), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(2895, 401, 17, 55), file_name="top_of_scroll.png", min_conf=0.96),
     mid_scroll=ImageReference(screen_bbox=(2882, 1314, 27, 27), file_name="mid_scroll_bottom.png", min_conf=0.95),
@@ -617,7 +623,7 @@ res_3440x1440p = Resolution(
     tp_location_col_x_coords=(1342, 1510),
     first_item_listing_bbox=(1282, 444, 200, 70),
     mouse_scroll_loc=(2871, 438),
-    menu_loc=(2932, 75),
+    menu_loc=(3357, 50),
     exit_to_desk_loc=(2205, 957),
     yes_button_loc=(1903, 864),
     resources_reset_loc=(610, 796),
@@ -704,6 +710,7 @@ res_1080p = Resolution(
     name="1920x1080",
     # trading_post=ImageReference(screen_bbox=(338, 31, 96, 24), file_name="trading_post_label.png", min_conf=0.80),
     # my_orders_clip_icon=ImageReference(screen_bbox=(792, 144, 15, 17), file_name="my_orders_clip_icon.png", min_conf=0.70),
+    server_name_bbox=(1763, 711, 135, 32),
     buy_icon=ImageReference(screen_bbox=(187, 143, 23, 17), file_name="buy_icon.png", min_conf=0.70),
     top_scroll=ImageReference(screen_bbox=(1841, 315, 9, 31), file_name="top_of_scroll.png", min_conf=0.95),
     mid_scroll=ImageReference(screen_bbox=(1833, 634, 18, 23), file_name="mid_scroll_bottom.png", min_conf=0.95),

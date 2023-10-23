@@ -72,18 +72,21 @@ def login_completed(response) -> None:
         except requests.exceptions.ConnectionError:
             r = None
         if r:
-            server_list = json.loads(r.text)
+            SESSION_DATA.server_list = json.loads(r.text)
             for idx, server_id in enumerate(server_access_ids):
-                server_name = server_list[server_id]
+                server_name = SESSION_DATA.server_list[server_id]
                 server_access_ids[idx] = f"{server_id}-{server_name['name']}"
         else:
             for idx, server_id in enumerate(server_access_ids):
                 server_access_ids[idx] = f"{server_id}-"
-
+        server_access_ids.insert(0, '(Auto-Detect)')
         OverlayUpdateHandler.update(events.SERVER_SELECT, server_access_ids)
         update_server_select(server_access_ids[0])
         overlay.show_main()
-        SESSION_DATA.advanced_user = 'advanced' in access_groups
-        if SESSION_DATA.advanced_user:
-            OverlayUpdateHandler.visible("advanced")
+        # SESSION_DATA.advanced_user = 'advanced' in access_groups
+        # if SESSION_DATA.advanced_user:
+        #     OverlayUpdateHandler.visible("advanced")
+
+
+
 

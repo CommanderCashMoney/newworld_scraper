@@ -1,7 +1,7 @@
 import logging
 import re
 from typing import Any, Tuple, Union
-
+import Levenshtein
 import cv2
 import mss
 import numpy as np
@@ -85,6 +85,15 @@ def parse_current_page(txt: dict) -> Tuple[int, bool]:
     else:
         return 500, False
 
+def parse_server_name(txt: dict) -> str:
+    text_list = txt['text']
+    # loop through conf scores and remove low scores
+    for idx, val in reversed(list(enumerate(txt['conf']))):
+        if val == '-1':
+            text_list.pop(idx)
+
+    text_string = ''.join(text_list)
+    return text_string
 
 def pre_process_listings_image(img, scale=2.5):
     img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
@@ -190,3 +199,22 @@ def capture_screen(save_to: str = None) -> Screenshot:
         ss.save_image(save_to)
 
     return ss
+
+def find_closest_match(input_str: str, list_to_compare: list):
+    closest_distance = 99
+    closest_match = None
+
+    for candidate in list_to_compare:
+        lev_distance = Levenshtein.distance(input_str, candidate)
+        if lev_distance < closest_distance:
+            closest_distance = lev_distance
+            closest_match = candidate
+
+
+    return closest_match, closest_distance
+
+def find_key_by_value(dictionary, value):
+    for key, val in dictionary.items():
+        if val['name'] == value:
+            return key
+    return None

@@ -9,7 +9,7 @@ def start_run(values) -> None:
     from app.ocr.ocr_queue import OCRQueue, OCRQueue
 
     from app.events import RUN_BUTTON
-    from app.ocr.crawler import Crawler
+
     from app.overlay.overlay_updates import OverlayUpdateHandler
     from app.session_data import SESSION_DATA
 
@@ -20,7 +20,6 @@ def start_run(values) -> None:
     OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", visible=False)
     queue = OCRQueue(overlay_update_handler=OverlayUpdateHandler)
     SESSION_DATA.crawler = Crawler(queue, run_id=SESSION_DATA.current_run_id)
-    SESSION_DATA.crawler.start()
     for key in ["key_count", "ocr_count", "listings_count", "validate_fails"]:
         OverlayUpdateHandler.update(key, "0")
     OverlayUpdateHandler.update("accuracy", "-")
@@ -29,5 +28,8 @@ def start_run(values) -> None:
     OverlayUpdateHandler.disable(RUN_BUTTON)
     # OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=False)
     # OverlayUpdateHandler.visible(events.CLOSE_NW_TOGGLE, visible=False)
-    OverlayUpdateHandler.visible("advanced", visible=False)
+    # OverlayUpdateHandler.visible("advanced", visible=False)
+    SESSION_DATA.crawler.start()
+
+
 

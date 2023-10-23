@@ -17,6 +17,7 @@ class CurrentData(BaseModel):
     password: str = SETTINGS.api_password
     pages: int = 1 if SETTINGS.is_dev else 500
     server_id: str = None
+    server_list: list = []
     test_run: bool = True
     close_nw: bool = False
     auto_sections: bool = True  # doesn't do anything atm

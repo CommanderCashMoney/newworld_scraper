@@ -13,12 +13,13 @@ from app.ocr.ocr_queue import OCRQueue
 from app.ocr.resolution_settings import get_resolution_obj
 from app.ocr.section_crawler import SectionCrawler
 from app.overlay.overlay_updates import OverlayUpdateHandler
-from app.session_data import SESSION_DATA
+from app.session_data import SESSION_DATA, update_server_select
 from app.settings import SETTINGS
 from app.utils import format_seconds
 from app.utils.keyboard import press_key
 from app.utils.window import bring_new_world_to_foreground, exit_to_desktop, bring_scanner_to_foreground, play_sound
 from app.utils.mouse import click
+from app.overlay import overlay
 
 class Crawler:
     def __init__(self, ocr_queue: OCRQueue, run_id: str) -> None:
@@ -191,6 +192,12 @@ class Crawler:
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-")
 
     def start(self) -> None:
+        event, values = overlay.window.read(timeout=0)
+        if values['-SERVER-SELECT-'] == '(Auto-Detect)':
+            if not self.get_server_name():
+                self.stop(reason="Could not detect server name.", is_error=True, wait_for_death=False)
+                logging.error(f'Could not auto detect Server name')
+                return
         OverlayUpdateHandler.visible("-SCAN-DATA-COLUMN-", False)
         self.started = time.perf_counter()
         if not self.crawler_thread.is_alive():
@@ -209,8 +216,58 @@ class Crawler:
             OverlayUpdateHandler.update('status_bar', 'Manually stopped crawl.')
         self.reset_ui_state()
 
+    def get_server_name(self):
+
+        from app.utils.keyboard import press_key
+        from app.utils.mouse import click
+        import time
+        from app.ocr.utils import screenshot_bbox, pre_process_listings_image, find_closest_match, parse_server_name, find_key_by_value
+        from pytesseract import pytesseract
+
+        try:
+            bring_new_world_to_foreground()
+        except:  # noqa
+            # self.stop(reason="New World doesn't seem to be open.", is_error=True, wait_for_death=False)
+            return None
+
+        resolution = get_resolution_obj()
+        time.sleep(1)
+        press_key(pynput.keyboard.Key.esc)
+        time.sleep(1)
+        press_key(pynput.keyboard.Key.esc)
+        time.sleep(1)
+        click('left', resolution.menu_loc)
+        time.sleep(1)
+
+        server_name_bbox = self.resolution.server_name_bbox
+        screenshot = screenshot_bbox(*server_name_bbox)
+        res = pre_process_listings_image(screenshot.img_array)
+        TEXT_ONLY_CONFIG = """--psm 6 -c tessedit_char_whitelist="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" """
+        txt = pytesseract.image_to_data(res, output_type=pytesseract.Output.DICT, config=TEXT_ONLY_CONFIG)
+        parsed_server_name = parse_server_name(txt)
+        server_names =  [value['name'] for value in SESSION_DATA.server_list.values()]
+        if parsed_server_name is None or '' or len(parsed_server_name) < 3:
+            logging.warning(f'Could not parse server name from image: {parsed_server_name}')
+            return None
+
+        if parsed_server_name in server_names:
+            logging.info(f'Found an exact match for server: {parsed_server_name}')
+            server_id = find_key_by_value(SESSION_DATA.server_list, parsed_server_name)
+            update_server_select(f'{server_id}-{parsed_server_name}')
+            return parsed_server_name
+        else:
+            matched_server_name, distance = find_closest_match(parsed_server_name, server_names)
+            logging.info(f'Matched server name to: {matched_server_name}')
+            server_id = find_key_by_value(SESSION_DATA.server_list, matched_server_name)
+            update_server_select(f'{server_id}-{matched_server_name}')
+            if distance > 2:
+                logging.warning(f'Could not find a close match for server name: {parsed_server_name}')
+                return None
+            return matched_server_name
+
+
     def reset_ui_state(self) -> None:
-        OverlayUpdateHandler.visible("advanced", visible=SESSION_DATA.advanced_user)
+        # OverlayUpdateHandler.visible("advanced", visible=SESSION_DATA.advanced_user)
         # OverlayUpdateHandler.visible(events.TEST_RUN_TOGGLE, visible=True)
         # OverlayUpdateHandler.visible(events.CLOSE_NW_TOGGLE, visible=True)
         OverlayUpdateHandler.enable(events.RUN_BUTTON)
