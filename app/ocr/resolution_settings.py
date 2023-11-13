@@ -429,7 +429,7 @@ res_2560x1080p = Resolution(
     buy_order_top_scroll=ImageReference(screen_bbox=(2145, 374, 9, 31), file_name="top_of_scroll.png", min_conf=0.91),
     buy_order_mid_scroll=ImageReference(screen_bbox=(2137, 600, 18, 23), file_name="mid_scroll_bottom.png",
                                         min_conf=0.91),
-    buy_order_bottom_scroll=ImageReference(screen_bbox=(2145, 1015, 9, 42), file_name="buy_order_bottom_of_scroll.png",
+    buy_order_bottom_scroll=ImageReference(screen_bbox=(2145, 1015, 9, 42), file_name="bottom_of_scroll.png",
                                            min_conf=0.91),
     buy_order_cancel_button=ImageReference(screen_bbox=(1044, 843, 63, 17), file_name="cancel_btn.png", min_conf=0.70),
     buy_order_refresh_button=ImageReference(screen_bbox=(1486, 707, 120, 19), file_name="refresh_btn.png",
