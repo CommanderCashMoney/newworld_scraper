@@ -5,14 +5,14 @@ from app.utils import resource_path
 from app.ocr.resolution_settings import *
 
 # Create a list of resolution options for the dropdown
-resolution_options = ['2560x1440', '1920x1080', '2840x2160', '5120x1440', '3440x1440', '2560x1080']
+resolution_options = ['2560x1440', '1920x1080', '3840x2160', '5120x1440', '3440x1440', '2560x1080']
 
 # Default selected resolution
 selected_resolution = '2560x1440'
 resolution_mapping = {
     '2560x1440': res_1440p,
     '1920x1080': res_1080p,
-    '2840x2160': res_4k,
+    '3840x2160': res_4k,
     '5120x1440': res_5120x1440p,
     '3440x1440': res_3440x1440p,
     '2560x1080': res_2560x1080p

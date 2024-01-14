@@ -15,7 +15,8 @@ class CurrentData(BaseModel):
     """Data that persists throughout the session, does not save between instances"""
     username: str = SETTINGS.api_username
     password: str = SETTINGS.api_password
-    pages: int = 1 if SETTINGS.is_dev else 500
+    # pages: int = 1 if SETTINGS.is_dev else 500
+    pages: int = 500
     server_id: str = None
     server_list: list = []
     test_run: bool = True
