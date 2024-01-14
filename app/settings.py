@@ -27,7 +27,7 @@ class KeyBindings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    VERSION = "1.7.0"
+    VERSION = "1.7.1"
     environment: Environment = Environment.prod
     use_dev_colors: bool = False
     console_logging_level: str = "INFO"
