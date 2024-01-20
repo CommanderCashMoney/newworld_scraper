@@ -100,6 +100,7 @@ class Crawler:
             pages_to_parse = SESSION_DATA.pages
 
         logging.info("Started Crawling")
+        overlay.show_minimized_overlay()
         self.started = time.perf_counter()
         self.timer_thread.start()
         for section_crawler in self.section_crawlers:
@@ -125,6 +126,8 @@ class Crawler:
         if self.stopped:
             logging.info(f"Stopped crawling because {self.stop_reason}.")
             self.ocr_queue.stop()
+            overlay.show_main()
+            bring_scanner_to_foreground()
             return
         else:
             # tell the ocr thread to stop processing once it has completed all its current tasks
@@ -133,6 +136,7 @@ class Crawler:
 
         if SESSION_DATA.close_nw:
             exit_to_desktop()
+        overlay.show_main()
         bring_scanner_to_foreground()
         self.wait_for_parse()
         if SETTINGS.playsound:

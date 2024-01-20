@@ -4,6 +4,7 @@ from app import events
 from app.overlay.layouts.key_settings_layout import settings_layout
 from app.overlay.layouts.login_layout import LOGIN_LAYOUT
 from app.overlay.layouts.scan_info_layout import scan_info_layout
+from app.overlay.layouts.minimized_scan_layout import minimized_scan_layout
 from app.settings import SETTINGS
 from app.utils import resource_path
 
@@ -15,8 +16,8 @@ class Overlay:
         self.server_version: str = None
         self.download_link: str = None
         layout1 = LOGIN_LAYOUT
-
         layout3 = scan_info_layout()
+        layout4 = minimized_scan_layout()
 
         version_update_layout = [
             [sg.Text('', key='download_update_text')],
@@ -30,7 +31,8 @@ class Overlay:
             [
                 sg.Column(layout1, key='login_window'),
                 sg.Column(layout3, visible=False, key='main_window'),
-                sg.Column(version_update_layout, visible=False, key='update_window')
+                sg.Column(version_update_layout, visible=False, key='update_window'),
+                sg.Column(layout4, visible=False, key='minimized_window'),
             ]
         ]
         # layout = [[sg.Column(layout1, key='login_window'), sg.Column(layout2, visible=False, key='main_window'), sg.Column(layout3, visible=False, key='advanced_window')]]
@@ -40,10 +42,11 @@ class Overlay:
             f'Trade Price Scraper - {SETTINGS.VERSION}',
             layout,
             keep_on_top=False,
+            no_titlebar=False,
             location=(150, 150),
             finalize=True,
             use_default_focus=False,
-            background_color='red' if SETTINGS.use_dev_colors else None,
+            background_color='#64778d',
         )
 
     def read(self):
@@ -60,6 +63,10 @@ class Overlay:
                 self.window[element].Update(value=val, append=True, autoscroll=True)
             else:
                 self.window[element].Update(value=val)
+                # update the minified window
+                if f'min_{element}' in self.window.AllKeysDict:
+                # if self.window.find_element(f'min_{element}', silent_on_error=True) is not None:
+                    self.window[f'min_{element}'].Update(value=val)
 
         if isinstance(size, tuple):
             self.window[element].set_size(size=(size, 1))
@@ -76,9 +83,28 @@ class Overlay:
     def unhide(self, element):
         self.window[element].update(visible=True)
 
+    def show_minimized_overlay(self):
+        # self.window.TKroot.config(bg='blue')
+        self.window.TKroot.attributes('-transparentcolor', '#64778d')
+        self.window.TKroot.attributes('-topmost', True)
+        screen_width = int(SETTINGS.resolution[:4])
+        center_loc = int(screen_width/2 - 300)
+        self.window.move(x=center_loc, y=0)
+        self.window.TKroot.overrideredirect(True)
+        self.window['main_window'].update(visible=False)
+        self.window['minimized_window'].update(visible=True)
+
+
+
     def show_main(self):
         self.window['login_window'].update(visible=False)
+        self.window['minimized_window'].update(visible=False)
+        self.window.TKroot.attributes('-topmost', False)
+        self.window.TKroot.config(bg='#64778d')
+        self.window.TKroot.attributes('-transparentcolor', '')
+        self.window.TKroot.overrideredirect(False)
         self.window['main_window'].update(visible=True)
+        self.window.move(x=150, y=150)
 
     def show_login(self):
         self.window['main_window'].update(visible=False)
