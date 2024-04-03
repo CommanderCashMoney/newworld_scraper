@@ -71,7 +71,7 @@ class Crawler:
         except:  # noqa
             self.stop(reason="New World doesn't seem to be open.", is_error=True, wait_for_death=False)
             return
-        press_key(pynput.keyboard.Key.esc)
+        press_key(SETTINGS.keybindings.action_key)
         time.sleep(0.5)
         rand_time = np.random.uniform(0.10, 0.15)
         press_key(SETTINGS.keybindings.backward_key, 0.1)
@@ -238,13 +238,12 @@ class Crawler:
         buy_icon_img = self.resolution.buy_icon
         if not buy_icon_img.compare_image_reference():
             logging.error("Couldn't find TP, please make sure the Trading Post is open")
+
             bring_scanner_to_foreground()
             return None
 
 
         resolution = get_resolution_obj()
-        time.sleep(1)
-        press_key(pynput.keyboard.Key.esc)
         time.sleep(1)
         press_key(pynput.keyboard.Key.esc)
         time.sleep(1)
@@ -267,6 +266,10 @@ class Crawler:
             logging.info(f'Found an exact match for server: {parsed_server_name}')
             server_id = find_key_by_value(SESSION_DATA.server_list, parsed_server_name)
             update_server_select(f'{server_id}-{parsed_server_name}')
+            press_key(pynput.keyboard.Key.esc)
+            time.sleep(0.5)
+            press_key(SETTINGS.keybindings.action_key)
+            time.sleep(0.5)
             return parsed_server_name
         else:
             matched_server_name, distance = find_closest_match(parsed_server_name, server_names)
@@ -277,6 +280,10 @@ class Crawler:
                 logging.warning(f'Could not find a close match for server name: {parsed_server_name}')
                 bring_scanner_to_foreground()
                 return None
+            press_key(pynput.keyboard.Key.esc)
+            time.sleep(0.5)
+            press_key(SETTINGS.keybindings.action_key)
+            time.sleep(0.5)
             return matched_server_name
 
 
